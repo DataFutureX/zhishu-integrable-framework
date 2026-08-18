@@ -136,7 +136,7 @@ cd yunqi-application-platform/backend
 mysql -u root -p < yqap-core/src/main/resources/db/init.sql
 ```
 
-默认库名：`yunqi_admin`。
+默认库名：`yunqi_application_platform`。
 
 #### 修改数据源
 
@@ -147,7 +147,7 @@ yunqi:
   datasource:
     host: localhost
     port: 3306
-    database: yunqi_admin
+    database: yunqi_application_platform
     username: root
     password: 你的密码
 ```
@@ -283,7 +283,7 @@ npm install
 
 **后端数据库连接被拒**
 
-- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_admin`
+- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_application_platform`
 - 检查 `backend/yqap-core/src/main/resources/application-dev.yml` 中 `yunqi.datasource` 账号密码
 
 **联调登录 401**

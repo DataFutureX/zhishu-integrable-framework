@@ -12,7 +12,7 @@ yunqi:
   datasource:
     host: ${YUNQI_DB_HOST:localhost}
     port: ${YUNQI_DB_PORT:3306}
-    database: ${YUNQI_DB_NAME:yunqi_admin_test}
+    database: ${YUNQI_DB_NAME:yunqi_application_platform_test}
     username: ${YUNQI_DB_USERNAME:root}
     password: ${YUNQI_DB_PASSWORD:12345678}
     params: useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true

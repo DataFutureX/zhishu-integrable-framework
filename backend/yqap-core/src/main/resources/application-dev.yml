@@ -22,7 +22,7 @@ yunqi:
   datasource:
     host: localhost
     port: 3306
-    database: yunqi_admin
+    database: yunqi_application_platform
     username: root
     password: 12345678
     params: useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true

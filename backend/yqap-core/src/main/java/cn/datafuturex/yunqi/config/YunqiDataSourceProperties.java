@@ -22,7 +22,7 @@ public class YunqiDataSourceProperties {
 
     private String host = "localhost";
     private int port = 3306;
-    private String database = "yunqi_admin";
+    private String database = "yunqi_application_platform";
     private String username;
     private String password;
     /**

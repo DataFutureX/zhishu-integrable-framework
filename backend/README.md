@@ -174,7 +174,7 @@ cd yunqi-application-platform/backend
 mysql -u root -p < yqap-core/src/main/resources/db/init.sql
 ```
 
-默认库名：`yunqi_admin`  
+默认库名：`yunqi_application_platform`  
 默认管理员：**admin / admin123**
 
 > **安全提示**：默认账户仅用于本地开发。上线前务必修改默认密码，并更换 `jwt.secret` 等敏感配置。
@@ -188,7 +188,7 @@ yunqi:
   datasource:
     host: localhost
     port: 3306
-    database: yunqi_admin
+    database: yunqi_application_platform
     username: root
     password: 你的密码
 ```
@@ -292,8 +292,8 @@ mvn -pl yqap-core -am spring-boot:run -Dspring-boot.run.profiles=prod
 
 **前置条件**
 
-1. 已创建库 `yunqi_admin_test`（可用环境变量 `YUNQI_DB_NAME` 覆盖）
-2. 对测试库执行 [init.sql](yqap-core/src/main/resources/db/init.sql)（将脚本中的库名改为 `yunqi_admin_test`），确保存在管理员 `admin / admin123`
+1. 已创建库 `yunqi_application_platform_test`（可用环境变量 `YUNQI_DB_NAME` 覆盖）
+2. 对测试库执行 [init.sql](yqap-core/src/main/resources/db/init.sql)（将脚本中的库名改为 `yunqi_application_platform_test`），确保存在管理员 `admin / admin123`
 3. 连接参数与 [application-test.yml](yqap-core/src/main/resources/application-test.yml) 一致，可用 `YUNQI_DB_HOST/PORT/USERNAME/PASSWORD` 覆盖
 4. **禁止**对生产库执行本套 IT
 
@@ -611,7 +611,7 @@ jwt:
 
 ### 1. 启动失败：数据库连接被拒
 
-- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_admin`
+- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_application_platform`
 - 检查 `application-dev.yml` 中 `yunqi.datasource` 账号密码
 - 生产环境确认已导出 `YUNQI_DB_HOST` / `USERNAME` / `PASSWORD`
 

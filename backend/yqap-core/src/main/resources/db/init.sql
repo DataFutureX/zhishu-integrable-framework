@@ -8,9 +8,9 @@
 -- 生成日期：2026-07-20
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS `yunqi_admin` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS `yunqi_application_platform` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE `yunqi_admin`;
+USE `yunqi_application_platform`;
 
 -- ---------------------------------------------------------------------------
 -- 1. 权限与系统管理

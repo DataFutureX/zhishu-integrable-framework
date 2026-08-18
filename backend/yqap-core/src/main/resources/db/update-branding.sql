@@ -1,5 +1,5 @@
 -- 云起应用平台：品牌文案更新（仅更新 sys_config，可单独执行）
--- 用法：mysql -u root -p yunqi_admin < yqap-core/src/main/resources/db/update-branding.sql
+-- 用法：mysql -u root -p yunqi_application_platform < yqap-core/src/main/resources/db/update-branding.sql
 
 UPDATE `sys_config`
 SET

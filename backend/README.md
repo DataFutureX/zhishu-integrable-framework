@@ -19,8 +19,8 @@
 | 类型     | 地址                                                                                               | 说明               |
 | ------ | ------------------------------------------------------------------------------------------------ | ---------------- |
 | 在线演示   | [https://yunqi.datafuturex.cn](https://yunqi.datafuturex.cn)                                     | 可直接体验系统功能        |
-| GitHub | [https://github.com/DataFutureX/yunqi-application-platform.git](https://github.com/DataFutureX/yunqi-application-platform.git) | 国际镜像，默认 `origin` |
-| Gitee  | [https://gitee.com/DataFutureX/yunqi-application-platform.git](https://gitee.com/DataFutureX/yunqi-application-platform.git)   | 国内镜像，远程名 `gitee` |
+| GitHub | `git@github.com:DataFutureX/yunqi-application-platform.git` | 国际镜像，默认 `origin` |
+| Gitee  | `git@gitee.com:DataFutureX/yunqi-application-platform.git` | 国内镜像，远程名 `gitee` |
 
 
 
@@ -160,10 +160,10 @@ yunqi-application-platform/
 
 ```bash
 # GitHub
-git clone https://github.com/DataFutureX/yunqi-application-platform.git
+git clone git@github.com:DataFutureX/yunqi-application-platform.git
 
 # 或 Gitee（国内网络更友好）
-git clone https://gitee.com/DataFutureX/yunqi-application-platform.git
+git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
 
 cd yunqi-application-platform/backend
 ```

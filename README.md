@@ -59,9 +59,9 @@
 
 ```bash
 # GitHub
-git clone https://github.com/DataFutureX/yunqi-application-platform.git
+git clone git@github.com:DataFutureX/yunqi-application-platform.git
 # 或 Gitee
-git clone https://gitee.com/DataFutureX/yunqi-application-platform.git
+git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
 
 cd yunqi-application-platform/frontend
 npm install
@@ -256,8 +256,8 @@ npm run dev
 
 | 平台 | 仓库 | 说明 |
 |------|------|------|
-| GitHub | [DataFutureX/yunqi-application-platform](https://github.com/DataFutureX/yunqi-application-platform.git) | 国际镜像，默认 `origin` |
-| Gitee | [DataFutureX/yunqi-application-platform](https://gitee.com/DataFutureX/yunqi-application-platform.git) | 国内镜像，远程名 `gitee` |
+| GitHub | `git@github.com:DataFutureX/yunqi-application-platform.git` | 国际镜像，默认 `origin` |
+| Gitee | `git@gitee.com:DataFutureX/yunqi-application-platform.git` | 国内镜像，远程名 `gitee` |
 
 | 路径 | 内容说明 |
 |------|----------|

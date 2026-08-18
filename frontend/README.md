@@ -19,8 +19,8 @@
 
 | 平台 | 仓库 | remote | 说明 |
 |------|------|--------|------|
-| GitHub | [DataFutureX/yunqi-application-platform](https://github.com/DataFutureX/yunqi-application-platform.git) | `origin` | 主仓库 |
-| Gitee | [DataFutureX/yunqi-application-platform](https://gitee.com/DataFutureX/yunqi-application-platform.git) | `gitee` | 国内镜像 |
+| GitHub | `git@github.com:DataFutureX/yunqi-application-platform.git` | `origin` | 主仓库 |
+| Gitee | `git@gitee.com:DataFutureX/yunqi-application-platform.git` | `gitee` | 国内镜像 |
 
 | 路径 | 内容说明 |
 |------|----------|
@@ -32,19 +32,10 @@
 
 ```bash
 # GitHub（推荐 / origin）
-git clone https://github.com/DataFutureX/yunqi-application-platform.git
+git clone git@github.com:DataFutureX/yunqi-application-platform.git
 cd yunqi-application-platform/frontend
 
 # 或 Gitee
-git clone https://gitee.com/DataFutureX/yunqi-application-platform.git
-cd yunqi-application-platform/frontend
-```
-
-SSH：
-
-```bash
-git clone git@github.com:DataFutureX/yunqi-application-platform.git
-# 或
 git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
 cd yunqi-application-platform/frontend
 ```
@@ -536,8 +527,8 @@ npm run test
 | ---------------------------------------------------------------- | ------------------ |
 | [仓库快速开始](../README.md) | 根目录 README：演示模式与前后端联调 |
 | [在线演示](https://yunqi.datafuturex.cn) | 线上体验地址 |
-| [GitHub 源码](https://github.com/DataFutureX/yunqi-application-platform.git) | 主仓库（`origin` / `main`）；前端位于 `frontend/` |
-| [Gitee 镜像](https://gitee.com/DataFutureX/yunqi-application-platform.git) | 国内镜像（`gitee`）；前端位于 `frontend/` |
+| [GitHub 源码](https://github.com/DataFutureX/yunqi-application-platform) | `git@github.com:DataFutureX/yunqi-application-platform.git`（`origin` / `main`）；前端位于 `frontend/` |
+| [Gitee 镜像](https://gitee.com/DataFutureX/yunqi-application-platform) | `git@gitee.com:DataFutureX/yunqi-application-platform.git`（`gitee`）；前端位于 `frontend/` |
 | [docs/MENU_ROUTES.json](docs/MENU_ROUTES.json)                   | 菜单树与路由、按钮权限对照      |
 | [docs/GUIDE.md](docs/GUIDE.md)                                   | 短说明（内容已并入本 README） |
 | [LICENSE](../LICENSE)                                             | MIT 许可证全文（仓库根目录） |

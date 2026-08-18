@@ -540,7 +540,7 @@ const quickStartCommands = [
   {
     title: '路径 A · 纯前端演示',
     hint: '无需后端 · 账号 demo / demo123',
-    code: `git clone https://github.com/DataFutureX/yunqi-application-platform.git
+    code: `git clone git@github.com:DataFutureX/yunqi-application-platform.git
 cd yunqi-application-platform/frontend
 npm install && npm run dev:demo`,
   },

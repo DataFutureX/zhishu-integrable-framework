@@ -1,0 +1,366 @@
+{
+  "version": "1.1.0",
+  "generatedFrom": "src/router + 当前后端菜单域约定",
+  "description": "云起应用平台 — 前端路由与侧边栏菜单结构，供后端菜单初始化 / 演示模式对照",
+  "notes": [
+    "path 为前端完整访问路径（以 / 开头）",
+    "routeName 对应 Vue Router 的 name；BUTTON 类型的 routeName 为权限标识",
+    "menuType: DIRECTORY=目录, MENU=可访问菜单, PAGE=隐藏页, BUTTON=按钮权限",
+    "visible: true 表示在侧边栏展示",
+    "requiresAuth: false 表示无需登录即可访问",
+    "icon 为 Element Plus Icons 组件名",
+    "sort 为同级菜单排序，数值越小越靠前",
+    "meta.layout 为 dashboard 时使用仪表盘布局预设（默认隐藏左侧二级侧栏）",
+    "meta.hideSecondaryAside 可覆盖预设；主页仪表盘设为 false 以在顶部菜单模式下展示左侧二级菜单",
+    "权限管理域使用 /permission/*；监控使用 /monitor/ops；开发工具使用 /devtools/api"
+  ],
+  "menuTree": [
+    {
+      "id": 1,
+      "parentId": 0,
+      "title": "主页",
+      "path": "/home",
+      "routeName": "Home",
+      "redirect": "/home/dashboard",
+      "icon": "HomeFilled",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 1,
+      "component": null,
+      "children": [
+        {
+          "id": 11,
+          "parentId": 1,
+          "title": "仪表盘",
+          "path": "/home/dashboard",
+          "routeName": "Dashboard",
+          "redirect": null,
+          "icon": "Odometer",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/dashboard/Dashboard.vue",
+          "meta": { "layout": "dashboard", "hideSecondaryAside": false }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "parentId": 0,
+      "title": "权限管理",
+      "path": "/permission",
+      "routeName": "Permission",
+      "redirect": "/permission/user",
+      "icon": "Lock",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 2,
+      "component": null,
+      "children": [
+        {
+          "id": 21,
+          "parentId": 2,
+          "title": "用户管理",
+          "path": "/permission/user",
+          "routeName": "User",
+          "redirect": null,
+          "icon": "User",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/user/UserList.vue",
+          "children": [
+            { "id": 2101, "parentId": 21, "title": "用户查询", "path": null, "routeName": "system:user:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 2102, "parentId": 21, "title": "用户新增", "path": null, "routeName": "system:user:add", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null },
+            { "id": 2103, "parentId": 21, "title": "用户编辑", "path": null, "routeName": "system:user:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 3, "component": null },
+            { "id": 2104, "parentId": 21, "title": "用户删除", "path": null, "routeName": "system:user:remove", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 4, "component": null },
+            { "id": 2105, "parentId": 21, "title": "分配角色", "path": null, "routeName": "system:user:assignRole", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 5, "component": null }
+          ]
+        },
+        {
+          "id": 22,
+          "parentId": 2,
+          "title": "单位管理",
+          "path": "/permission/unit",
+          "routeName": "Unit",
+          "redirect": null,
+          "icon": "OfficeBuilding",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 2,
+          "component": "views/system/UnitList.vue",
+          "children": [
+            { "id": 2201, "parentId": 22, "title": "单位查询", "path": null, "routeName": "system:unit:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 2202, "parentId": 22, "title": "单位新增", "path": null, "routeName": "system:unit:add", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null },
+            { "id": 2203, "parentId": 22, "title": "单位编辑", "path": null, "routeName": "system:unit:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 3, "component": null },
+            { "id": 2204, "parentId": 22, "title": "单位删除", "path": null, "routeName": "system:unit:remove", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 4, "component": null }
+          ]
+        },
+        {
+          "id": 23,
+          "parentId": 2,
+          "title": "角色管理",
+          "path": "/permission/role",
+          "routeName": "Role",
+          "redirect": null,
+          "icon": "Avatar",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 3,
+          "component": "views/system/RoleList.vue",
+          "children": [
+            { "id": 2301, "parentId": 23, "title": "角色查询", "path": null, "routeName": "system:role:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 2302, "parentId": 23, "title": "角色新增", "path": null, "routeName": "system:role:add", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null },
+            { "id": 2303, "parentId": 23, "title": "角色编辑", "path": null, "routeName": "system:role:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 3, "component": null },
+            { "id": 2304, "parentId": 23, "title": "角色删除", "path": null, "routeName": "system:role:remove", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 4, "component": null },
+            { "id": 2305, "parentId": 23, "title": "分配菜单", "path": null, "routeName": "system:role:assignMenu", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 5, "component": null }
+          ]
+        },
+        {
+          "id": 24,
+          "parentId": 2,
+          "title": "菜单管理",
+          "path": "/permission/menu",
+          "routeName": "Menu",
+          "redirect": null,
+          "icon": "Menu",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 4,
+          "component": "views/system/MenuList.vue",
+          "children": [
+            { "id": 2401, "parentId": 24, "title": "菜单查询", "path": null, "routeName": "system:menu:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 2402, "parentId": 24, "title": "菜单新增", "path": null, "routeName": "system:menu:add", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null },
+            { "id": 2403, "parentId": 24, "title": "菜单编辑", "path": null, "routeName": "system:menu:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 3, "component": null },
+            { "id": 2404, "parentId": 24, "title": "菜单删除", "path": null, "routeName": "system:menu:remove", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 4, "component": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "parentId": 0,
+      "title": "系统管理",
+      "path": "/system",
+      "routeName": "System",
+      "redirect": "/system/config",
+      "icon": "Setting",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 3,
+      "component": null,
+      "children": [
+        {
+          "id": 31,
+          "parentId": 3,
+          "title": "系统设置",
+          "path": "/system/config",
+          "routeName": "SystemConfig",
+          "redirect": null,
+          "icon": "Tools",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/system/SystemConfig.vue",
+          "children": [
+            { "id": 3101, "parentId": 31, "title": "配置查询", "path": null, "routeName": "system:config:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 3102, "parentId": 31, "title": "配置编辑", "path": null, "routeName": "system:config:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null }
+          ]
+        },
+        {
+          "id": 32,
+          "parentId": 3,
+          "title": "公告管理",
+          "path": "/system/announcement",
+          "routeName": "Announcement",
+          "redirect": null,
+          "icon": "Notification",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 2,
+          "component": "views/system/AnnouncementList.vue",
+          "children": [
+            { "id": 3201, "parentId": 32, "title": "公告查询", "path": null, "routeName": "system:announcement:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null },
+            { "id": 3202, "parentId": 32, "title": "公告新增", "path": null, "routeName": "system:announcement:add", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 2, "component": null },
+            { "id": 3203, "parentId": 32, "title": "公告编辑", "path": null, "routeName": "system:announcement:edit", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 3, "component": null },
+            { "id": 3204, "parentId": 32, "title": "公告删除", "path": null, "routeName": "system:announcement:remove", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 4, "component": null },
+            { "id": 3205, "parentId": 32, "title": "公告发布", "path": null, "routeName": "system:announcement:publish", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 5, "component": null }
+          ]
+        },
+        {
+          "id": 33,
+          "parentId": 3,
+          "title": "操作日志",
+          "path": "/system/operation-log",
+          "routeName": "OperationLog",
+          "redirect": null,
+          "icon": "Document",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 3,
+          "component": "views/system/OperationLogList.vue",
+          "children": [
+            { "id": 3301, "parentId": 33, "title": "日志查询", "path": null, "routeName": "system:operlog:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "parentId": 0,
+      "title": "运维监控",
+      "path": "/monitor",
+      "routeName": "Monitor",
+      "redirect": "/monitor/ops",
+      "icon": "Monitor",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 4,
+      "component": null,
+      "children": [
+        {
+          "id": 41,
+          "parentId": 4,
+          "title": "系统监控",
+          "path": "/monitor/ops",
+          "routeName": "SystemMonitor",
+          "redirect": null,
+          "icon": "Odometer",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/system/SystemMonitor.vue",
+          "children": [
+            { "id": 4101, "parentId": 41, "title": "监控查询", "path": null, "routeName": "system:monitor:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "parentId": 0,
+      "title": "开发工具",
+      "path": "/devtools",
+      "routeName": "Devtools",
+      "redirect": "/devtools/api",
+      "icon": "Cpu",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 5,
+      "component": null,
+      "children": [
+        {
+          "id": 51,
+          "parentId": 5,
+          "title": "接口文档",
+          "path": "/devtools/api",
+          "routeName": "SwaggerApi",
+          "redirect": null,
+          "icon": "Document",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/devtools/SwaggerEmbed.vue",
+          "children": [
+            { "id": 5101, "parentId": 51, "title": "接口文档查询", "path": null, "routeName": "devtools:api:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "parentId": 0,
+      "title": "个人中心",
+      "path": "/profile",
+      "routeName": "Profile",
+      "redirect": "/profile/info",
+      "icon": "UserFilled",
+      "menuType": "DIRECTORY",
+      "visible": true,
+      "requiresAuth": true,
+      "sort": 6,
+      "component": null,
+      "children": [
+        {
+          "id": 61,
+          "parentId": 6,
+          "title": "个人信息",
+          "path": "/profile/info",
+          "routeName": "ProfileInfo",
+          "redirect": null,
+          "icon": "User",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/user/UserProfile.vue"
+        },
+        {
+          "id": 62,
+          "parentId": 6,
+          "title": "修改密码",
+          "path": "/profile/password",
+          "routeName": "ChangePassword",
+          "redirect": null,
+          "icon": "Lock",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 2,
+          "component": "views/user/ChangePassword.vue"
+        }
+      ]
+    }
+  ],
+  "hiddenRoutes": [
+    {
+      "id": 9001,
+      "parentId": 0,
+      "title": "登录",
+      "path": "/login",
+      "routeName": "Login",
+      "redirect": null,
+      "icon": null,
+      "menuType": "PAGE",
+      "visible": false,
+      "requiresAuth": false,
+      "sort": 0,
+      "component": "views/login/Login.vue"
+    },
+    {
+      "id": 9002,
+      "parentId": 0,
+      "title": "产品门户",
+      "path": "/portal",
+      "routeName": "Portal",
+      "redirect": null,
+      "icon": null,
+      "menuType": "PAGE",
+      "visible": false,
+      "requiresAuth": false,
+      "sort": 0,
+      "component": "views/portal/PortalLanding.vue"
+    }
+  ],
+  "layout": {
+    "path": "/",
+    "component": "layouts/MainLayout.vue",
+    "redirect": "/home/dashboard",
+    "requiresAuth": true
+  }
+}

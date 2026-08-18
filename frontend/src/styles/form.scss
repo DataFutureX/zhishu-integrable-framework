@@ -1,0 +1,249 @@
+@use './variables.scss' as *;
+
+// Element Plus 主题变量 — 主色随 --el-color-primary / 云起青绿对齐
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: color-mix(in srgb, var(--el-color-primary) 70%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--el-color-primary) 50%, white);
+  --el-color-primary-light-7: color-mix(in srgb, var(--el-color-primary) 30%, white);
+  --el-color-primary-light-8: color-mix(in srgb, var(--el-color-primary) 20%, white);
+  --el-color-primary-light-9: color-mix(in srgb, var(--el-color-primary) 10%, white);
+  --el-color-primary-dark-2: #{$primary-dark};
+  --el-color-success: #{$success-color};
+  --el-color-warning: #{$warning-color};
+  --el-color-danger: #{$danger-color};
+  --el-color-info: #{$info-color};
+
+  --el-text-color-primary: #{$text-primary};
+  --el-text-color-regular: #{$text-regular};
+  --el-text-color-secondary: #{$text-secondary};
+  --el-text-color-placeholder: #{$text-placeholder};
+
+  --el-border-color: #{$border-color};
+  --el-border-color-light: #{$border-light};
+  --el-border-color-lighter: #{$border-lighter};
+
+  --el-fill-color-blank: #{$form-input-bg};
+  --el-bg-color: #{$bg-white};
+  --el-bg-color-page: #{$bg-color};
+
+  --el-border-radius-base: #{$border-radius-md};
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 20px;
+
+  --el-component-size: 32px;
+  --el-component-size-large: 40px;
+  --el-component-size-small: 24px;
+
+  --el-font-size-base: 14px;
+  --el-font-weight-primary: 500;
+}
+
+// 表单标签
+.el-form-item__label {
+  font-weight: 500;
+  color: $form-label-color;
+}
+
+.el-form-item__error {
+  font-size: 12px;
+  padding-top: 2px;
+}
+
+// 输入框、选择器、日期选择器 — 统一圆角与阴影
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  border-radius: $border-radius-md !important;
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.el-input__wrapper,
+.el-select__wrapper {
+  box-shadow: 0 0 0 1px $border-color inset !important;
+  background-color: #ffffff;
+
+  &:hover {
+    box-shadow: 0 0 0 1px $border-light inset !important;
+  }
+
+  &.is-focus,
+  &.is-focused {
+    box-shadow:
+      0 0 0 1px $primary-color inset,
+      0 0 0 3px rgba(9, 105, 218, 0.3) !important;
+  }
+}
+
+.el-textarea__inner {
+  box-shadow: 0 0 0 1px $border-color inset !important;
+
+  &:hover {
+    box-shadow: 0 0 0 1px $border-light inset !important;
+  }
+
+  &:focus {
+    box-shadow:
+      0 0 0 1px $primary-color inset,
+      0 0 0 3px rgba(9, 105, 218, 0.3) !important;
+  }
+}
+
+// 数字输入框
+.el-input-number {
+  .el-input__wrapper {
+    border-radius: $border-radius-md !important;
+  }
+}
+
+// 单选、多选
+.el-radio__input.is-checked .el-radio__inner,
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: $primary-color;
+  border-color: $primary-color;
+}
+
+.el-radio__input.is-checked + .el-radio__label,
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: $primary-color;
+}
+
+// 开关
+.el-switch.is-checked .el-switch__core {
+  background-color: $primary-color;
+  border-color: $primary-color;
+}
+
+// 表单内主按钮 — GitHub success 绿
+.el-form {
+  .el-button--primary:not(.is-link):not(.is-text) {
+    background: #1f883d;
+    border: 1px solid rgba(31, 35, 40, 0.15);
+    box-shadow: none;
+    color: #fff;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
+
+    &:hover,
+    &:focus {
+      background: #1a7f37;
+      border-color: rgba(31, 35, 40, 0.15);
+      color: #fff;
+      box-shadow: none;
+    }
+
+    &:active {
+      background: #116329;
+    }
+  }
+
+  .el-button:not(.is-link):not(.is-text) {
+    border-radius: $border-radius-md;
+    font-weight: 500;
+  }
+}
+
+// 搜索表单（卡片内行内布局）
+.el-card .el-form--inline,
+.hm-search-form,
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: $form-search-gap 0;
+
+  .el-form-item {
+    margin-right: $form-search-gap;
+    margin-bottom: 0;
+  }
+
+  .el-form-item__label {
+    font-size: 13px;
+  }
+
+  .el-input,
+  .el-select {
+    --el-input-width: 180px;
+  }
+}
+
+// 卡片内纵向表单
+.el-card .el-form:not(.el-form--inline),
+.settings-form,
+.profile-form,
+.password-form {
+  .el-form-item {
+    margin-bottom: $form-item-gap;
+  }
+
+  .el-input,
+  .el-textarea {
+    max-width: 560px;
+  }
+}
+
+// 对话框内表单
+.el-dialog {
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+
+  .el-dialog__header {
+    padding: 16px 20px;
+    margin-right: 0;
+    border-bottom: 1px solid $border-lighter;
+
+    .el-dialog__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: $text-primary;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 20px 24px;
+  }
+
+  .el-dialog__footer {
+    padding: 12px 20px;
+    border-top: 1px solid $border-lighter;
+
+    .el-button--primary:not(.is-link):not(.is-text) {
+      background: $bg-gradient;
+      border: none;
+      box-shadow: 0 2px 8px rgba($primary-color, 0.35);
+
+      &:hover {
+        background: linear-gradient(135deg, $primary-light 0%, $primary-color 100%);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.45);
+      }
+    }
+  }
+
+  .el-form {
+    .el-form-item {
+      margin-bottom: 18px;
+    }
+
+    .el-divider__text {
+      font-size: 13px;
+      font-weight: 500;
+      color: $text-secondary;
+    }
+  }
+}
+
+// 禁用态输入框
+.el-input.is-disabled .el-input__wrapper,
+.el-textarea.is-disabled .el-textarea__inner {
+  background-color: #f6f8fa;
+  box-shadow: 0 0 0 1px $border-lighter inset;
+}
+
+// 上传区域（表单内）
+.el-form .el-upload {
+  .el-button--primary:not(.is-link):not(.is-text) {
+    background: $bg-gradient;
+    border: none;
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "yunqi-application-platform",
+  "version": "1.0.0",
+  "description": "云起应用平台",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:demo": "vite --mode demo",
+    "build": "vue-tsc --noEmit && vite build",
+    "build:demo": "vue-tsc --noEmit && vite build --mode demo",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/",
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e:demo": "playwright test --project=demo",
+    "test:e2e:integration": "playwright test --project=integration",
+    "test:e2e:report": "playwright show-report ../docs/e2e-test-report",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "src/**/*.{scss,css,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.8.4",
+    "element-plus": "^2.9.7",
+    "jsencrypt": "^3.5.4",
+    "markdown-it": "^14.3.0",
+    "nprogress": "^0.2.0",
+    "pinia": "^2.3.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@playwright/test": "^1.62.1",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.17.24",
+    "@types/nprogress": "^0.2.3",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^3.0.8",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-vue": "^9.33.0",
+    "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "jsdom": "^26.0.0",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "sass": "1.85.1",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.26.1",
+    "unplugin-auto-import": "^19.1.1",
+    "unplugin-vue-components": "^28.4.1",
+    "vite": "^5.4.14",
+    "vitest": "^3.0.8",
+    "vue-eslint-parser": "^9.4.3",
+    "vue-tsc": "^2.2.8"
+  }
+}

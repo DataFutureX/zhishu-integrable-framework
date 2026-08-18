@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="YunQi Application Platform">
+  <g fill="#409EFF" stroke="#409EFF" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M56 84 L100 48 L144 84"
+      fill="none"
+      stroke-width="16"
+    />
+    <path
+      d="M48 148
+         C36 148 28 138 28 126
+         C28 114 36 106 48 106
+         C52 86 72 72 96 72
+         C122 72 142 88 146 110
+         C160 112 172 124 172 138
+         C172 152 160 164 146 164
+         H48
+         Z"
+      stroke="none"
+    />
+  </g>
+</svg>

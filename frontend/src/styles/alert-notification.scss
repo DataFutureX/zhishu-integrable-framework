@@ -1,0 +1,80 @@
+@use './variables.scss' as *;
+
+// 右下角阈值告警弹窗（ElNotification customClass）
+.hydro-alert-popup.el-notification {
+  width: 360px;
+  padding: 0;
+  border: 1px solid $border-lighter;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+  box-shadow: $box-shadow-lg;
+
+  .el-notification__icon {
+    display: none;
+  }
+
+  .el-notification__group {
+    margin: 0;
+    width: 100%;
+  }
+
+  .el-notification__title {
+    display: none;
+  }
+
+  .el-notification__content {
+    margin: 0;
+    line-height: normal;
+    color: inherit;
+  }
+
+  .el-notification__closeBtn {
+    top: 12px;
+    right: 12px;
+    color: $text-placeholder;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $text-regular;
+    }
+  }
+
+  // 底部自动关闭进度条
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    transform-origin: left center;
+    animation: hydro-alert-popup-progress 5s linear forwards;
+    background: $primary-color;
+    opacity: 0.55;
+  }
+
+  &--level-1::after {
+    background: #ff0000;
+  }
+
+  &--level-2::after {
+    background: #ffa500;
+  }
+
+  &--level-3::after {
+    background: #e6a23c;
+  }
+
+  &--level-4::after {
+    background: var(--app-primary);
+  }
+}
+
+@keyframes hydro-alert-popup-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

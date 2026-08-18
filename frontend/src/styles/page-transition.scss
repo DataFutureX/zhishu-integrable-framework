@@ -1,0 +1,46 @@
+@use './variables.scss' as *;
+
+// NProgress top progress bar
+#nprogress {
+  pointer-events: none;
+
+  .bar {
+    height: 3px;
+    background: linear-gradient(90deg, $primary-dark 0%, $primary-color 45%, $primary-light 100%);
+    box-shadow: 0 0 10px rgba(9, 105, 218, 0.45);
+  }
+
+  .peg {
+    box-shadow:
+      0 0 10px rgba(9, 105, 218, 0.55),
+      0 0 5px rgba(9, 105, 218, 0.35);
+  }
+}
+
+// page transition animation
+.page-fade-slide-enter-active,
+.page-fade-slide-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease;
+}
+
+.page-fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.24s ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
+}

@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: api-it
+  # 避免 test/resources/application.yml 的 H2 自动装配抢数据源；使用 yunqi.datasource（MySQL）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+
+yunqi:
+  captcha:
+    enabled: false
+  login-crypto:
+    enabled: false
+  table-sharding:
+    enabled: false
+
+# jjwt 要求 HMAC 密钥 >= 256 bit
+jwt:
+  secret: yqap-api-it-secret-key-must-be-at-least-256-bits-long-for-hs256
+  expiration: 3600000
+
+logging:
+  level:
+    root: WARN
+    cn.datafuturex.yunqi: INFO

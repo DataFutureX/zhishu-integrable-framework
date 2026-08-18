@@ -1,0 +1,36 @@
+# 测试环境
+spring:
+  config:
+    activate:
+      on-profile: test
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# 数据库（测试）—— 请按实际测试库修改；可用环境变量覆盖敏感项
+yunqi:
+  datasource:
+    host: ${YUNQI_DB_HOST:localhost}
+    port: ${YUNQI_DB_PORT:3306}
+    database: ${YUNQI_DB_NAME:yunqi_admin_test}
+    username: ${YUNQI_DB_USERNAME:root}
+    password: ${YUNQI_DB_PASSWORD:12345678}
+    params: useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    pool:
+      maximum-pool-size: 30
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  captcha:
+    enabled: true
+  login-crypto:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    cn.datafuturex.yunqi: INFO
+
+jwt:
+  secret: ${JWT_SECRET:yqap-test-secret-key-change-me-must-be-256bits-min}

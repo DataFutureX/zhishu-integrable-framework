@@ -1,0 +1,40 @@
+@use './variables.scss' as *;
+
+// 列表页：搜索 / 操作栏 / 表格卡片紧凑间距
+.search-card,
+.toolbar-card {
+  margin-bottom: 8px;
+}
+
+.search-card {
+  .el-card__body {
+    padding: 12px 16px;
+  }
+
+  .el-form--inline .el-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.toolbar-card {
+  .el-card__body {
+    padding: 10px 16px;
+  }
+}
+
+.table-card {
+  margin-bottom: 0;
+
+  .el-card__body {
+    padding: 0;
+  }
+
+  .pagination-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0;
+    padding: 10px 16px;
+    background-color: #fff;
+    border-top: 1px solid $border-lighter;
+  }
+}

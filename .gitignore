@@ -1,0 +1,67 @@
+# ── OS ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── IDE / Editor ──
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.settings/
+.classpath
+.project
+.factorypath
+
+# ── Logs ──
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Env / Secrets ──
+.env.local
+.env.*.local
+*.pem
+*.key
+!**/src/**/*.key
+
+# ── Temp ──
+*.tmp
+*.bak
+*~
+*.pid
+*.seed
+*.pid.lock
+
+# ── Root / 工具产物 ──
+build/
+uploads/
+
+# ── Docs 测试报告（本地生成，不入库） ──
+docs/api-test-report/
+docs/e2e-test-report/
+docs/unit-test-report/
+
+# ── Frontend (Node / Vite) ──
+node_modules/
+dist/
+dist-ssr/
+.wrangler/
+*.tsbuildinfo
+frontend/src/types/auto-imports.d.ts
+frontend/src/types/components.d.ts
+
+# ── Backend (Maven) ──
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/

@@ -1,0 +1,253 @@
+// 全局 Design Token（由 useThemeStore 动态覆盖）— 默认对齐 GitHub 式浅色
+:root {
+  --app-primary: #0969da;
+  --app-primary-dark: #0550ae;
+  --app-header-bg: #ffffff;
+  --app-header-text: #1f2328;
+  --app-header-shadow: 0 1px 0 #d0d7de;
+  --app-content-bg: #f6f8fa;
+  --app-content-bg-gradient: linear-gradient(180deg, #ffffff 0%, #f6f8fa 100%);
+  --app-surface-bg: #ffffff;
+  --app-surface-muted: #f6f8fa;
+  --app-border-color: #d0d7de;
+  --app-text-primary: #1f2328;
+  --app-text-regular: #424a53;
+  --app-text-secondary: #656d76;
+  --app-sidebar-bg: #ffffff;
+  --app-sidebar-text: #656d76;
+  --app-sidebar-active: #0969da;
+  --app-radius-sm: 6px;
+  --app-radius-md: 6px;
+  --app-radius-lg: 12px;
+  --app-content-padding: 16px;
+  --app-header-height: 56px;
+  --app-subheader-height: 0px;
+  --app-list-gap: 12px;
+  --app-section-padding-y: 12px;
+  --app-section-padding-x: 16px;
+  --app-hero-inner-padding-y: 14px;
+  --app-hero-inner-padding-x: 16px;
+  --app-table-cell-padding-y: 8px;
+  --app-tabs-bar-height: 34px;
+  --app-shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --app-shadow-md: 0 3px 6px rgba(31, 35, 40, 0.04);
+}
+
+html[data-density='compact'] {
+  --app-content-padding: 12px;
+  --app-radius-md: 6px;
+  --app-list-gap: 8px;
+  --app-section-padding-y: 8px;
+  --app-section-padding-x: 14px;
+  --app-hero-inner-padding-y: 10px;
+  --app-hero-inner-padding-x: 14px;
+  --app-table-cell-padding-y: 6px;
+  --app-tabs-bar-height: 30px;
+}
+
+html[data-theme='light'] {
+  .page-hero {
+    box-shadow: none;
+  }
+
+  .list-page__panel {
+    box-shadow: none;
+  }
+
+  .page-hero__wave {
+    background:
+      radial-gradient(ellipse 120% 80% at 100% 0%, rgba(9, 105, 218, 0.04) 0%, transparent 55%),
+      radial-gradient(ellipse 80% 60% at 0% 100%, rgba(31, 136, 61, 0.03) 0%, transparent 50%);
+  }
+
+  .layout-aside {
+    box-shadow: none !important;
+
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      border-radius: 6px;
+      margin: 0 8px;
+      height: 36px;
+      line-height: 36px;
+
+      &:hover {
+        background-color: #f6f8fa !important;
+      }
+    }
+
+    :deep(.el-menu-item.is-active) {
+      background: #ddf4ff !important;
+      color: #0969da !important;
+      font-weight: 600;
+
+      &::before {
+        display: none;
+      }
+    }
+  }
+
+  .layout-tabs:not(.layout-tabs--embedded) {
+    .layout-tabs__item {
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+
+      &:hover {
+        background: #f6f8fa;
+      }
+
+      &--active {
+        color: #1f2328;
+        background: #ffffff;
+        border-color: #d0d7de;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .el-button--primary {
+    --el-button-bg-color: #1f883d;
+    --el-button-border-color: rgba(31, 35, 40, 0.15);
+    --el-button-hover-bg-color: #1a7f37;
+    --el-button-hover-border-color: rgba(31, 35, 40, 0.15);
+    --el-button-active-bg-color: #116329;
+    --el-button-active-border-color: rgba(31, 35, 40, 0.15);
+    --el-button-outline-color: rgba(31, 136, 61, 0.4);
+  }
+}
+
+html[data-theme='default'] {
+  .layout-aside {
+    box-shadow: none !important;
+    border-right: 1px solid #30363d;
+
+    :deep(.el-menu-item.is-active) {
+      background: rgba(56, 139, 253, 0.15) !important;
+
+      &::before {
+        background: #58a6ff;
+        box-shadow: none;
+        width: 2px;
+        border-radius: 0;
+      }
+    }
+
+    :deep(.el-menu-item:hover),
+    :deep(.el-sub-menu__title:hover) {
+      background-color: rgba(177, 186, 196, 0.12) !important;
+    }
+  }
+
+  .hybrid-top-header {
+    border-bottom: 1px solid #d0d7de;
+    color: #1f2328;
+  }
+}
+
+html[data-theme='dark'] {
+  .layout-aside {
+    box-shadow: none !important;
+    border-right: 1px solid #30363d;
+
+    :deep(.el-menu-item.is-active) {
+      background: rgba(56, 139, 253, 0.15) !important;
+
+      &::before {
+        background: #58a6ff;
+        box-shadow: none;
+      }
+    }
+  }
+
+  .page-hero,
+  .list-page__panel {
+    box-shadow: none;
+  }
+}
+
+html[data-content-scheme='dark'] .layout-content-view {
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+html[data-theme='blue'][data-content-scheme='dark'] {
+  .layout-tabs:not(.layout-tabs--embedded) {
+    background: rgba(8, 32, 56, 0.92);
+    border-bottom-color: rgba(56, 189, 248, 0.18);
+
+    .layout-tabs__item {
+      background: rgba(12, 48, 78, 0.55);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      color: rgba(186, 230, 253, 0.82);
+
+      &:hover {
+        color: #bae6fd;
+        background: rgba(56, 189, 248, 0.1);
+      }
+
+      &--active {
+        color: #061018;
+        background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+        border-color: rgba(125, 211, 252, 0.55);
+        font-weight: 700;
+      }
+    }
+
+    .layout-tabs__more {
+      color: rgba(186, 230, 253, 0.75);
+
+      &:hover {
+        color: #7dd3fc;
+        background: rgba(56, 189, 248, 0.1);
+      }
+    }
+  }
+
+  .layout-header--sub .layout-tabs--embedded {
+    .layout-tabs__item {
+      color: rgba(186, 230, 253, 0.82);
+      border-color: rgba(56, 189, 248, 0.18);
+      background: rgba(12, 48, 78, 0.45);
+
+      &:hover {
+        color: #bae6fd;
+        background: rgba(56, 189, 248, 0.1);
+      }
+
+      &--active {
+        color: #061018;
+        background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+        border-color: rgba(125, 211, 252, 0.55);
+      }
+    }
+
+    .layout-tabs__more {
+      color: rgba(186, 230, 253, 0.75);
+      border-color: rgba(56, 189, 248, 0.22);
+      background: rgba(12, 48, 78, 0.45);
+    }
+  }
+
+  .layout-content-view {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.25);
+
+      &:hover {
+        background: rgba(56, 189, 248, 0.4);
+      }
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(6, 16, 24, 0.35);
+    }
+  }
+}

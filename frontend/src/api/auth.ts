@@ -62,3 +62,25 @@ export const getPublicKeyApi = () => {
 export const logoutApi = () => {
   return post('/auth/logout')
 }
+
+/** SSO 换票请求 */
+export interface SsoExchangeRequest {
+  ticket: string
+  redirect?: string
+}
+
+/** SSO 换票响应 */
+export interface SsoExchangeResponse {
+  token: string
+  expiration: number
+  redirect: string
+}
+
+/**
+ * 伙伴 Ticket 换取云起业务 JWT
+ * POST /api/v1/auth/sso/exchange
+ */
+export const exchangeSsoTicketApi = (data: SsoExchangeRequest) => {
+  // 换票失败的 401 表示票据无效，不是会话过期，勿触发全局登出
+  return post<SsoExchangeResponse>('/auth/sso/exchange', data, { skipErrorMessage: true })
+}

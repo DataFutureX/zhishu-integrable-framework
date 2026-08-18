@@ -62,6 +62,36 @@ yunqi:
     enabled: true
     key-size: 2048
     key-expire-seconds: 300
+  # 伙伴 SSO（Ticket 换票）；开发默认开启，生产见 application-prod.yml
+  sso:
+    enabled: true
+    audience: yunqi-application-platform
+    clock-skew-seconds: 30
+    jti-ttl-seconds: 180
+    default-redirect: /home/dashboard
+    rate-limit-window-seconds: 60
+    rate-limit-max-requests: 30
+    partners:
+      wanxiang:
+        enabled: true
+        issuer: wanxiang
+        display-name: 万象
+        algorithm: RS256
+        public-key: classpath:sso/wanxiang.pem
+        public-keys:
+          wanxiang-2026: classpath:sso/wanxiang.pem
+        ticket-ttl-max-seconds: 120
+        username-claim: username
+      shuzhi-iot:
+        enabled: true
+        issuer: shuzhi-iot
+        display-name: 数智IoT
+        algorithm: RS256
+        public-key: classpath:sso/shuzhi-iot.pem
+        public-keys:
+          shuzhi-iot-2026: classpath:sso/shuzhi-iot.pem
+        ticket-ttl-max-seconds: 120
+        username-claim: username
   # 月分表监控与预建（操作日志等）
   table-sharding:
     enabled: true

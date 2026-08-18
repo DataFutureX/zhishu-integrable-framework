@@ -50,13 +50,18 @@ public class OperationLogServiceImpl implements OperationLogService {
 
     @Override
     public void recordLogin(String username, String ipAddress, String userAgent,
-                            boolean success, String errorMessage) {
+                            boolean success, String errorMessage, String channel) {
+        String safeChannel = StringUtils.hasText(channel) ? channel : "LOCAL";
+        String method = "LOCAL".equals(safeChannel)
+                ? "POST /api/v1/auth/login"
+                : "POST /api/v1/auth/sso/exchange";
         OperationLogEntity entity = new OperationLogEntity();
         entity.setUsername(username);
         entity.setModule("认证");
         entity.setOperation("LOGIN");
-        entity.setMethod("POST /api/v1/auth/login");
-        entity.setRequestParams("{\"username\":\"" + maskUsername(username) + "\"}");
+        entity.setMethod(method);
+        entity.setRequestParams("{\"username\":\"" + maskUsername(username)
+                + "\",\"channel\":\"" + escapeJson(safeChannel) + "\"}");
         entity.setResponseCode(success ? 200 : 500);
         entity.setIpAddress(ipAddress);
         entity.setUserAgent(truncate(userAgent, 500));
@@ -65,6 +70,13 @@ public class OperationLogServiceImpl implements OperationLogService {
         entity.setErrorMessage(errorMessage);
         entity.setCreateTime(LocalDateTime.now());
         recordAsync(entity);
+    }
+
+    private static String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override

@@ -195,6 +195,17 @@ ZX2DyIQ6ggb67B0cNwIDAQAB
   if (method === 'POST' && path === '/auth/login') {
     return { token: DEMO_TOKEN, expiration: Date.now() + 86400000 }
   }
+  if (method === 'POST' && path === '/auth/sso/exchange') {
+    const redirect =
+      typeof _body.redirect === 'string' && _body.redirect.startsWith('/') && !_body.redirect.startsWith('//')
+        ? _body.redirect
+        : '/home/dashboard'
+    return {
+      token: DEMO_TOKEN,
+      expiration: Date.now() + 86400000,
+      redirect,
+    }
+  }
   if (method === 'POST' && path === '/auth/logout') {
     return okVoid()
   }

@@ -4,6 +4,7 @@ Thumbs.db
 Desktop.ini
 
 # ── IDE / Editor ──
+.cursor/mcp.json
 .idea/
 *.iml
 *.ipr
@@ -33,6 +34,9 @@ pnpm-debug.log*
 *.pem
 *.key
 !**/src/**/*.key
+# 允许入库的伙伴公钥（私钥仍忽略）
+!backend/yqap-core/src/main/resources/sso/*.pem
+!**/src/main/resources/sso/*.pem
 
 # ── Temp ──
 *.tmp
@@ -50,6 +54,7 @@ uploads/
 docs/api-test-report/
 docs/e2e-test-report/
 docs/unit-test-report/
+docs/dev-keys/out/
 
 # ── Frontend (Node / Vite) ──
 node_modules/

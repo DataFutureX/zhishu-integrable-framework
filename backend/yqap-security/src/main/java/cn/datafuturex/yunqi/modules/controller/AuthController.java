@@ -12,6 +12,8 @@ import cn.datafuturex.yunqi.modules.dto.CaptchaVerifyResponseDTO;
 import cn.datafuturex.yunqi.modules.dto.LoginRequestDTO;
 import cn.datafuturex.yunqi.modules.dto.LoginResponseDTO;
 import cn.datafuturex.yunqi.modules.dto.PublicKeyResponseDTO;
+import cn.datafuturex.yunqi.modules.dto.SsoExchangeRequestDTO;
+import cn.datafuturex.yunqi.modules.dto.SsoExchangeResponseDTO;
 import cn.datafuturex.yunqi.modules.entity.UserEntity;
 import cn.datafuturex.yunqi.modules.service.CaptchaService;
 import cn.datafuturex.yunqi.modules.service.UserService;
@@ -19,6 +21,11 @@ import cn.datafuturex.yunqi.security.DecryptedCredentials;
 import cn.datafuturex.yunqi.security.LoginAttemptService;
 import cn.datafuturex.yunqi.security.LoginCryptoService;
 import cn.datafuturex.yunqi.security.TokenBlacklistService;
+import cn.datafuturex.yunqi.config.SsoProperties;
+import cn.datafuturex.yunqi.security.sso.LoginChannel;
+import cn.datafuturex.yunqi.security.sso.SsoException;
+import cn.datafuturex.yunqi.security.sso.SsoExchangeService;
+import cn.datafuturex.yunqi.security.sso.SsoRateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +63,9 @@ public class AuthController {
     private final LoginAttemptService loginAttemptService;
     private final AuthAuditApi authAuditApi;
     private final TokenBlacklistService tokenBlacklistService;
+    private final SsoExchangeService ssoExchangeService;
+    private final SsoProperties ssoProperties;
+    private final SsoRateLimiter ssoRateLimiter;
 
     @GetMapping("/public-key")
     @Operation(summary = "获取登录公钥", description = "返回 RSA 公钥，前端用于加密用户名和密码")
@@ -87,7 +97,7 @@ public class AuthController {
         if (captchaProperties.isEnabled()) {
             if (request.captchaToken() == null || !captchaService.consumeToken(request.captchaToken())) {
                 log.warn("登录失败: 滑动验证码无效");
-                authAuditApi.recordLogin(null, clientIp, userAgent, false, "请先完成滑动验证");
+                authAuditApi.recordLogin(null, clientIp, userAgent, false, "请先完成滑动验证", LoginChannel.LOCAL);
                 return Result.error("请先完成滑动验证");
             }
         }
@@ -100,14 +110,14 @@ public class AuthController {
             password = credentials.password();
         } catch (IllegalArgumentException e) {
             log.warn("登录失败: {}", e.getMessage());
-            authAuditApi.recordLogin(null, clientIp, userAgent, false, "登录凭证无效或已过期");
+            authAuditApi.recordLogin(null, clientIp, userAgent, false, "登录凭证无效或已过期", LoginChannel.LOCAL);
             return Result.error("登录凭证无效或已过期");
         }
 
         Optional<String> lockMessage = loginAttemptService.checkLocked(username);
         if (lockMessage.isPresent()) {
             log.warn("登录失败: 用户 {} 处于锁定状态", username);
-            authAuditApi.recordLogin(username, clientIp, userAgent, false, lockMessage.get());
+            authAuditApi.recordLogin(username, clientIp, userAgent, false, lockMessage.get(), LoginChannel.LOCAL);
             return Result.error(lockMessage.get());
         }
 
@@ -117,20 +127,20 @@ public class AuthController {
         if (user == null) {
             log.warn("登录失败: 用户不存在, username={}", username);
             String failureMessage = loginAttemptService.recordFailure(username);
-            authAuditApi.recordLogin(username, clientIp, userAgent, false, failureMessage);
+            authAuditApi.recordLogin(username, clientIp, userAgent, false, failureMessage, LoginChannel.LOCAL);
             return Result.error(failureMessage);
         }
 
         if (user.getStatus() == null || user.getStatus() != 1) {
             log.warn("登录失败: 用户已禁用, username={}", username);
-            authAuditApi.recordLogin(username, clientIp, userAgent, false, "账号已被禁用");
+            authAuditApi.recordLogin(username, clientIp, userAgent, false, "账号已被禁用", LoginChannel.LOCAL);
             return Result.error("账号已被禁用，请联系管理员");
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.warn("登录失败: 密码错误, username={}", username);
             String failureMessage = loginAttemptService.recordFailure(username);
-            authAuditApi.recordLogin(username, clientIp, userAgent, false, failureMessage);
+            authAuditApi.recordLogin(username, clientIp, userAgent, false, failureMessage, LoginChannel.LOCAL);
             return Result.error(failureMessage);
         }
 
@@ -143,9 +153,63 @@ public class AuthController {
         }
 
         log.info("用户 {} 登录成功", user.getUsername());
-        authAuditApi.recordLogin(user.getUsername(), clientIp, userAgent, true, null);
+        authAuditApi.recordLogin(user.getUsername(), clientIp, userAgent, true, null, LoginChannel.LOCAL);
 
         return Result.success(new LoginResponseDTO(token, expiration));
+    }
+
+    @PostMapping("/sso/exchange")
+    @Operation(summary = "SSO 换票", description = "校验伙伴签发的短期 Ticket，签发云起业务 JWT（无需验证码与密码）")
+    public Result<SsoExchangeResponseDTO> exchangeSso(
+            @RequestBody SsoExchangeRequestDTO request,
+            HttpServletRequest httpRequest) {
+        String clientIp = ClientIpUtils.getClientIp(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        if (request == null) {
+            authAuditApi.recordLogin(null, clientIp, userAgent, false, "票据不能为空", "UNKNOWN");
+            return Result.error(400, "票据不能为空");
+        }
+
+        if (!ssoRateLimiter.tryAcquire(
+                clientIp,
+                ssoProperties.getRateLimitWindowSeconds(),
+                ssoProperties.getRateLimitMaxRequests())) {
+            log.warn("SSO 换票限流: ip={}", clientIp);
+            authAuditApi.recordLogin(null, clientIp, userAgent, false, "请求过于频繁", "UNKNOWN");
+            return Result.error(429, "请求过于频繁，请稍后再试");
+        }
+
+        if (StringUtils.hasText(request.redirect()) && isExplicitlyUnsafeRedirect(request.redirect())) {
+            authAuditApi.recordLogin(null, clientIp, userAgent, false, "回调地址不合法", "UNKNOWN");
+            return Result.error(400, "回调地址不合法");
+        }
+
+        try {
+            var result = ssoExchangeService.exchange(request.ticket(), request.redirect());
+            authAuditApi.recordLogin(
+                    result.username(),
+                    clientIp,
+                    userAgent,
+                    true,
+                    null,
+                    result.channel());
+            return Result.success(result.response());
+        } catch (SsoException e) {
+            String channel = StringUtils.hasText(e.getChannel()) ? e.getChannel() : "UNKNOWN";
+            authAuditApi.recordLogin(e.getUsername(), clientIp, userAgent, false, e.getMessage(), channel);
+            return Result.error(e.getCode(), e.getMessage());
+        }
+    }
+
+    private boolean isExplicitlyUnsafeRedirect(String redirect) {
+        String value = redirect.trim();
+        return !value.startsWith("/")
+                || value.startsWith("//")
+                || value.contains("://")
+                || value.contains("\\")
+                || value.contains("\r")
+                || value.contains("\n");
     }
 
     @PostMapping("/logout")

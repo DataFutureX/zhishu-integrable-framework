@@ -14,6 +14,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录', requiresAuth: false },
   },
   {
+    path: '/sso/callback',
+    name: 'SsoCallback',
+    component: () => import('@/views/sso/SsoCallback.vue'),
+    meta: { title: '单点登录', requiresAuth: false },
+  },
+  {
     path: '/portal',
     name: 'Portal',
     component: () => import('@/views/portal/PortalLanding.vue'),
@@ -112,6 +118,11 @@ router.beforeEach(async (to, _from, next) => {
     } else {
       next()
     }
+    return
+  }
+
+  if (to.path === '/sso/callback' || to.name === 'SsoCallback') {
+    next()
     return
   }
 

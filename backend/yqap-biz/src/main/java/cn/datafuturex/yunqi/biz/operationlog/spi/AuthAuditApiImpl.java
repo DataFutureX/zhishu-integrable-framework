@@ -15,7 +15,8 @@ public class AuthAuditApiImpl implements AuthAuditApi {
     private final OperationLogService operationLogService;
 
     @Override
-    public void recordLogin(String username, String ipAddress, String userAgent, boolean success, String errorMessage) {
-        operationLogService.recordLogin(username, ipAddress, userAgent, success, errorMessage);
+    public void recordLogin(String username, String ipAddress, String userAgent,
+                            boolean success, String errorMessage, String channel) {
+        operationLogService.recordLogin(username, ipAddress, userAgent, success, errorMessage, channel);
     }
 }

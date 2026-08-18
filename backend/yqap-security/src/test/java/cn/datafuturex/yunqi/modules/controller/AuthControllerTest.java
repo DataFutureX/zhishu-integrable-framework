@@ -17,6 +17,9 @@ import cn.datafuturex.yunqi.modules.service.UserService;
 import cn.datafuturex.yunqi.security.LoginAttemptService;
 import cn.datafuturex.yunqi.security.LoginCryptoService;
 import cn.datafuturex.yunqi.security.TokenBlacklistService;
+import cn.datafuturex.yunqi.config.SsoProperties;
+import cn.datafuturex.yunqi.security.sso.SsoExchangeService;
+import cn.datafuturex.yunqi.security.sso.SsoRateLimiter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,6 +90,15 @@ class AuthControllerTest {
 
     @MockitoBean
     private PermissionService permissionService;
+
+    @MockitoBean
+    private SsoExchangeService ssoExchangeService;
+
+    @MockitoBean
+    private SsoProperties ssoProperties;
+
+    @MockitoBean
+    private SsoRateLimiter ssoRateLimiter;
 
     private UserEntity adminUser;
 

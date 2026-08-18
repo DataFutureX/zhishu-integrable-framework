@@ -26,6 +26,32 @@ yunqi:
     enabled: true
   login-crypto:
     enabled: true
+  # 生产默认关闭；开启时通过环境变量注入公钥文件路径
+  sso:
+    enabled: ${YUNQI_SSO_ENABLED:false}
+    audience: ${YUNQI_SSO_AUDIENCE:yunqi-application-platform}
+    clock-skew-seconds: ${YUNQI_SSO_CLOCK_SKEW_SECONDS:30}
+    jti-ttl-seconds: ${YUNQI_SSO_JTI_TTL_SECONDS:180}
+    default-redirect: ${YUNQI_SSO_DEFAULT_REDIRECT:/home/dashboard}
+    rate-limit-window-seconds: ${YUNQI_SSO_RATE_LIMIT_WINDOW_SECONDS:60}
+    rate-limit-max-requests: ${YUNQI_SSO_RATE_LIMIT_MAX_REQUESTS:30}
+    partners:
+      wanxiang:
+        enabled: ${YUNQI_SSO_WANXIANG_ENABLED:true}
+        issuer: wanxiang
+        display-name: 万象
+        algorithm: RS256
+        public-key: ${YUNQI_SSO_WANXIANG_PUBLIC_KEY:classpath:sso/wanxiang.pem}
+        ticket-ttl-max-seconds: 120
+        username-claim: username
+      shuzhi-iot:
+        enabled: ${YUNQI_SSO_SHUZHI_IOT_ENABLED:true}
+        issuer: shuzhi-iot
+        display-name: 数智IoT
+        algorithm: RS256
+        public-key: ${YUNQI_SSO_SHUZHI_IOT_PUBLIC_KEY:classpath:sso/shuzhi-iot.pem}
+        ticket-ttl-max-seconds: 120
+        username-claim: username
 
 logging:
   level:

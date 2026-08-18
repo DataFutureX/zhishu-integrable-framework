@@ -18,9 +18,20 @@ public interface OperationLogService {
     void recordAsync(OperationLogEntity entity);
 
     /**
-     * 记录登录操作
+     * 记录登录操作（默认渠道 LOCAL）
      */
-    void recordLogin(String username, String ipAddress, String userAgent, boolean success, String errorMessage);
+    default void recordLogin(String username, String ipAddress, String userAgent,
+                             boolean success, String errorMessage) {
+        recordLogin(username, ipAddress, userAgent, success, errorMessage, "LOCAL");
+    }
+
+    /**
+     * 记录登录操作
+     *
+     * @param channel 渠道编码：LOCAL / WANXIANG / SHUZHI_IOT 等，写入 requestParams
+     */
+    void recordLogin(String username, String ipAddress, String userAgent,
+                     boolean success, String errorMessage, String channel);
 
     /**
      * 分页查询操作日志

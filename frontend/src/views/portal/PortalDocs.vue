@@ -88,7 +88,7 @@ interface PortalDocMeta {
   repoUrl: string
 }
 
-const GITHUB_BLOB = 'https://github.com/DataFutureX/yunqi-application-platform/blob/master'
+const GITHUB_BLOB = 'https://github.com/DataFutureX/zhishu-integrable-framework/blob/master'
 
 const docs: PortalDocMeta[] = [
   {

@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 echo "========================================"
-echo "  云起应用平台 - 前端单元测试"
+echo "  知枢可集成框架 - 前端单元测试"
 echo "========================================"
 echo ""
 echo "  执行 Vitest（permission / dynamicRoutes / format）"

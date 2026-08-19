@@ -1,0 +1,69 @@
+# 生产环境
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# 数据库（生产）—— 敏感信息务必通过环境变量注入，勿将真实密码提交仓库
+yunqi:
+  datasource:
+    host: ${YUNQI_DB_HOST}
+    port: ${YUNQI_DB_PORT:5432}
+    database: ${YUNQI_DB_NAME:zhishu_integrable_framework}
+    username: ${YUNQI_DB_USERNAME}
+    password: ${YUNQI_DB_PASSWORD}
+    params: sslmode=require
+    pool:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  captcha:
+    enabled: true
+  login-crypto:
+    enabled: true
+  # 生产默认关闭；开启时通过环境变量注入公钥文件路径
+  sso:
+    enabled: ${YUNQI_SSO_ENABLED:false}
+    audience: ${YUNQI_SSO_AUDIENCE:zhishu-integrable-framework}
+    clock-skew-seconds: ${YUNQI_SSO_CLOCK_SKEW_SECONDS:30}
+    jti-ttl-seconds: ${YUNQI_SSO_JTI_TTL_SECONDS:180}
+    default-redirect: ${YUNQI_SSO_DEFAULT_REDIRECT:/home/dashboard}
+    rate-limit-window-seconds: ${YUNQI_SSO_RATE_LIMIT_WINDOW_SECONDS:60}
+    rate-limit-max-requests: ${YUNQI_SSO_RATE_LIMIT_MAX_REQUESTS:30}
+    partners:
+      wanxiang:
+        enabled: ${YUNQI_SSO_WANXIANG_ENABLED:true}
+        issuer: wanxiang
+        display-name: 万象
+        algorithm: RS256,SM2
+        public-key: ${YUNQI_SSO_WANXIANG_PUBLIC_KEY:classpath:sso/wanxiang.pem}
+        ticket-ttl-max-seconds: 120
+        username-claim: username
+      shuzhi-iot:
+        enabled: ${YUNQI_SSO_SHUZHI_IOT_ENABLED:true}
+        issuer: shuzhi-iot
+        display-name: 数智IoT
+        algorithm: RS256,SM2
+        public-key: ${YUNQI_SSO_SHUZHI_IOT_PUBLIC_KEY:classpath:sso/shuzhi-iot.pem}
+        ticket-ttl-max-seconds: 120
+        username-claim: username
+
+logging:
+  level:
+    root: WARN
+    cn.datafuturex.zhishu: INFO
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

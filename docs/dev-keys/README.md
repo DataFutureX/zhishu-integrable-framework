@@ -11,7 +11,7 @@
 
 - 私钥**不得**进入 git（根目录 `.gitignore` 已忽略 `*.pem`）。
 - 生产环境由各伙伴自行保管私钥；云起只登记公钥文件路径（见 `application-prod.yml` 环境变量）。
-- 重新生成密钥对后，需同步替换 `backend/yqap-core/src/main/resources/sso/*.pem` 中的公钥。
+- 重新生成密钥对后，需同步替换 `backend/zhishu-core/src/main/resources/sso/*.pem` 中的公钥。
 
 签发 Ticket 时 Header 建议携带：
 

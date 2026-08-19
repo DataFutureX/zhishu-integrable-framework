@@ -1,8 +1,8 @@
-# 云起应用平台 · 快速开始
+# 知枢可集成框架 · 快速开始
 
-一套面向企业数字化应用建设的模块化开发基础平台（MIT），简称 **YQAP**（YunQi Application Platform）。本文综合 [前端 README](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/frontend/README.md) 与 [后端 README](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/backend/README.md)，帮助你尽快跑通**演示**或**前后端联调**。
+一套面向企业数字化与智能化应用集成的模块化开发底座（MIT），简称 **ZSIF**（ZhiShu Integrable Framework）。本工程基于 [云起应用平台](https://github.com/DataFutureX/yunqi-application-platform)（YQAP）构建，继承其前后端一体架构、权限体系与伙伴 SSO 能力，面向可集成、可扩展的应用场景二次演进。
 
-**在线演示**：[https://yunqi.datafuturex.cn](https://yunqi.datafuturex.cn)　·　**源码**：[GitHub](https://github.com/DataFutureX/yunqi-application-platform) / [Gitee](https://gitee.com/DataFutureX/yunqi-application-platform)
+**上游底座**：[云起应用平台](https://github.com/DataFutureX/yunqi-application-platform)（`upstream` 远程）
 
 ## 目录
 
@@ -13,7 +13,7 @@
 - [默认账号](#默认账号)
 - [联调验证清单](#联调验证清单)
 - [技术栈一览](#技术栈一览)
-- [源码仓库](#源码仓库)
+- [工程结构说明](#工程结构说明)
 - [常见问题](#常见问题)
 - [下一步](#下一步)
 - [许可证](#许可证)
@@ -44,26 +44,21 @@
 |:---:|:---:|:---:|:---:|
 | ![系统监控](./screenshot/11-monitor.png) | ![API 文档](./screenshot/12-api-docs.png) | ![个人信息](./screenshot/13-profile.png) | ![修改密码](./screenshot/14-change-password.png) |
 
-> 截图资源见 [`screenshot/`](./screenshot/)。门户分屏（点击顶部导航后截视口）：`node scripts/capture-portal-sections.mjs`；其它页面：`node scripts/capture-demo-screenshots.mjs`。前端非 3000 端口时设置 `DEMO_BASE_URL`（如 `http://localhost:3001`）。
+> 截图资源见 [`screenshot/`](./screenshot/)。门户分屏：`node scripts/capture-portal-sections.mjs`；其它页面：`node scripts/capture-demo-screenshots.mjs`。
 
 ## 两种体验路径
 
 | 路径 | 适用场景 | 需要准备 |
 |------|----------|----------|
 | **A. 前端演示模式** | 快速浏览界面与交互，不接真实 API | Node.js ≥ 18、npm ≥ 9 |
-| **B. 前后端联调** | 完整权限、持久化数据、Swagger 调试 | 另需 JDK 21、Maven 3.9+、MySQL 8.0+ |
+| **B. 前后端联调** | 完整权限、持久化数据、Swagger 调试 | 另需 JDK 21、Maven 3.9+、PostgreSQL 14+ |
 
 建议：先走路径 A 熟悉产品，再按路径 B 启动后端完成真实联调。
 
 ## 路径 A：仅前端演示（无需后端）
 
 ```bash
-# GitHub
-git clone git@github.com:DataFutureX/yunqi-application-platform.git
-# 或 Gitee
-git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
-
-cd yunqi-application-platform/frontend
+cd zhishu-integrable-framework/frontend
 npm install
 npm run dev:demo
 ```
@@ -72,21 +67,17 @@ npm run dev:demo
 
 演示账号：`demo` / `demo123`（演示态任意账号密码均可登录）。
 
-演示模式通过 `--mode demo` 加载 `.env.demo`（`VITE_DEMO_MODE=true`），Axios 挂载内置 Mock：
+演示模式通过 `--mode demo` 加载 `.env.demo`（`VITE_DEMO_MODE=true`），Axios 挂载内置 Mock。
 
-- 覆盖登录、公钥、权限、CRUD、监控、审计等与正式接口对齐的行为
-- 数据存于内存会话，刷新后回到初始 Mock
-- 无后端时 Swagger 页展示空状态说明
-
-可选启动脚本（在 `frontend/` 目录）：`start.bat` / `.\start.ps1` / `./start.sh`（可选开发或演示模式）。
+可选启动脚本（在 `frontend/` 目录）：`start.bat` / `.\start.ps1` / `./start.sh`。
 
 ## 路径 B：前后端联调
 
 本仓库为前后端一体的 monorepo：
 
 ```text
-yunqi-application-platform/
-├── backend/     # Java 后端
+zhishu-integrable-framework/
+├── backend/     # Java 后端（继承 zhishu-* 模块结构）
 ├── frontend/    # Vue 前端
 ├── start.bat    # 根目录一键启动（Windows）
 ├── start.ps1    # 根目录一键启动（PowerShell）
@@ -109,15 +100,11 @@ chmod +x start.sh
 ./start.sh
 ```
 
-脚本会分别启动后端（`yqap-core`）与前端（`npm run dev`）：
-
 | 地址 | 说明 |
 |------|------|
 | http://localhost:3000 | 前端 |
 | http://localhost:8080 | 后端 |
 | http://localhost:8080/swagger-ui.html | API 文档 |
-
-> Windows / PowerShell 会打开两个独立控制台窗口；Linux / macOS 在后台运行，日志写入根目录 `logs/`，`Ctrl+C` 结束全部进程。
 
 ### 1. 启动后端
 
@@ -125,34 +112,31 @@ chmod +x start.sh
 
 - JDK **21+**
 - Maven **3.9+**
-- MySQL **8.0+**
+- PostgreSQL **14+**
 
 #### 初始化数据库
 
-若尚未克隆，先按路径 A 的方式克隆仓库，然后：
-
 ```bash
-cd yunqi-application-platform/backend
-mysql -u root -p < yqap-core/src/main/resources/db/init.sql
+cd backend
+psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init.sql
 ```
 
-默认库名：`yunqi_application_platform`。
+默认库名：`zhishu_integrable_framework`。
 
 #### 修改数据源
 
-编辑 `yqap-core/src/main/resources/application-dev.yml`：
+编辑 `zhishu-core/src/main/resources/application-dev.yml`：
 
 ```yaml
 yunqi:
   datasource:
     host: localhost
-    port: 3306
-    database: yunqi_application_platform
-    username: root
+    port: 5432
+    database: zhishu_integrable_framework
+    username: postgres
     password: 你的密码
 ```
-
-数据源使用自定义前缀 `yunqi.datasource.*`（非 `spring.datasource`）。
 
 #### 启动服务
 
@@ -165,51 +149,18 @@ chmod +x start-dev.sh
 ./start-dev.sh
 
 # 或 Maven
-mvn -pl yqap-core -am spring-boot:run -DskipTests
+mvn -pl zhishu-core -am spring-boot:run -DskipTests
 ```
-
-启动成功后可访问：
-
-| 地址 | 说明 |
-|------|------|
-| http://localhost:8080 | HTTP 服务 |
-| http://localhost:8080/swagger-ui.html | API 文档（dev 放行） |
-| http://localhost:8080/api/v1/system/health | 健康检查（无需登录） |
-
-> **安全提示**：默认账户与 `jwt.secret` 仅用于本地开发；上线前务必修改。
 
 ### 2. 启动前端（联调模式）
 
 ```bash
-cd yunqi-application-platform/frontend
-```
-
-确认 `.env.development`：
-
-```env
-VITE_PORT=3000
-VITE_API_BASE_URL=http://localhost:8080
-```
-
-```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-开发服务器监听 `0.0.0.0`：
-
-- 本机：[http://localhost:3000](http://localhost:3000)
-- 局域网：`http://本机IP:3000`
-
-前端请求走相对路径 `/api/v1/...`，由 Vite 代理转发到 `VITE_API_BASE_URL`。
-
-### 3. 登录对接顺序（前后端一致）
-
-1. `GET /api/v1/auth/public-key` — RSA 公钥与 `keyId`
-2. `GET /api/v1/auth/captcha` — 滑动验证码
-3. `POST /api/v1/auth/captcha/verify` — 获得 `captchaToken`
-4. `POST /api/v1/auth/login` — 提交加密用户名/密码 + `captchaToken` + `keyId`，返回 JWT
-5. 后续请求头：`Authorization: Bearer <token>`
+确认 `.env.development` 中 `VITE_API_BASE_URL=http://localhost:8080`。
 
 联调默认管理员：`admin` / `admin123`。
 
@@ -226,8 +177,7 @@ npm run dev
 2. 打开 http://localhost:3000/portal ，再进入登录页
 3. 使用 `admin / admin123` 完成滑动验证码登录
 4. 确认侧栏菜单由 `GET /menus/current-user` 动态加载
-5. 需要时可打开前端「API 文档」页或后端 Swagger 对照接口
-6. （可选）在已启动前后端的前提下执行前端冒烟：`cd frontend && npm run test:e2e:integration`（日常无后端可用 `npm run test:e2e:demo`）
+5. （可选）`cd frontend && npm run test:e2e:integration`
 
 ## 技术栈一览
 
@@ -248,23 +198,29 @@ npm run dev
 |------|------|
 | 语言 / 框架 | Java 21、Spring Boot 4.1 |
 | 安全 | Spring Security 7 + JWT |
-| 持久化 | MyBatis-Plus 3.5、MySQL 8 |
+| 持久化 | MyBatis-Plus 3.5、PostgreSQL 14 |
 | 模块 | Spring Modulith（`api` → `security` → `biz` → `core`） |
 | 文档 | SpringDoc / Swagger UI |
 
-## 源码仓库
+## 工程结构说明
 
-| 平台 | 仓库 | 说明 |
-|------|------|------|
-| GitHub | `git@github.com:DataFutureX/yunqi-application-platform.git` | 国际镜像，默认 `origin` |
-| Gitee | `git@gitee.com:DataFutureX/yunqi-application-platform.git` | 国内镜像，远程名 `gitee` |
+| 项 | 值 |
+|----|-----|
+| 中文名称 | 知枢可集成框架 |
+| 英文名称 | ZhiShu Integrable Framework |
+| 简称 | ZSIF |
+| 前端包名 | `zhishu-integrable-framework` |
+| 后端模块 | `zhishu-*`（继承云起工程结构） |
+| Java 包名 | `cn.datafuturex.zhishu` |
+| 数据库 | `zhishu_integrable_framework` |
+| 上游远程 | `upstream` → `git@github.com:DataFutureX/yunqi-application-platform.git` |
 
-| 路径 | 内容说明 |
-|------|----------|
-| [`frontend/`](./frontend/) | 前端源码（Vue 3） |
-| [`backend/`](./backend/) | 后端源码（Java / Spring Boot） |
-| [`screenshot/`](./screenshot/) | 界面截图资源 |
-| [`LICENSE`](./LICENSE) | MIT 开源许可证 |
+从上游同步更新：
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
 
 ## 常见问题
 
@@ -277,37 +233,16 @@ Remove-Item -Recurse -Force node_modules, package-lock.json -ErrorAction Silentl
 npm install
 ```
 
-**前端端口被占用**
-
-修改 `frontend/.env.development` 中 `VITE_PORT`，或结束占用 3000 的进程。
-
 **后端数据库连接被拒**
 
-- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_application_platform`
-- 检查 `backend/yqap-core/src/main/resources/application-dev.yml` 中 `yunqi.datasource` 账号密码
-
-**联调登录 401**
-
-- 确认走完验证码 + RSA 登录链路（不可跳过）
-- Token 是否过期，或后端是否已重启导致密钥变化
-
-**联调进系统后 403**
-
-- 当前角色缺少对应 BUTTON 权限；用 `admin` 验证，或给角色分配菜单按钮
-- 前端路由 `meta.permissions` 与后端菜单 BUTTON 的 `routeName` 需一致
-
-**跨域 / 代理异常**
-
-- 开发联调请使用 `npm run dev`（非 demo），并确认 `VITE_API_BASE_URL=http://localhost:8080`
-- 修改环境变量后需重启 Vite
+- 确认 PostgreSQL 已启动，且已执行 `init.sql` 初始化 `zhishu_integrable_framework`
+- 检查 `backend/zhishu-core/src/main/resources/application-dev.yml` 中 `yunqi.datasource` 账号密码
 
 ## 下一步
 
-- 产品门户文档（快速开始 + 单点登录）：本地 [http://localhost:3000/docs](http://localhost:3000/docs)，或在线演示站 `/docs`
-- 前端完整说明：[frontend/README.md](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/frontend/README.md)（项目结构、配置、部署、开发规范）
-- 菜单与权限对照：[frontend/docs/MENU_ROUTES.json](./frontend/docs/MENU_ROUTES.json)
-- 后端完整说明：[backend/README.md](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/backend/README.md)
-- API 契约：后端 Swagger `http://localhost:8080/swagger-ui.html`
+- 产品门户文档：本地 [http://localhost:3000/docs](http://localhost:3000/docs)
+- 前端完整说明：[frontend/README.md](./frontend/README.md)
+- 后端完整说明：[backend/README.md](./backend/README.md)
 - 单点登录协议：[docs/单点登录对接说明.md](./docs/单点登录对接说明.md)
 
 ## 许可证

@@ -41,7 +41,7 @@
           <img
             class="portal-preview__shot"
             :src="previewPng"
-            alt="云起应用平台工作台界面"
+            alt="知枢可集成框架工作台界面"
             width="1280"
             height="800"
             loading="eager"
@@ -80,7 +80,7 @@
               rel="noopener noreferrer"
             >
               <span class="portal-repo-card__platform">{{ repo.label }}</span>
-              <span class="portal-repo-card__path">DataFutureX/yunqi-application-platform</span>
+              <span class="portal-repo-card__path">DataFutureX/zhishu-integrable-framework</span>
               <span class="portal-repo-card__action">查看仓库 →</span>
             </a>
           </div>
@@ -124,9 +124,9 @@
             <p class="portal-section-eyebrow">Tech Stack</p>
             <h2 class="portal-section-title">统一技术架构，前后端协同交付</h2>
             <p class="portal-section-desc">
-              前端包 <code>yunqi-application-platform</code>，后端 Maven 模块
-              <code>yqap-*</code>，包名
-              <code>cn.datafuturex.yunqi</code>，工程边界清晰、便于二次开发。
+              前端包 <code>zhishu-integrable-framework</code>，后端 Maven 模块
+              <code>zhishu-*</code>（继承云起工程结构），包名
+              <code>cn.datafuturex.zhishu</code>，工程边界清晰、便于二次开发。
             </p>
           </div>
           <ul class="portal-stack">
@@ -140,9 +140,9 @@
 
       <section class="portal-cta">
         <div class="portal-section-inner portal-cta__panel">
-          <h2 class="portal-cta__title">从云起开始，构建智能化应用</h2>
+          <h2 class="portal-cta__title">从知枢开始，构建可集成应用</h2>
           <p class="portal-cta__desc">
-            云起应用平台提供模块化开发底座，帮助企业更快交付数字化与智能化应用。
+            知枢可集成框架提供模块化开发底座，帮助企业更快交付数字化与智能化应用集成。
           </p>
           <div class="portal-cta__actions">
             <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
@@ -153,7 +153,7 @@
             </button>
             <a
               class="portal-cta__link"
-              href="https://github.com/DataFutureX/yunqi-application-platform"
+              href="https://github.com/DataFutureX/zhishu-integrable-framework"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -200,9 +200,9 @@ const introduction = computed(
   () => systemConfigStore.systemIntroduction || DEFAULT_SYSTEM_INTRODUCTION,
 )
 
-const heroTagline = '企业数字化应用建设的模块化开发基础平台'
+const heroTagline = '企业数字化与智能化应用集成的模块化开发底座'
 const heroSupport =
-  '统一技术架构、业务组件、伙伴单点登录与运维观测，帮助企业更快构建可落地的数字化应用。'
+  '统一技术架构、业务组件、伙伴单点登录与运维观测，帮助企业更快构建可集成、可扩展的数字化应用。'
 
 const openSourceHighlights = [
   {
@@ -213,7 +213,7 @@ const openSourceHighlights = [
   {
     mark: 'MOD',
     title: '模块化后端架构',
-    desc: 'yqap-api / security / biz / core 分层清晰；security 含 JWT 登录与伙伴 SSO 换票，Spring Modulith 支撑模块独立演进。',
+    desc: 'zhishu-api / security / biz / core 分层清晰；security 含 JWT 登录与伙伴 SSO 换票，Spring Modulith 支撑模块独立演进。',
   },
   {
     mark: 'SSO',
@@ -245,7 +245,7 @@ const features = [
   },
   {
     title: '伙伴系统接入',
-    desc: '万象、数智 IoT 等通过 Partner SDK 签发短期 Ticket，经 /sso/callback 换票进入云起，沿用本地 RBAC。',
+    desc: '万象、数智 IoT 等通过 Partner SDK 签发短期 Ticket，经 /sso/callback 换票进入知枢，沿用本地 RBAC。',
     icon: PortalConnectionIcon,
   },
   {
@@ -269,7 +269,7 @@ const techStack = [
   { name: 'Spring Security 7', role: '认证鉴权' },
   { name: 'Spring Modulith', role: '模块化' },
   { name: 'MyBatis-Plus', role: '数据访问' },
-  { name: 'MySQL 8', role: '数据存储' },
+  { name: 'PostgreSQL', role: '数据存储' },
   { name: 'JWT / RSA / SM2', role: '登录与 SSO' },
 ]
 

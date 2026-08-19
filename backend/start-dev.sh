@@ -26,5 +26,5 @@ mvn compile -DskipTests
 echo ""
 echo "[3/3] spring-boot:run..."
 echo ""
-mvn -pl yqap-core -am spring-boot:run -DskipTests \
+mvn -pl zhishu-core -am spring-boot:run -DskipTests \
   -Dspring-boot.run.jvmArguments="-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8"

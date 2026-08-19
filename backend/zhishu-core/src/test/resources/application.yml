@@ -1,0 +1,30 @@
+# 单元测试默认配置（覆盖主配置；与部署用 profile=test 的测试环境无关）
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+
+server:
+  port: 18080
+
+jwt:
+  secret: test-secret-key-for-jwt-token-generation
+  expiration: 3600000
+
+yunqi:
+  captcha:
+    enabled: false
+  login-crypto:
+    enabled: false
+  table-sharding:
+    enabled: false
+
+logging:
+  level:
+    root: WARN
+    cn.datafuturex.zhishu: DEBUG

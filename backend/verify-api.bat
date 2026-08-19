@@ -10,7 +10,7 @@ echo.
 
 set "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8"
 
-call mvn -pl yqap-core -am verify -Dconsole.encoding=UTF-8
+call mvn -pl zhishu-core -am verify -Dconsole.encoding=UTF-8
 set "EXIT_CODE=%ERRORLEVEL%"
 echo.
 if not "%EXIT_CODE%"=="0" (

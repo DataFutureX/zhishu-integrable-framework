@@ -68,7 +68,7 @@ public class IssueSsoTicket {
         String headerJson = "{\"alg\":\"" + alg + "\",\"typ\":\"JWT\",\"kid\":\"" + kid + "\"}";
         String payloadJson = "{"
                 + "\"iss\":\"" + issuer + "\","
-                + "\"aud\":\"yunqi-application-platform\","
+                + "\"aud\":\"zhishu-integrable-framework\","
                 + "\"sub\":\"" + username + "\","
                 + "\"username\":\"" + username + "\","
                 + "\"iat\":" + now + ","

@@ -12,12 +12,12 @@
         <relativePath/>
     </parent>
 
-    <groupId>cn.datafuturex.yunqi</groupId>
-    <artifactId>yqap</artifactId>
+    <groupId>cn.datafuturex.zhishu</groupId>
+    <artifactId>zhishu</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>YunQi Application Platform Backend</name>
-    <description>云起应用平台 - Spring Boot 4 + Spring Security 7</description>
+    <name>ZhiShu Integrable Framework Backend</name>
+    <description>知枢可集成框架 - Spring Boot 4 + Spring Security 7</description>
 
     <licenses>
         <license>
@@ -28,11 +28,11 @@
     </licenses>
 
     <modules>
-        <module>yqap-api</module>
-        <module>yqap-test-support</module>
-        <module>yqap-security</module>
-        <module>yqap-biz</module>
-        <module>yqap-core</module>
+        <module>zhishu-api</module>
+        <module>zhishu-test-support</module>
+        <module>zhishu-security</module>
+        <module>zhishu-biz</module>
+        <module>zhishu-core</module>
     </modules>
 
     <properties>
@@ -52,28 +52,28 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>cn.datafuturex.yunqi</groupId>
-                <artifactId>yqap-api</artifactId>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.datafuturex.yunqi</groupId>
-                <artifactId>yqap-security</artifactId>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-security</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.datafuturex.yunqi</groupId>
-                <artifactId>yqap-biz</artifactId>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-biz</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.datafuturex.yunqi</groupId>
-                <artifactId>yqap-core</artifactId>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.datafuturex.yunqi</groupId>
-                <artifactId>yqap-test-support</artifactId>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-test-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -43,11 +43,11 @@ export const mockPermissions: string[] = Object.values(PERMISSIONS)
 
 export const mockSystemConfig: SystemConfigVO = {
   id: 1,
-  systemName: '云起应用平台',
-  englishTitle: 'YunQi Application Platform',
+  systemName: '知枢可集成框架',
+  englishTitle: 'ZhiShu Integrable Framework',
   systemIntroduction:
     '一套面向企业数字化应用建设的模块化开发基础平台，通过统一技术架构、业务组件、AI能力和行业扩展能力，帮助企业快速构建智能化应用系统。',
-  copyright: '© 2026 云起应用平台 · MIT 开源',
+  copyright: '© 2026 知枢可集成框架 · MIT 开源',
   projectSite: '演示项目地 · 云起科技园',
   loginRetryLimitEnabled: true,
   loginMaxRetryAttempts: 5,
@@ -454,7 +454,7 @@ export const mockOperationLogs = [
     module: '系统设置',
     operation: '更新配置',
     method: 'PUT',
-    requestParams: '{"systemName":"云起应用平台"}',
+    requestParams: '{"systemName":"知枢可集成框架"}',
     responseCode: 200,
     ipAddress: '192.168.1.20',
     userAgent: UA_CHROME,
@@ -650,7 +650,7 @@ export const mockSystemStatus: SystemStatusDTO = {
   status: 'UP',
   timestamp: nowStr(),
   application: {
-    name: 'yqap',
+    name: 'zhishu',
     version: '1.0.0-demo',
     javaVersion: '17.0.11',
     springBootVersion: '3.2.5',

@@ -13,7 +13,7 @@ description: 基于 Java 21、Spring Boot 4、Spring Security 7 和 MyBatis-Plus
 - **核心框架**: Spring Boot 4.x（Spring Framework 7 / Jakarta EE 11）
 - **安全框架**: Spring Security 7.x（基于 SecurityFilterChain 配置）
 - **持久层**: MyBatis-Plus 3.5.x（`mybatis-plus-spring-boot4-starter`）
-- **数据库**: MySQL 8.0
+- **数据库**: PostgreSQL 14+
 - **JSON**: Jackson 3（`tools.jackson.databind`；注解仍用 `com.fasterxml.jackson.annotation`）
 - **API工具**: SpringDoc OpenAPI 3.x
 - **鉴权Token**: JWT
@@ -29,7 +29,7 @@ description: 基于 Java 21、Spring Boot 4、Spring Security 7 和 MyBatis-Plus
 ### 2. MyBatis-Plus 持久层规范
 - **依赖声明**: 必须使用 `mybatis-plus-spring-boot4-starter`。
 - **主键策略**: 实体类主键一律采用雪花算法 `@TableId(type = IdType.ASSIGN_ID)`。
-- **分页与拦截器**: 必须配置 `MybatisPlusInterceptor`，并加入 `PaginationInnerInterceptor(DbType.MYSQL)` 分页插件。
+- **分页与拦截器**: 必须配置 `MybatisPlusInterceptor`，并加入 `PaginationInnerInterceptor(DbType.POSTGRE_SQL)` 分页插件。
 - **代码规范**: Entity 层字段使用驼峰命名，必须通过 Lombok `@Data` 简化；Mapper 接口必须继承 `BaseMapper<T>`。
 
 ### 3. Web 与测试

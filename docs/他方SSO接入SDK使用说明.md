@@ -82,7 +82,7 @@ sm2.writePublicKeyPem(Path.of("wanxiang-sm2-public.pem"));
 |----|------|
 | `iss` | `wanxiang` |
 | `kid` | `wanxiang-2026`（SM2 建议另起，如 `wanxiang-sm2-2026`） |
-| `aud` | 固定 `yunqi-application-platform` |
+| `aud` | 固定 `zhishu-integrable-framework` |
 | 用户名 | 伙伴登录名 = 云起 `sys_user.username`（第一期无 JIT） |
 
 ### 4.2 已登录用户点击「进入云起」
@@ -185,7 +185,7 @@ Payload（SDK 自动填写）：
 ```json
 {
   "iss": "<builder.issuer>",
-  "aud": "yunqi-application-platform",
+  "aud": "zhishu-integrable-framework",
   "sub": "<subject>",
   "username": "<username>",
   "name": "<可选>",

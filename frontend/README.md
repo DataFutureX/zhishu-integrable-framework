@@ -9,13 +9,13 @@
 [Element Plus](https://element-plus.org/)
 [Node](https://nodejs.org/)
 
-**当前版本**：v1.0.0（包名 `yunqi-application-platform`）
+**当前版本**：v1.0.0（包名 `zhishu-integrable-framework`）
 
 **在线演示**：[https://yunqi.datafuturex.cn](https://yunqi.datafuturex.cn)
 
 ## 开源源码
 
-本项目与后端同属 **yunqi-application-platform** 单体仓库（monorepo），以 **MIT** 协议开源。默认分支：`main`（跟踪 `origin/main`）。本文档对应仓库内 **`frontend/`** 目录（前端源码）。
+本项目与后端同属 **zhishu-integrable-framework** 单体仓库（monorepo），以 **MIT** 协议开源。默认分支：`main`（跟踪 `origin/main`）。本文档对应仓库内 **`frontend/`** 目录（前端源码）。
 
 | 平台 | 仓库 | remote | 说明 |
 |------|------|--------|------|
@@ -33,11 +33,11 @@
 ```bash
 # GitHub（推荐 / origin）
 git clone git@github.com:DataFutureX/yunqi-application-platform.git
-cd yunqi-application-platform/frontend
+cd zhishu-integrable-framework/frontend
 
 # 或 Gitee
 git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
-cd yunqi-application-platform/frontend
+cd zhishu-integrable-framework/frontend
 ```
 
 本地已同时配置双远程时，可按需推送：
@@ -47,7 +47,7 @@ git push origin main
 git push gitee main
 ```
 
-包名与产品名以 `frontend/package.json`（`yunqi-application-platform`）与本 README 为准。许可证全文见 [LICENSE](../LICENSE)。
+包名与产品名以 `frontend/package.json`（`zhishu-integrable-framework`）与本 README 为准。许可证全文见 [LICENSE](../LICENSE)。
 
 ## 目录
 
@@ -215,7 +215,7 @@ npm run build:demo    # 打演示静态包
 ## 项目结构
 
 ```
-yunqi-application-platform/
+zhishu-integrable-framework/
 ├── backend/                 # 后端源码
 └── frontend/                # 前端源码（本目录）
     ├── src/

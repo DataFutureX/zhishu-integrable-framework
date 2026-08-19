@@ -318,7 +318,7 @@ const todayLabel = computed(() => {
 })
 
 const welcomeSubtitle = computed(() => {
-  const name = systemConfigStore.systemName || '云起应用平台'
+  const name = systemConfigStore.systemName || '知枢可集成框架'
   return `${name} 工作台 · 组织权限、公告运维与审计一站总览`
 })
 

@@ -13,7 +13,7 @@
 
 ## 开源源码路径
 
-本项目与前端同属 **yunqi-application-platform** 单体仓库（monorepo），托管于 GitHub 与 Gitee，内容同步，任选其一克隆即可。本文档对应仓库内 `**backend/`** 目录（后端源码）。
+本项目与前端同属 **zhishu-integrable-framework** 单体仓库（monorepo），托管于 GitHub 与 Gitee，内容同步，任选其一克隆即可。本文档对应仓库内 `**backend/`** 目录（后端源码）。
 
 
 | 类型     | 地址                                                                                               | 说明               |
@@ -29,11 +29,11 @@
 | `frontend/`                                               | 前端源码（Vue 3）                   |
 | `backend/`                                                | 后端源码（本 README 所在目录，Maven 父工程） |
 | [`../README.md`](../README.md)（仓库根目录） | 前后端快速开始（演示 / 联调） |
-| `backend/yqap-api/`                                | 跨模块 SPI / DTO，避免循环依赖          |
-| `backend/yqap-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码      |
-| `backend/yqap-biz/`                                | 公告、操作日志、系统配置、系统监控等业务          |
-| `backend/yqap-core/`                               | 启动模块、配置文件、数据库初始化脚本            |
-| `backend/yqap-core/src/main/resources/db/init.sql` | 唯一数据库初始化 SQL                  |
+| `backend/zhishu-api/`                                | 跨模块 SPI / DTO，避免循环依赖          |
+| `backend/zhishu-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码      |
+| `backend/zhishu-biz/`                                | 公告、操作日志、系统配置、系统监控等业务          |
+| `backend/zhishu-core/`                               | 启动模块、配置文件、数据库初始化脚本            |
+| `backend/zhishu-core/src/main/resources/db/init.sql` | 唯一数据库初始化 SQL                  |
 | [`../LICENSE`](../LICENSE)（仓库根目录） | MIT 开源许可证 |
 | `backend/README.md`                                       | 本说明文档                         |
 
@@ -77,7 +77,7 @@
 | Spring Security | 7.x     | SecurityFilterChain + 方法级鉴权           |
 | MyBatis-Plus    | 3.5.17  | `mybatis-plus-spring-boot4-starter`   |
 | Spring Modulith | 2.1.0   | biz 领域模块边界                            |
-| MySQL           | 8.0+    | 关系型数据库                                |
+| PostgreSQL      | 14+     | 关系型数据库                                |
 | JWT (jjwt)      | 0.12.6  | Token 签发与校验                           |
 | SpringDoc       | 3.1.0   | OpenAPI / Swagger UI                  |
 | Lombok          | 1.18.38 | 简化样板代码                                |
@@ -89,31 +89,31 @@
 ### 模块依赖
 
 ```
-yqap-core  →  yqap-biz  →  yqap-security  →  yqap-api
+zhishu-core  →  zhishu-biz  →  zhishu-security  →  zhishu-api
 ```
 
 
 | 模块                       | 职责                                                                |
 | ------------------------ | ----------------------------------------------------------------- |
-| **yqap-api**      | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），避免循环依赖 |
-| **yqap-security** | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、登录加密、公共 `Result`                         |
-| **yqap-biz**      | 公告、操作日志、系统配置、系统监控；Spring Modulith 应用模块                            |
-| **yqap-core**     | 启动壳：数据源、OpenAPI UI、调度/异步、静态资源、配置文件                                |
+| **zhishu-api**      | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），避免循环依赖 |
+| **zhishu-security** | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、登录加密、公共 `Result`                         |
+| **zhishu-biz**      | 公告、操作日志、系统配置、系统监控；Spring Modulith 应用模块                            |
+| **zhishu-core**     | 启动壳：数据源、OpenAPI UI、调度/异步、静态资源、配置文件                                |
 
 
 ### 项目结构
 
 ```
-yunqi-application-platform/
+zhishu-integrable-framework/
 ├── LICENSE                              # MIT 开源许可证
 ├── README.md                            # 前后端快速开始
 ├── frontend/                            # 前端源码
 └── backend/                             # 后端源码（Maven 父工程）
-    ├── yqap-api/
+    ├── zhishu-api/
     │   └── src/main/java/com/yunqi/admin/api/
     │       ├── dto/                     # LoginSecuritySettingsDTO 等
     │       └── spi/                     # AuthAuditApi, LoginSecuritySettingsApi
-    ├── yqap-security/
+    ├── zhishu-security/
     │   └── src/main/java/com/yunqi/admin/
     │       ├── captcha/                 # 滑动验证码
     │       ├── common/                  # Result, PageResult, GlobalExceptionHandler
@@ -123,13 +123,13 @@ yunqi-application-platform/
     │       │   ├── controller/          # Auth, User, Role, Menu, Unit
     │       │   ├── dto|vo|entity|mapper|service/
     │       └── security/                # TokenBlacklist, LoginCrypto, LoginAttempt
-    ├── yqap-biz/
+    ├── zhishu-biz/
     │   └── src/main/java/com/yunqi/admin/biz/
     │       ├── announcement/            # 公告 + SSE（@ApplicationModule）
     │       ├── operationlog/            # 操作日志 + AuthAuditApiImpl
     │       ├── systemconfig/            # 系统配置 + LoginSecuritySettingsApiImpl
     │       └── systemmonitor/           # 运维监控 + 月分表管理
-    ├── yqap-core/
+    ├── zhishu-core/
     │   └── src/main/
     │       ├── java/com/yunqi/admin/
     │       │   ├── YqapApplication.java
@@ -154,7 +154,7 @@ yunqi-application-platform/
 
 - JDK **21+**
 - Maven **3.9+**
-- MySQL **8.0+**
+- PostgreSQL **14+**
 
 ### 1. 克隆仓库
 
@@ -165,31 +165,32 @@ git clone git@github.com:DataFutureX/yunqi-application-platform.git
 # 或 Gitee（国内网络更友好）
 git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
 
-cd yunqi-application-platform/backend
+cd zhishu-integrable-framework/backend
 ```
 
 ### 2. 初始化数据库
 
 ```bash
-mysql -u root -p < yqap-core/src/main/resources/db/init.sql
+psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init.sql
 ```
 
-默认库名：`yunqi_application_platform`  
+默认库名：`zhishu_integrable_framework`  
 默认管理员：**admin / admin123**
 
 > **安全提示**：默认账户仅用于本地开发。上线前务必修改默认密码，并更换 `jwt.secret` 等敏感配置。
 
 ### 3. 修改配置
 
-编辑 `yqap-core/src/main/resources/application-dev.yml`：
+编辑 `zhishu-core/src/main/resources/application-dev.yml`：
 
 ```yaml
 yunqi:
   datasource:
     host: localhost
-    port: 3306
-    database: yunqi_application_platform
-    username: root
+    port: 5432
+    database: zhishu_integrable_framework
+    username: postgres
     password: 你的密码
 ```
 
@@ -208,19 +209,19 @@ chmod +x start-dev.sh
 ./start-dev.sh
 ```
 
-脚本会执行 `mvn clean` → `compile` → `mvn -pl yqap-core -am spring-boot:run`。
+脚本会执行 `mvn clean` → `compile` → `mvn -pl zhishu-core -am spring-boot:run`。
 
 **方式二：Maven**
 
 ```bash
-mvn -pl yqap-core -am spring-boot:run -DskipTests
+mvn -pl zhishu-core -am spring-boot:run -DskipTests
 ```
 
 **方式三：打包运行**
 
 ```bash
 mvn clean package -DskipTests
-java -jar yqap-core/target/yqap-core-1.0.0.jar
+java -jar zhishu-core/target/zhishu-core-1.0.0.jar
 ```
 
 ### 5. 验证服务
@@ -262,7 +263,7 @@ export YUNQI_DB_HOST=db.example.com
 export YUNQI_DB_USERNAME=yunqi
 export YUNQI_DB_PASSWORD=********
 export JWT_SECRET=your-long-random-secret
-java -jar yqap-core/target/yqap-core-1.0.0.jar
+java -jar zhishu-core/target/zhishu-core-1.0.0.jar
 ```
 
 ### 常用命令
@@ -275,26 +276,26 @@ mvn clean compile -DskipTests
 # Windows: test-unit.bat  |  Linux/macOS: ./test-unit.sh
 mvn test
 
-# 全量接口真实 HTTP 集成测试（需 MySQL 测试库，见下文）
+# 全量接口真实 HTTP 集成测试（需 PostgreSQL 测试库，见下文）
 # Windows: verify-api.bat
-mvn -pl yqap-core -am verify
+mvn -pl zhishu-core -am verify
 
 # 打包
 mvn clean package -DskipTests
 
 # 指定环境启动（默认 dev）
-mvn -pl yqap-core -am spring-boot:run -Dspring-boot.run.profiles=prod
+mvn -pl zhishu-core -am spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 ### API 集成测试（真实 HTTP + 入库 + 清理）
 
-对全部 REST 接口做主路径集成验证：`@SpringBootTest(RANDOM_PORT)` 发真实 HTTP，数据写入 MySQL 测试库，用例结束后按 `apitest_` 前缀/追踪 ID **物理删除**，并生成中文 HTML 报告。
+对全部 REST 接口做主路径集成验证：`@SpringBootTest(RANDOM_PORT)` 发真实 HTTP，数据写入 PostgreSQL 测试库，用例结束后按 `apitest_` 前缀/追踪 ID **物理删除**，并生成中文 HTML 报告。
 
 **前置条件**
 
-1. 已创建库 `yunqi_application_platform_test`（可用环境变量 `YUNQI_DB_NAME` 覆盖）
-2. 对测试库执行 [init.sql](yqap-core/src/main/resources/db/init.sql)（将脚本中的库名改为 `yunqi_application_platform_test`），确保存在管理员 `admin / admin123`
-3. 连接参数与 [application-test.yml](yqap-core/src/main/resources/application-test.yml) 一致，可用 `YUNQI_DB_HOST/PORT/USERNAME/PASSWORD` 覆盖
+1. 已创建库 `zhishu_integrable_framework_test`（可用环境变量 `YUNQI_DB_NAME` 覆盖）
+2. 对测试库执行 [init.sql](zhishu-core/src/main/resources/db/init.sql)，确保存在管理员 `admin / admin123`
+3. 连接参数与 [application-test.yml](zhishu-core/src/main/resources/application-test.yml) 一致，可用 `YUNQI_DB_HOST/PORT/USERNAME/PASSWORD` 覆盖
 4. **禁止**对生产库执行本套 IT
 
 **执行与报告**
@@ -303,17 +304,17 @@ mvn -pl yqap-core -am spring-boot:run -Dspring-boot.run.profiles=prod
 cd backend
 # Windows：先切 UTF-8 代码页，或直接双击 verify-api.bat
 chcp 65001
-mvn -pl yqap-core -am verify
+mvn -pl zhishu-core -am verify
 ```
 
 报告路径（用浏览器打开，勿用系统默认记事本乱码预览）：
 
-- 构建产物：`backend/yqap-core/target/api-test-report/index.html`
+- 构建产物：`backend/zhishu-core/target/api-test-report/index.html`
 - 仓库文档目录（每次覆盖最新一份）：[`docs/api-test-report/index.html`](../docs/api-test-report/index.html)
 
 报告标题含**测试时间**；正文含**平台基本信息**（名称/版本/Java/Spring Boot/OS/编码等）、开始/结束时间、耗时、目标接口、输入、输出、测试过程、通过/失败。仅保留最新一份 `index.html`（不生成时间戳归档）。控制台成功提示为英文路径行：`[ApiTestReport] HTML report written to: ...` / `Docs copy written to: ...`。
 
-IT 使用 profile `test` + `api-it`（关闭验证码/RSA/分表，便于稳定登录与清理）。现有 `yqap-security` / `yqap-biz` 的 `@WebMvcTest` 仍通过 `mvn test` 运行，不依赖 MySQL。
+IT 使用 profile `test` + `api-it`（关闭验证码/RSA/分表，便于稳定登录与清理）。现有 `zhishu-security` / `zhishu-biz` 的 `@WebMvcTest` 仍通过 `mvn test` 运行，不依赖 PostgreSQL。
 
 ## 核心功能模块
 
@@ -545,7 +546,7 @@ yunqi:
 - 主键策略：雪花算法 `IdType.ASSIGN_ID`（配置 `id-type: assign_id`）
 - 逻辑删除字段：`deleted`（1 删除 / 0 未删除）；部分表以业务 `status` 管理启停
 
-> 数据库仅保留 `yqap-core/src/main/resources/db/init.sql` 一份初始化脚本。
+> 数据库仅保留 `zhishu-core/src/main/resources/db/init.sql` 一份初始化脚本。
 
 ## 安全与鉴权
 
@@ -565,7 +566,7 @@ yunqi:
 
 ```yaml
 jwt:
-  secret: yqap-secret-key-for-jwt-token-generation-2024  # prod 必须用环境变量覆盖
+  secret: zhishu-secret-key-for-jwt-token-generation-2024  # prod 必须用环境变量覆盖
   expiration: 86400000  # 24 小时
 ```
 
@@ -590,12 +591,12 @@ jwt:
 | Controller 返回 | 统一 `Result<T>`（SSE 端点除外）                                       |
 | URL           | `/api/v1/...`，小写连字符                                            |
 | Service       | 接口与 `impl` 分离                                                  |
-| SPI           | 接口放 `yqap-api`，实现放 biz，由 security 调用                    |
+| SPI           | 接口放 `zhishu-api`，实现放 biz，由 security 调用                    |
 
 
 ### 新增业务模块建议
 
-1. 在 `yqap-biz` 下新建包，并添加 `package-info.java` + `@ApplicationModule`
+1. 在 `zhishu-biz` 下新建包，并添加 `package-info.java` + `@ApplicationModule`
 2. 按 `controller / dto / vo / entity / mapper / service` 分层
 3. 按钮权限写入 `sys_menu`（`menu_type=BUTTON`）并在 `PermissionConstants` 增加常量
 4. 需要跨模块回调时，在 api 定义 SPI，biz 提供实现
@@ -604,14 +605,14 @@ jwt:
 
 - 使用 `start-dev.bat` / `start-dev.sh` 启用 DevTools 热部署
 - 开发环境已放行 Swagger，可用 [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) 调试
-- 日志文件：`logs/yqap-backend.log`（相对启动目录）
+- 日志文件：`logs/zhishu-backend.log`（相对启动目录）
 - 控制台统一 UTF-8（`CONSOLE_LOG_CHARSET=UTF-8`）；Windows 请先 `chcp 65001`，或直接用 `start-dev.bat` / `test-unit.bat` / `verify-api.bat`
 
 ## 常见问题与故障排查
 
 ### 1. 启动失败：数据库连接被拒
 
-- 确认 MySQL 已启动，且已执行 `init.sql` 创建 `yunqi_application_platform`
+- 确认 PostgreSQL 已启动，且已执行 `init.sql` 初始化 `zhishu_integrable_framework`
 - 检查 `application-dev.yml` 中 `yunqi.datasource` 账号密码
 - 生产环境确认已导出 `YUNQI_DB_HOST` / `USERNAME` / `PASSWORD`
 
@@ -641,7 +642,7 @@ jwt:
 始终从 `backend/` 目录（Maven 父工程根）构建，并对启动模块加 `-am`：
 
 ```bash
-mvn -pl yqap-core -am clean compile -DskipTests
+mvn -pl zhishu-core -am clean compile -DskipTests
 ```
 
 ## 配置速查
@@ -660,10 +661,10 @@ mvn -pl yqap-core -am clean compile -DskipTests
 | `yunqi.table-sharding.*`                 | 操作日志月分表                                   |
 | `spring.servlet.multipart.max-file-size` | `2MB`                                     |
 | `springdoc.swagger-ui.path`              | `/swagger-ui.html`                        |
-| `logging.file.name`                      | `logs/yqap-backend.log`            |
+| `logging.file.name`                      | `logs/zhishu-backend.log`            |
 
 
-主类：`cn.datafuturex.yunqi.YqapApplication`（模块 `yqap-core`）
+主类：`cn.datafuturex.zhishu.YqapApplication`（模块 `zhishu-core`）
 
 ## 参与贡献
 

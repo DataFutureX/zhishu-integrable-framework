@@ -66,7 +66,7 @@
           </ul>
           <a class="portal-entry" href="/portal" @click.prevent="goPortal">
             <el-icon :size="16"><ArrowRight /></el-icon>
-            了解云起应用平台
+            了解知枢可集成框架
           </a>
         </div>
       </div>

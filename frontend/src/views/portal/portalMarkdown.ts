@@ -6,8 +6,8 @@ import {
   type PortalDocId,
 } from '@/utils/portalDocRoutes'
 
-const REPO_BLOB = 'https://github.com/DataFutureX/yunqi-application-platform/blob/master/'
-const REPO_TREE = 'https://github.com/DataFutureX/yunqi-application-platform/tree/master/'
+const REPO_BLOB = 'https://github.com/DataFutureX/zhishu-integrable-framework/blob/master/'
+const REPO_TREE = 'https://github.com/DataFutureX/zhishu-integrable-framework/tree/master/'
 
 function fileBasename(href: string): string {
   const path = href.split('?')[0]?.split('#')[0] ?? href

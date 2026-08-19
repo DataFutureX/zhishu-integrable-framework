@@ -9,7 +9,7 @@ echo "========================================"
 echo ""
 echo "  Runs mvn test (MockMvc / unit tests)"
 echo "  Does NOT require MySQL test DB"
-echo "  For API IT, use: mvn -pl yqap-core -am verify"
+echo "  For API IT, use: mvn -pl zhishu-core -am verify"
 echo ""
 
 if ! command -v mvn >/dev/null 2>&1; then

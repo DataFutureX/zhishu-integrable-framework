@@ -56,7 +56,7 @@ class YunqiSsoClientTest {
         assertTrue(headerJson.contains("\"alg\":\"RS256\""));
         assertTrue(headerJson.contains("\"kid\":\"wanxiang-2026\""));
         assertTrue(payloadJson.contains("\"iss\":\"wanxiang\""));
-        assertTrue(payloadJson.contains("\"aud\":\"yunqi-application-platform\""));
+        assertTrue(payloadJson.contains("\"aud\":\"zhishu-integrable-framework\""));
         assertTrue(payloadJson.contains("\"username\":\"admin\""));
         assertTrue(payloadJson.contains("\"name\":\"管理员\""));
     }

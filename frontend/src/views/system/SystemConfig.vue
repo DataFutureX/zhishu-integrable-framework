@@ -70,7 +70,7 @@
               <el-form-item label="英文标题" prop="englishTitle">
                 <el-input
                   v-model="formData.englishTitle"
-                  placeholder="请输入英文标题，如 YunQi Application Platform"
+                  placeholder="请输入英文标题，如 ZhiShu Integrable Framework"
                   maxlength="100"
                   show-word-limit
                   class="settings-input"
@@ -132,7 +132,7 @@
                   v-model="formData.copyright"
                   type="textarea"
                   :rows="3"
-                  placeholder="请输入版权信息，如 © 2026 云起应用平台 · MIT 开源"
+                  placeholder="请输入版权信息，如 © 2026 知枢可集成框架 · MIT 开源"
                   maxlength="200"
                   show-word-limit
                   class="settings-input"

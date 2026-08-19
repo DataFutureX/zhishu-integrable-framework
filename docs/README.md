@@ -20,14 +20,14 @@
 cd backend
 # Windows 请先切 UTF-8，或使用 verify-api.bat
 chcp 65001
-mvn -pl yqap-core -am verify
+mvn -pl zhishu-core -am verify
 ```
 
 | 文件 | 说明 |
 |------|------|
 | `api-test-report/index.html` | 最新一次报告（覆盖写入） |
 
-报告标题含测试时间；正文含**平台基本信息**、开始/结束时间、耗时、目标接口、输入、输出与测试过程。构建产物另见 `backend/yqap-core/target/api-test-report/`（`target/` 本身已忽略）。
+报告标题含测试时间；正文含**平台基本信息**、开始/结束时间、耗时、目标接口、输入、输出与测试过程。构建产物另见 `backend/zhishu-core/target/api-test-report/`（`target/` 本身已忽略）。
 
 ## 前端单元测试报告
 

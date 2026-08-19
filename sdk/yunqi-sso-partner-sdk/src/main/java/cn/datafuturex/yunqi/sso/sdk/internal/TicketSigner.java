@@ -13,7 +13,7 @@ import java.util.UUID;
  */
 public final class TicketSigner {
 
-    private static final String AUDIENCE = "yunqi-application-platform";
+    private static final String AUDIENCE = "zhishu-integrable-framework";
 
     private TicketSigner() {
     }

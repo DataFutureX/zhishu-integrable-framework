@@ -4,7 +4,7 @@ Set-Location -Path $PSScriptRoot
 
 function Write-Banner {
     Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  YunQi Platform - Start All" -ForegroundColor Cyan
+    Write-Host "  知枢可集成框架 - 一键启动（前后端）" -ForegroundColor Cyan
     Write-Host "  Frontend + Backend" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
@@ -61,9 +61,9 @@ if (-not (Test-Path (Join-Path $frontendDir 'node_modules'))) {
 Write-Host "[START] Backend window (mvn spring-boot:run)..." -ForegroundColor Cyan
 $backendCmd = @(
     'chcp 65001 >nul'
-    'title YQAP-Backend'
+    'title ZSIF-Backend'
     'set JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8'
-    'mvn -pl yqap-core -am spring-boot:run -DskipTests "-Dspring-boot.run.jvmArguments=-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8"'
+    'mvn -pl zhishu-core -am spring-boot:run -DskipTests "-Dspring-boot.run.jvmArguments=-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8"'
 ) -join ' && '
 Start-Process -FilePath 'cmd.exe' `
     -WorkingDirectory $backendDir `
@@ -74,7 +74,7 @@ Start-Sleep -Seconds 2
 Write-Host "[START] Frontend window (npm run dev)..." -ForegroundColor Cyan
 Start-Process -FilePath 'cmd.exe' `
     -WorkingDirectory $frontendDir `
-    -ArgumentList '/k', 'title YQAP-Frontend && npm run dev'
+    -ArgumentList '/k', 'title ZSIF-Frontend && npm run dev'
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green

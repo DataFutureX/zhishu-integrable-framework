@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 ROOT="$(pwd)"
 
 echo "========================================"
-echo "  云起应用平台 - 一键启动（前后端）"
+echo "  知枢可集成框架 - 一键启动（前后端）"
 echo "========================================"
 echo ""
 
@@ -49,13 +49,13 @@ trap cleanup EXIT INT TERM
 
 mkdir -p logs
 
-echo "[启动] 后端: mvn -pl yqap-core -am spring-boot:run"
+echo "[启动] 后端: mvn -pl zhishu-core -am spring-boot:run"
 (
     cd "${ROOT}/backend"
-    mvn -pl yqap-core -am spring-boot:run -DskipTests
-) >"${ROOT}/logs/yqap-backend-dev.log" 2>&1 &
+    mvn -pl zhishu-core -am spring-boot:run -DskipTests
+) >"${ROOT}/logs/zhishu-backend-dev.log" 2>&1 &
 BACKEND_PID=$!
-echo "  PID=${BACKEND_PID}  日志: logs/yqap-backend-dev.log"
+echo "  PID=${BACKEND_PID}  日志: logs/zhishu-backend-dev.log"
 
 sleep 2
 
@@ -63,9 +63,9 @@ echo "[启动] 前端: npm run dev"
 (
     cd "${ROOT}/frontend"
     npm run dev
-) >"${ROOT}/logs/yqap-frontend-dev.log" 2>&1 &
+) >"${ROOT}/logs/zhishu-frontend-dev.log" 2>&1 &
 FRONTEND_PID=$!
-echo "  PID=${FRONTEND_PID}  日志: logs/yqap-frontend-dev.log"
+echo "  PID=${FRONTEND_PID}  日志: logs/zhishu-frontend-dev.log"
 
 echo ""
 echo "========================================"
@@ -75,7 +75,7 @@ echo "  前端: http://localhost:3000"
 echo "  后端: http://localhost:8080"
 echo "  API 文档: http://localhost:8080/swagger-ui.html"
 echo ""
-echo "  查看日志: tail -f logs/yqap-*-dev.log"
+echo "  查看日志: tail -f logs/zhishu-*-dev.log"
 echo "  按 Ctrl+C 停止全部服务"
 echo "========================================"
 echo ""

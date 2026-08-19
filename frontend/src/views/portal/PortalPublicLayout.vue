@@ -121,7 +121,7 @@
           <img :src="systemIconUrl" alt="" class="portal-footer__icon" />
           <div>
             <span class="portal-footer__name">{{ systemName }}</span>
-            <span class="portal-footer__license">YunQi Application Platform · MIT</span>
+            <span class="portal-footer__license">ZhiShu Integrable Framework · MIT</span>
           </div>
         </div>
         <div class="portal-footer__links">

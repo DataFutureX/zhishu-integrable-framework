@@ -9,7 +9,7 @@ try {
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  云起应用平台 - 启动脚本" -ForegroundColor Cyan
+Write-Host "  知枢可集成框架 - 启动脚本" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

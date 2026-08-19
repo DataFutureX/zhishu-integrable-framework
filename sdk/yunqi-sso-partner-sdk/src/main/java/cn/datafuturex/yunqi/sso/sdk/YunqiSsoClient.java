@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public final class YunqiSsoClient {
 
-    public static final String AUDIENCE = "yunqi-application-platform";
+    public static final String AUDIENCE = "zhishu-integrable-framework";
 
     private final String issuer;
     private final String kid;

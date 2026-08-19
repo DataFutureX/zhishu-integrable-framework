@@ -32,6 +32,7 @@
         <module>zhishu-test-support</module>
         <module>zhishu-security</module>
         <module>zhishu-biz</module>
+        <module>zhishu-ai</module>
         <module>zhishu-core</module>
     </modules>
 
@@ -64,6 +65,11 @@
             <dependency>
                 <groupId>cn.datafuturex.zhishu</groupId>
                 <artifactId>zhishu-biz</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-ai</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

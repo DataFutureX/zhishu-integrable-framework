@@ -53,6 +53,7 @@ public class SecurityConfig {
                 auth.requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/system-config").permitAll()
                     .requestMatchers("/api/v1/system/health").permitAll()
+                    .requestMatchers("/open/v1/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll();
                 permitApiDocsIfEnabled(auth);
                 auth.anyRequest().authenticated();

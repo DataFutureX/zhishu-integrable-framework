@@ -80,9 +80,9 @@ Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  Launched 2 new console windows" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
-Write-Host "  Frontend: http://localhost:3000"
-Write-Host "  Backend:  http://localhost:8080"
-Write-Host "  Swagger:  http://localhost:8080/swagger-ui.html"
+Write-Host "  Frontend: http://localhost:3100"
+Write-Host "  Backend:  http://localhost:8180"
+Write-Host "  Swagger:  http://localhost:8180/swagger-ui.html"
 Write-Host ""
 Write-Host "  Check taskbar for new CMD windows."
 Write-Host "  Close those windows to stop services."

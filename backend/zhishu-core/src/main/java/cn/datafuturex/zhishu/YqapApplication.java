@@ -6,13 +6,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * 云起应用平台启动类
  */
-@SpringBootApplication
-@MapperScan(basePackages = "cn.datafuturex.zhishu", annotationClass = Mapper.class)
+@SpringBootApplication(scanBasePackages = {
+        "cn.datafuturex.zhishu",
+        "com.datafuturex.assistant"  // 过渡期：ai-assistant 迁入后保留至包名迁移完成
+})
+@MapperScan(basePackages = {
+        "cn.datafuturex.zhishu",
+        "com.datafuturex.assistant"
+}, annotationClass = Mapper.class)
+@EnableCaching
 public class YqapApplication {
 
     private static final Logger log = LoggerFactory.getLogger(YqapApplication.class);

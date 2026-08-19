@@ -89,7 +89,9 @@ git push gitee main
 
 | 模块     | 路径                      | 说明                |
 | ------ | ----------------------- | ----------------- |
-| 产品门户   | `/portal`               | 产品落地页             |
+| 产品门户   | `/portal`               | 产品落地页               |
+| 文档       | `/docs`                 | 快速开始与单点登录说明   |
+| 单点登录回调 | `/sso/callback`         | 伙伴 Ticket 换票登录     |
 | 登录     | `/login`                | 滑动验证码 + RSA       |
 | 仪表盘    | `/home/dashboard`       | 概览、公告、快捷入口        |
 | 权限管理   | `/permission/*`         | 用户 / 单位 / 角色 / 菜单 |
@@ -526,6 +528,7 @@ npm run test
 | 文档                                                               | 说明                 |
 | ---------------------------------------------------------------- | ------------------ |
 | [仓库快速开始](../README.md) | 根目录 README：演示模式与前后端联调 |
+| [门户文档](https://yunqi.datafuturex.cn/docs) | 独立文档页 `/docs`：快速开始与单点登录说明 |
 | [在线演示](https://yunqi.datafuturex.cn) | 线上体验地址 |
 | [GitHub 源码](https://github.com/DataFutureX/yunqi-application-platform) | `git@github.com:DataFutureX/yunqi-application-platform.git`（`origin` / `main`）；前端位于 `frontend/` |
 | [Gitee 镜像](https://gitee.com/DataFutureX/yunqi-application-platform) | `git@gitee.com:DataFutureX/yunqi-application-platform.git`（`gitee`）；前端位于 `frontend/` |

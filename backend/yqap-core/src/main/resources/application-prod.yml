@@ -40,7 +40,7 @@ yunqi:
         enabled: ${YUNQI_SSO_WANXIANG_ENABLED:true}
         issuer: wanxiang
         display-name: 万象
-        algorithm: RS256
+        algorithm: RS256,SM2
         public-key: ${YUNQI_SSO_WANXIANG_PUBLIC_KEY:classpath:sso/wanxiang.pem}
         ticket-ttl-max-seconds: 120
         username-claim: username
@@ -48,7 +48,7 @@ yunqi:
         enabled: ${YUNQI_SSO_SHUZHI_IOT_ENABLED:true}
         issuer: shuzhi-iot
         display-name: 数智IoT
-        algorithm: RS256
+        algorithm: RS256,SM2
         public-key: ${YUNQI_SSO_SHUZHI_IOT_PUBLIC_KEY:classpath:sso/shuzhi-iot.pem}
         ticket-ttl-max-seconds: 120
         username-claim: username

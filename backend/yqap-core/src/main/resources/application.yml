@@ -76,7 +76,7 @@ yunqi:
         enabled: true
         issuer: wanxiang
         display-name: 万象
-        algorithm: RS256
+        algorithm: RS256,SM2
         public-key: classpath:sso/wanxiang.pem
         public-keys:
           wanxiang-2026: classpath:sso/wanxiang.pem
@@ -86,7 +86,7 @@ yunqi:
         enabled: true
         issuer: shuzhi-iot
         display-name: 数智IoT
-        algorithm: RS256
+        algorithm: RS256,SM2
         public-key: classpath:sso/shuzhi-iot.pem
         public-keys:
           shuzhi-iot-2026: classpath:sso/shuzhi-iot.pem

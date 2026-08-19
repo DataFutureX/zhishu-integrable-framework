@@ -14,13 +14,13 @@ const ROOT = path.resolve(__dirname, '..')
 const OUT_DIR = path.join(ROOT, 'screenshot')
 const BASE = process.env.DEMO_BASE_URL || 'http://localhost:3000'
 
-/** 与 PortalLanding.vue 顶部 navItems 一致 */
+/** 与门户导航一致：落地页分屏 + 独立文档页 */
 const NAV_SHOTS = [
   { name: '01a-portal-hero', label: '首屏', mode: 'hero' },
   { name: '01b-portal-opensource', label: '开源', navLabel: '开源', hash: 'opensource' },
   { name: '01c-portal-features', label: '能力', navLabel: '能力', hash: 'features' },
   { name: '01d-portal-stack', label: '技术栈', navLabel: '技术栈', hash: 'stack' },
-  { name: '01e-portal-quickstart', label: '快速开始', navLabel: '快速开始', hash: 'quickstart' },
+  { name: '01e-portal-docs', label: '文档', mode: 'docs', path: '/docs/quickstart' },
 ]
 
 async function waitSettled(page, ms = 600) {
@@ -81,7 +81,17 @@ async function main() {
         await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }))
         await page.locator('.portal-hero').first().waitFor({ state: 'visible' })
         await page.waitForTimeout(500)
+      } else if (item.mode === 'docs') {
+        console.log('打开独立文档页…')
+        await page.goto(`${BASE}${item.path}`, { waitUntil: 'domcontentloaded' })
+        await waitSettled(page, 800)
+        await page.locator('.docs-page').first().waitFor({ state: 'visible' })
+        await page.waitForTimeout(400)
       } else {
+        if (!page.url().includes('/portal')) {
+          await page.goto(`${BASE}/portal`, { waitUntil: 'domcontentloaded' })
+          await waitSettled(page, 600)
+        }
         console.log(`点击顶部菜单「${item.navLabel}」…`)
         await clickNavAndSettle(page, item.navLabel, item.hash)
       }
@@ -93,7 +103,9 @@ async function main() {
       results.push(item)
     }
 
-    // 整页全长对照
+    // 整页全长对照（落地页）
+    await page.goto(`${BASE}/portal`, { waitUntil: 'domcontentloaded' })
+    await waitSettled(page, 600)
     await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }))
     await page.waitForTimeout(300)
     await page.screenshot({

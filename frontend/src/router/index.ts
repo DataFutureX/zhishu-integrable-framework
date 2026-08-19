@@ -26,6 +26,16 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '产品门户', requiresAuth: false },
   },
   {
+    path: '/docs',
+    redirect: '/docs/quickstart',
+  },
+  {
+    path: '/docs/:docId',
+    name: 'PortalDocs',
+    component: () => import('@/views/portal/PortalDocsPage.vue'),
+    meta: { title: '文档', requiresAuth: false },
+  },
+  {
     path: '/403',
     name: 'Forbidden',
     component: () => import('@/views/error/Forbidden.vue'),
@@ -92,7 +102,9 @@ function preloadPortalPreview() {
 }
 
 function canAccessRoute(
-  matched: RouteRecordRaw['children'] extends infer _T ? typeof router.currentRoute.value.matched : never,
+  matched: RouteRecordRaw['children'] extends infer _T
+    ? typeof router.currentRoute.value.matched
+    : never,
   userStore: ReturnType<typeof useUserStore>,
 ) {
   const required = collectRoutePermissions(matched)
@@ -108,6 +120,11 @@ router.beforeEach(async (to, _from, next) => {
 
   if (to.path === '/portal' || to.name === 'Portal') {
     preloadPortalPreview()
+    next()
+    return
+  }
+
+  if (to.path.startsWith('/docs') || to.name === 'PortalDocs') {
     next()
     return
   }

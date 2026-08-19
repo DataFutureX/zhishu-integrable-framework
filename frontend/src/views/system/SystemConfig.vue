@@ -13,37 +13,37 @@
         </p>
       </header>
 
-      <div class="settings-layout">
-        <aside class="settings-nav" aria-label="设置分类导航">
-          <div class="settings-nav__title">设置分类</div>
-          <nav class="settings-nav__list">
-            <button
-              v-for="item in settingSections"
-              :key="item.id"
-              type="button"
-              class="settings-nav__item"
-              :class="{ 'is-active': activeSectionId === item.id }"
-              @click="scrollToSection(item.id)"
-            >
-              <span class="settings-nav__icon" :class="`settings-nav__icon--${item.id}`">
-                <el-icon :size="16"><component :is="item.icon" /></el-icon>
-              </span>
-              <span class="settings-nav__text">
-                <span class="settings-nav__label">{{ item.title }}</span>
-                <span class="settings-nav__hint">{{ item.hint }}</span>
-              </span>
-            </button>
-          </nav>
-        </aside>
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="100px"
+        class="settings-form"
+      >
+        <div class="settings-layout">
+          <aside class="settings-nav" aria-label="设置分类导航">
+            <div class="settings-nav__title">设置分类</div>
+            <nav class="settings-nav__list">
+              <button
+                v-for="item in settingSections"
+                :key="item.id"
+                type="button"
+                class="settings-nav__item"
+                :class="{ 'is-active': activeSectionId === item.id }"
+                @click="scrollToSection(item.id)"
+              >
+                <span class="settings-nav__icon" :class="`settings-nav__icon--${item.id}`">
+                  <el-icon :size="16"><component :is="item.icon" /></el-icon>
+                </span>
+                <span class="settings-nav__text">
+                  <span class="settings-nav__label">{{ item.title }}</span>
+                  <span class="settings-nav__hint">{{ item.hint }}</span>
+                </span>
+              </button>
+            </nav>
+          </aside>
 
-        <div class="settings-main">
-          <el-form
-            ref="formRef"
-            :model="formData"
-            :rules="formRules"
-            label-width="100px"
-            class="settings-form"
-          >
+          <div ref="settingsMainRef" class="settings-main">
             <!-- 品牌标识 -->
             <div id="setting-section-brand" class="settings-section">
             <div class="settings-section__head">
@@ -206,29 +206,29 @@
               </el-form-item>
             </div>
           </div>
-
-          <div class="settings-footer">
-            <el-button
-              v-permission="PERMISSIONS.SYSTEM_CONFIG_EDIT"
-              type="primary"
-              :icon="Check"
-              :loading="submitLoading"
-              @click="handleSubmit"
-            >
-              保存设置
-            </el-button>
-            <el-button
-              v-permission="PERMISSIONS.SYSTEM_CONFIG_EDIT"
-              :icon="RefreshLeft"
-              @click="handleReset"
-            >
-              重置
-            </el-button>
-            <el-button :icon="Refresh" :loading="loading" @click="fetchConfig">刷新</el-button>
           </div>
-        </el-form>
         </div>
-      </div>
+
+        <div class="settings-footer">
+          <el-button
+            v-permission="PERMISSIONS.SYSTEM_CONFIG_EDIT"
+            type="primary"
+            :icon="Check"
+            :loading="submitLoading"
+            @click="handleSubmit"
+          >
+            保存设置
+          </el-button>
+          <el-button
+            v-permission="PERMISSIONS.SYSTEM_CONFIG_EDIT"
+            :icon="RefreshLeft"
+            @click="handleReset"
+          >
+            重置
+          </el-button>
+          <el-button :icon="Refresh" :loading="loading" @click="fetchConfig">刷新</el-button>
+        </div>
+      </el-form>
     </section>
   </div>
 </template>
@@ -279,6 +279,7 @@ const loading = ref(false)
 const submitLoading = ref(false)
 const iconUploading = ref(false)
 const formRef = ref<FormInstance>()
+const settingsMainRef = ref<HTMLElement | null>(null)
 const systemConfigStore = useSystemConfigStore()
 const activeSectionId = ref(settingSections[0].id)
 
@@ -424,7 +425,7 @@ const scrollToSection = (sectionId: string) => {
 }
 
 const setupSectionObserver = () => {
-  const scrollRoot = document.querySelector('.layout-content-view')
+  const scrollRoot = settingsMainRef.value
   if (!scrollRoot) return
 
   sectionObserver?.disconnect()
@@ -472,10 +473,18 @@ onUnmounted(() => {
 @use '@/styles/variables.scss' as *;
 
 .system-config-page {
-  min-height: 100%;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .content-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: $border-radius-md;
   background: $bg-white;
   border: 1px solid $border-lighter;
@@ -488,6 +497,7 @@ onUnmounted(() => {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  flex-shrink: 0;
   padding: 16px 20px;
   border-bottom: 1px solid $border-lighter;
   background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
@@ -521,16 +531,25 @@ onUnmounted(() => {
   }
 }
 
+.settings-form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .settings-layout {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
+  overflow: hidden;
 }
 
 .settings-nav {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  min-height: 0;
+  overflow-y: auto;
   padding: 16px 12px 20px 16px;
   border-right: 1px solid $border-lighter;
   background: #fafbfc;
@@ -634,10 +653,12 @@ onUnmounted(() => {
 
 .settings-main {
   min-width: 0;
-  padding: 20px 24px 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
 }
 
-.settings-form {
+.settings-main .settings-section {
   max-width: 860px;
 }
 
@@ -798,30 +819,28 @@ onUnmounted(() => {
 }
 
 .settings-footer {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 8px -24px 0;
-  padding: 14px 24px 20px;
+  padding: 12px 24px 12px 244px;
   border-top: 1px solid $border-lighter;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.04);
+  background: #fff;
 }
 
 @media (max-width: 960px) {
   .settings-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .settings-nav {
-    top: 0;
     padding: 12px 16px;
     border-right: none;
     border-bottom: 1px solid $border-lighter;
+    overflow-x: auto;
+    overflow-y: hidden;
 
     &__list {
       flex-direction: row;
@@ -847,11 +866,10 @@ onUnmounted(() => {
   }
 
   .settings-main {
-    padding: 16px 16px 0;
+    padding: 16px;
   }
 
   .settings-footer {
-    margin-inline: -16px;
     padding-inline: 16px;
   }
 }

@@ -74,9 +74,10 @@ public class SsoProperties {
         private String displayName;
 
         /**
-         * 算法，仅支持 RS256
+         * 允许的 Ticket 算法（逗号分隔）。支持 RS256、SM2；空则两者均可。
+         * 实际验签按票据 Header.alg 选择，不强制伙伴只使用一种。
          */
-        private String algorithm = "RS256";
+        private String algorithm = "RS256,SM2";
 
         /**
          * 默认公钥资源（classpath: 或 file:）

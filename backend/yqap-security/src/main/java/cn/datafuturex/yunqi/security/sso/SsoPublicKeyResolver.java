@@ -1,24 +1,28 @@
 package cn.datafuturex.yunqi.security.sso;
 
 import cn.datafuturex.yunqi.config.SsoProperties;
+import cn.hutool.crypto.PemUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
-import java.security.interfaces.RSAPublicKey;
+import java.security.PublicKey;
+import java.security.Security;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 按伙伴 / kid 解析并缓存 RSA 公钥
+ * 按伙伴 / kid 解析并缓存公钥（RSA 或 SM2）
  */
 @Slf4j
 @Component
@@ -26,9 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SsoPublicKeyResolver {
 
     private final ResourceLoader resourceLoader;
-    private final Map<String, RSAPublicKey> cache = new ConcurrentHashMap<>();
+    private final Map<String, PublicKey> cache = new ConcurrentHashMap<>();
 
-    public RSAPublicKey resolve(SsoProperties.Partner partner, String kid) {
+    public PublicKey resolve(SsoProperties.Partner partner, String kid) {
         String location = null;
         if (StringUtils.hasText(kid) && partner.getPublicKeys() != null) {
             location = partner.getPublicKeys().get(kid);
@@ -45,7 +49,7 @@ public class SsoPublicKeyResolver {
         return cache.computeIfAbsent(cacheKey, k -> loadPublicKey(resolvedLocation, partner.getIssuer()));
     }
 
-    private RSAPublicKey loadPublicKey(String location, String issuer) {
+    private PublicKey loadPublicKey(String location, String issuer) {
         try {
             Resource resource = resourceLoader.getResource(location);
             if (!resource.exists()) {
@@ -65,14 +69,34 @@ public class SsoPublicKeyResolver {
         }
     }
 
-    static RSAPublicKey parsePem(String pem) throws Exception {
+    static PublicKey parsePem(String pem) throws Exception {
+        ensureBouncyCastle();
+        try (InputStream in = new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8))) {
+            PublicKey key = PemUtil.readPemPublicKey(in);
+            if (key != null) {
+                return key;
+            }
+        } catch (Exception e) {
+            log.debug("PemUtil 解析 SSO 公钥失败，回退 KeyFactory: {}", e.getMessage());
+        }
+
         String normalized = pem
                 .replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s", "");
         byte[] decoded = Base64.getDecoder().decode(normalized);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
-        KeyFactory factory = KeyFactory.getInstance("RSA");
-        return (RSAPublicKey) factory.generatePublic(spec);
+        try {
+            return KeyFactory.getInstance("RSA").generatePublic(spec);
+        } catch (Exception rsaFailed) {
+            // 国密 SM2 曲线 OID，须用 BC 的 EC KeyFactory
+            return KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME).generatePublic(spec);
+        }
+    }
+
+    private static void ensureBouncyCastle() {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
     }
 }

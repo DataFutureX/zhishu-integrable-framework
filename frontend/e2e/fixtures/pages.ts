@@ -7,6 +7,16 @@ export const PUBLIC_PAGES = [
     expectSelector: '.portal-hero__brand',
   },
   {
+    name: 'docs',
+    path: '/docs/quickstart',
+    expectSelector: '.docs-page__title',
+  },
+  {
+    name: 'docs-sso',
+    path: '/docs/sso',
+    expectSelector: '.portal-docs__heading',
+  },
+  {
     name: 'login',
     path: '/login',
     expectSelector: 'input[placeholder="用户名"]',

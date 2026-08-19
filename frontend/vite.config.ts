@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
       port: Number(env.VITE_PORT) || 3000,
       // E2E（Playwright webServer）设置 PW_TEST=1，避免自动打开浏览器
       open: process.env.PW_TEST !== '1',
-      // 门户页引用仓库根目录 README.md
+      // 独立文档页 /docs 引用仓库根 README 与 docs/*.md
       fs: {
         allow: [fileURLToPath(new URL('..', import.meta.url))],
       },

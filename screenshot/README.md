@@ -33,6 +33,6 @@
 | 01b-portal-opensource.png | 开源 |
 | 01c-portal-features.png | 能力 |
 | 01d-portal-stack.png | 技术栈 |
-| 01e-portal-quickstart.png | 快速开始 |
+| 01e-portal-docs.png | 文档 |
 | 01-portal.png | 整页全长 |
 

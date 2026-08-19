@@ -22,9 +22,9 @@
 
 产品门户（`/portal`，按顶部导航分屏截取视口）：
 
-| 首屏 | 开源 | 能力 | 技术栈 | 快速开始 |
+| 首屏 | 开源 | 能力 | 技术栈 | 文档 |
 |:---:|:---:|:---:|:---:|:---:|
-| ![产品门户 · 首屏](./screenshot/01a-portal-hero.png) | ![产品门户 · 开源](./screenshot/01b-portal-opensource.png) | ![产品门户 · 能力](./screenshot/01c-portal-features.png) | ![产品门户 · 技术栈](./screenshot/01d-portal-stack.png) | ![产品门户 · 快速开始](./screenshot/01e-portal-quickstart.png) |
+| ![产品门户 · 首屏](./screenshot/01a-portal-hero.png) | ![产品门户 · 开源](./screenshot/01b-portal-opensource.png) | ![产品门户 · 能力](./screenshot/01c-portal-features.png) | ![产品门户 · 技术栈](./screenshot/01d-portal-stack.png) | ![产品门户 · 文档](./screenshot/01e-portal-docs.png) |
 
 登录页：
 
@@ -303,10 +303,12 @@ npm install
 
 ## 下一步
 
+- 产品门户文档（快速开始 + 单点登录）：本地 [http://localhost:3000/docs](http://localhost:3000/docs)，或在线演示站 `/docs`
 - 前端完整说明：[frontend/README.md](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/frontend/README.md)（项目结构、配置、部署、开发规范）
 - 菜单与权限对照：[frontend/docs/MENU_ROUTES.json](./frontend/docs/MENU_ROUTES.json)
 - 后端完整说明：[backend/README.md](https://gitee.com/DataFutureX/yunqi-application-platform/blob/master/backend/README.md)
 - API 契约：后端 Swagger `http://localhost:8080/swagger-ui.html`
+- 单点登录协议：[docs/单点登录对接说明.md](./docs/单点登录对接说明.md)
 
 ## 许可证
 

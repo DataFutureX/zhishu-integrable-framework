@@ -33,6 +33,6 @@ export async function expectAuthPageReady(page: Page, item: AuthPageFixture) {
 /** 打开公开页并断言选择器可见 */
 export async function expectPublicPageReady(page: Page, path: string, expectSelector: string) {
   await page.goto(path, { waitUntil: 'domcontentloaded' })
-  await waitSettled(page, path === '/portal' ? 1200 : 800)
+  await waitSettled(page, path === '/portal' || path.startsWith('/docs') ? 1200 : 800)
   await expect(page.locator(expectSelector).first()).toBeVisible({ timeout: 15_000 })
 }

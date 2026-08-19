@@ -5,16 +5,25 @@ import { parseRouteMetaJson } from '@/utils/routeLayout'
 export const LAYOUT_ROUTE_NAME = 'Layout'
 
 /** 与静态路由冲突、禁止注册为 Layout 子路由的路径 */
-const RESERVED_PATHS = new Set(['/login', '/portal', '/403', '/404'])
+const RESERVED_PATHS = new Set(['/login', '/portal', '/docs', '/403', '/404'])
 
 /** 与静态路由冲突、禁止用于动态路由的 name */
-const RESERVED_ROUTE_NAMES = new Set(['Login', 'Portal', 'Layout', 'Forbidden', 'NotFound'])
+const RESERVED_ROUTE_NAMES = new Set([
+  'Login',
+  'Portal',
+  'PortalDocs',
+  'Layout',
+  'Forbidden',
+  'NotFound',
+])
 
 const normalizeFullPath = (path: string) => (path.startsWith('/') ? path : `/${path}`)
 
 const isReservedPath = (path?: string) => {
   if (!path) return false
-  return RESERVED_PATHS.has(normalizeFullPath(path))
+  const normalized = normalizeFullPath(path)
+  if (RESERVED_PATHS.has(normalized)) return true
+  return normalized === '/docs' || normalized.startsWith('/docs/')
 }
 
 const viewModules = import.meta.glob('@/views/**/*.vue')
@@ -30,18 +39,28 @@ function toViewsPath(modulePath: string) {
 export function resolveViewComponent(component?: string) {
   if (!component) return undefined
 
-  const normalized = component.replace(/^\//, '').replace(/\\/g, '/').replace(/\.vue$/, '')
+  const normalized = component
+    .replace(/^\//, '')
+    .replace(/\\/g, '/')
+    .replace(/\.vue$/, '')
 
-  const entries = Object.entries(viewModules).map(([path, loader]) => [toViewsPath(path), loader] as const)
+  const entries = Object.entries(viewModules).map(
+    ([path, loader]) => [toViewsPath(path), loader] as const,
+  )
 
-  const exact = entries.find(([viewPath]) => viewPath === `${normalized}.vue` || viewPath === normalized)
+  const exact = entries.find(
+    ([viewPath]) => viewPath === `${normalized}.vue` || viewPath === normalized,
+  )
   if (exact) return exact[1]
 
   // 兼容目录迁移后仍写旧路径的情况：按文件名唯一匹配
   const fileName = normalized.split('/').pop()
   if (!fileName) return undefined
   const byName = entries.filter(([viewPath]) => {
-    const base = viewPath.replace(/\.vue$/, '').split('/').pop()
+    const base = viewPath
+      .replace(/\.vue$/, '')
+      .split('/')
+      .pop()
     return base === fileName
   })
   return byName.length === 1 ? byName[0][1] : undefined
@@ -137,8 +156,7 @@ function menuToRoute(menu: MenuVO, parentFullPath?: string): RouteRecordRaw | nu
     .filter((route): route is RouteRecordRaw => route !== null)
 
   const component = resolveViewComponent(menu.component)
-  const isDirectory =
-    menu.menuType === 'DIRECTORY' || (!component && childRoutes.length > 0)
+  const isDirectory = menu.menuType === 'DIRECTORY' || (!component && childRoutes.length > 0)
 
   if (isDirectory) {
     const route: RouteRecordRaw = {

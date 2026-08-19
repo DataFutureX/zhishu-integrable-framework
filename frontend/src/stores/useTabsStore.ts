@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
 import { HOME_DASHBOARD_PATH } from '@/constants/app'
-import { LAYOUT_ROUTE_NAME } from '@/router/dynamicRoutes'
+import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
 import type { LayoutTab } from '@/types/tabs'
 
 const resolveTabTitle = (route: RouteLocationNormalized) => {

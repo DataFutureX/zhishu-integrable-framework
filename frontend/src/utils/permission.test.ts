@@ -4,7 +4,7 @@ import {
   matchPermissions,
   normalizePermissionCodes,
 } from '@/utils/permission'
-import { resolveViewComponent } from '@/router/dynamicRoutes'
+import { resolveViewComponent } from '@/router/dynamicRouteViews'
 
 describe('normalizePermissionCodes', () => {
   it('normalizes string and array inputs', () => {

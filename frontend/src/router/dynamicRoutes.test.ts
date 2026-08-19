@@ -4,8 +4,8 @@ import {
   filterVisibleMenus,
   findFirstMenuPath,
   menusToRoutes,
-  resolveViewComponent,
 } from '@/router/dynamicRoutes'
+import { resolveViewComponent } from '@/router/dynamicRouteViews'
 
 function menu(partial: Partial<MenuVO> & Pick<MenuVO, 'id' | 'title' | 'menuType'>): MenuVO {
   return {

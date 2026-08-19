@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { getSystemConfigApi, getPublicSystemConfigApi } from '@/api/systemConfig'
 import { resolveAssetUrl } from '@/utils/asset'
 import { updateBrowserFavicon } from '@/utils/favicon'
 import type { SystemConfigVO } from '@/types/systemConfig'
@@ -77,8 +76,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
       configFetchPromise = (async () => {
         try {
           const config = options?.publicOnly
-            ? await getPublicSystemConfigApi()
-            : await getSystemConfigApi()
+            ? await (await import('@/api/publicSystemConfig')).fetchPublicSystemConfig()
+            : await (await import('@/api/systemConfig')).getSystemConfigApi()
           if (config) {
             this.applyConfig(config)
             document.title = this.systemName

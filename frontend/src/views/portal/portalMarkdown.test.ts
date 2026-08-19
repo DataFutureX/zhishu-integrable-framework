@@ -1,34 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
-  parsePortalDocRef,
-  portalDocPath,
   prepareQuickStartMarkdown,
   renderPortalMarkdown,
+  renderPortalMarkdownWithToc,
 } from './portalMarkdown'
 
 describe('portalMarkdown', () => {
-  it('parses docs path and legacy hash', () => {
-    expect(parsePortalDocRef('/docs')).toBe('quickstart')
-    expect(parsePortalDocRef('/docs/sso')).toBe('sso')
-    expect(parsePortalDocRef('/docs/wanxiang')).toBe('wanxiang')
-    expect(parsePortalDocRef('/docs/sso-sdk')).toBe('sso-sdk')
-    expect(parsePortalDocRef('#docs')).toBe('quickstart')
-    expect(parsePortalDocRef('#docs/sso')).toBe('sso')
-    expect(parsePortalDocRef('#quickstart')).toBe('quickstart')
-    expect(parsePortalDocRef('#features')).toBeNull()
-  })
-
-  it('parses relative markdown doc links', () => {
-    expect(parsePortalDocRef('./单点登录对接说明.md')).toBe('sso')
-    expect(parsePortalDocRef('../docs/万象接入联调实现步骤.md')).toBe('wanxiang')
-    expect(parsePortalDocRef('./他方SSO接入SDK使用说明.md')).toBe('sso-sdk')
-    expect(parsePortalDocRef('./README.md')).toBe('quickstart')
-  })
-
-  it('builds docs path', () => {
-    expect(portalDocPath('sso')).toBe('/docs/sso')
-  })
-
   it('renders GFM tables and rewrites SSO markdown links', () => {
     const html = renderPortalMarkdown(`
 | 算法 | 说明 |
@@ -65,5 +42,26 @@ describe('portalMarkdown', () => {
     expect(prepared).not.toContain('## 目录')
     expect(prepared).not.toContain('界面一览')
     expect(prepared).toContain('两种体验路径')
+  })
+
+  it('extracts heading toc with stable ids', () => {
+    const { html, toc } = renderPortalMarkdownWithToc(`
+## 两种体验路径
+
+正文
+
+### 演示模式
+
+说明
+
+## 常见问题
+`)
+    expect(html).toContain('id="两种体验路径"')
+    expect(html).toContain('id="演示模式"')
+    expect(toc).toEqual([
+      { id: '两种体验路径', text: '两种体验路径', level: 2 },
+      { id: '演示模式', text: '演示模式', level: 3 },
+      { id: '常见问题', text: '常见问题', level: 2 },
+    ])
   })
 })

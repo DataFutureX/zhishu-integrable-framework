@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
       vue(),
       AutoImport({
         imports: ['vue', 'vue-router', 'pinia'],
-        resolvers: [ElementPlusResolver()],
         dts: 'src/types/auto-imports.d.ts',
       }),
       Components({
@@ -59,10 +58,29 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       sourcemap: false,
       chunkSizeWarningLimit: 1500,
+      modulePreload: {
+        resolveDependencies(_filename, deps) {
+          return deps.filter(
+            (dep) =>
+              !dep.includes('element-plus') &&
+              !dep.includes('portal-markdown') &&
+              !dep.includes('portal-doc-routes'),
+          )
+        },
+      },
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes('node_modules')) return
+            if (id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) {
+              return 'vite-preload'
+            }
+            if (!id.includes('node_modules')) {
+              if (id.includes('portalDocRoutes')) return 'portal-doc-routes'
+              if (id.includes('markdown-it')) return 'markdown-it'
+              if (id.includes('portalMarkdown')) return 'portal-markdown'
+              return
+            }
+            if (id.includes('nprogress')) return 'nprogress'
             if (id.includes('element-plus') || id.includes('@element-plus')) {
               return 'element-plus'
             }

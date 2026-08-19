@@ -17,13 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { defineAsyncComponent, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEFAULT_SYSTEM_NAME } from '@/stores/useSystemConfigStore'
-import PortalDocs from './PortalDocs.vue'
 import PortalPublicLayout from './PortalPublicLayout.vue'
-import { isPortalDocId } from './portalMarkdown'
+import { isPortalDocId } from '@/utils/portalDocRoutes'
+
+const PortalDocs = defineAsyncComponent(() => import('./PortalDocs.vue'))
 
 const route = useRoute()
 const router = useRouter()

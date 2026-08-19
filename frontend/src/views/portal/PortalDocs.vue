@@ -15,6 +15,23 @@
           <span class="portal-docs__link-desc">{{ doc.navHint }}</span>
         </a>
       </div>
+
+      <div v-if="currentToc.length" class="portal-docs__toc">
+        <p class="portal-docs__group-name">本篇目录</p>
+        <a
+          v-for="item in currentToc"
+          :key="item.id"
+          :href="`#${item.id}`"
+          class="portal-docs__toc-link"
+          :class="[
+            `portal-docs__toc-link--h${item.level}`,
+            { 'portal-docs__toc-link--active': activeHeadingId === item.id },
+          ]"
+          @click.prevent="scrollToHeading(item.id)"
+        >
+          {{ item.text }}
+        </a>
+      </div>
     </nav>
 
     <div class="portal-docs__main">
@@ -33,26 +50,34 @@
         </a>
       </header>
 
-      <article class="portal-readme" v-html="currentHtml" @click="onArticleClick" />
+      <article
+        ref="articleRef"
+        class="portal-readme"
+        v-if="docLoading"
+        aria-busy="true"
+      >
+        <p class="portal-docs__loading">文档加载中…</p>
+      </article>
+      <article
+        v-else
+        ref="articleRef"
+        class="portal-readme"
+        v-html="currentHtml"
+        @click="onArticleClick"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import quickStartSource from '../../../../README.md?raw'
-import ssoGuideSource from '../../../../docs/单点登录对接说明.md?raw'
-import wanxiangGuideSource from '../../../../docs/万象接入联调实现步骤.md?raw'
-import ssoSdkSource from '../../../../docs/他方SSO接入SDK使用说明.md?raw'
 import {
   parsePortalDocRef,
   portalDocPath,
-  preparePortalMarkdown,
-  prepareQuickStartMarkdown,
-  renderPortalMarkdown,
   type PortalDocId,
-} from './portalMarkdown'
+} from '@/utils/portalDocRoutes'
+import type { PortalDocTocItem } from './portalMarkdown'
 
 interface PortalDocMeta {
   id: PortalDocId
@@ -105,12 +130,19 @@ const docGroups = [
   { name: '单点登录', items: docs.filter((doc) => doc.id !== 'quickstart') },
 ]
 
-const renderedHtml: Record<PortalDocId, string> = {
-  quickstart: renderPortalMarkdown(prepareQuickStartMarkdown(quickStartSource)),
-  sso: renderPortalMarkdown(preparePortalMarkdown(ssoGuideSource)),
-  wanxiang: renderPortalMarkdown(preparePortalMarkdown(wanxiangGuideSource)),
-  'sso-sdk': renderPortalMarkdown(preparePortalMarkdown(ssoSdkSource)),
+interface DocCacheEntry {
+  html: string
+  toc: PortalDocTocItem[]
 }
+
+const htmlCache = new Map<PortalDocId, DocCacheEntry>()
+const currentHtml = ref('')
+const currentToc = ref<PortalDocTocItem[]>([])
+const activeHeadingId = ref('')
+const articleRef = ref<HTMLElement | null>(null)
+const docLoading = ref(false)
+let loadSeq = 0
+let headingObserver: IntersectionObserver | null = null
 
 const route = useRoute()
 const router = useRouter()
@@ -118,13 +150,102 @@ const router = useRouter()
 const activeDoc = computed<PortalDocId>(() => parsePortalDocRef(route.path) ?? 'quickstart')
 
 const currentDoc = computed(() => docs.find((doc) => doc.id === activeDoc.value) ?? docs[0])
-const currentHtml = computed(() => renderedHtml[activeDoc.value])
+
+async function ensureDocHtml(id: PortalDocId) {
+  const cached = htmlCache.get(id)
+  if (cached) {
+    currentHtml.value = cached.html
+    currentToc.value = cached.toc
+    docLoading.value = false
+    await nextTick()
+    setupHeadingObserver()
+    return
+  }
+
+  const seq = ++loadSeq
+  docLoading.value = true
+  activeHeadingId.value = ''
+  try {
+    const { loadPortalDocContent } = await import('./portalMarkdown')
+    const content = await loadPortalDocContent(id)
+    if (seq !== loadSeq) return
+    htmlCache.set(id, content)
+    currentHtml.value = content.html
+    currentToc.value = content.toc
+  } finally {
+    if (seq === loadSeq) {
+      docLoading.value = false
+      await nextTick()
+      setupHeadingObserver()
+    }
+  }
+}
+
+function scrollToHeading(id: string) {
+  const target = document.getElementById(id)
+  if (!target) return
+  activeHeadingId.value = id
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  history.replaceState(null, '', `#${encodeURIComponent(id)}`)
+}
+
+function setupHeadingObserver() {
+  headingObserver?.disconnect()
+  headingObserver = null
+
+  const article = articleRef.value
+  if (!article || currentToc.value.length === 0) return
+
+  const headingIds = new Set(currentToc.value.map((item) => item.id))
+  const visible = new Map<string, IntersectionObserverEntry>()
+
+  headingObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = entry.target.id
+        if (!headingIds.has(id)) continue
+        if (entry.isIntersecting) {
+          visible.set(id, entry)
+        } else {
+          visible.delete(id)
+        }
+      }
+
+      if (visible.size === 0) return
+
+      const topmost = [...visible.values()].sort(
+        (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+      )[0]
+      if (topmost) {
+        activeHeadingId.value = topmost.target.id
+      }
+    },
+    {
+      root: null,
+      rootMargin: '-88px 0px -65% 0px',
+      threshold: [0, 1],
+    },
+  )
+
+  for (const item of currentToc.value) {
+    const el = article.querySelector<HTMLElement>(`#${CSS.escape(item.id)}`)
+    if (el) headingObserver.observe(el)
+  }
+
+  const hash = decodeURIComponent(location.hash.replace(/^#/, ''))
+  if (hash && headingIds.has(hash)) {
+    activeHeadingId.value = hash
+  } else if (currentToc.value[0]) {
+    activeHeadingId.value = currentToc.value[0].id
+  }
+}
 
 function selectDoc(id: PortalDocId) {
   const path = portalDocPath(id)
   if (route.path !== path) {
     void router.push(path)
   }
+  activeHeadingId.value = ''
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -148,9 +269,21 @@ function onArticleClick(event: MouseEvent) {
   if (href.startsWith('#') && !href.startsWith('#docs')) {
     event.preventDefault()
     const headingId = decodeURIComponent(href.slice(1))
-    document.getElementById(headingId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    scrollToHeading(headingId)
   }
 }
+
+onUnmounted(() => {
+  headingObserver?.disconnect()
+})
+
+watch(
+  activeDoc,
+  (id) => {
+    void ensureDocHtml(id)
+  },
+  { immediate: true },
+)
 
 watch(
   () => route.params.docId,
@@ -183,7 +316,9 @@ $canvas-dark-subtle: #161b22;
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-height: calc(100vh - 96px);
   padding: 12px;
+  overflow-y: auto;
   background: $canvas;
   border: 1px solid $border;
   border-radius: $radius;
@@ -233,6 +368,50 @@ $canvas-dark-subtle: #161b22;
   color: $accent;
 }
 
+.portal-docs__toc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+  border-top: 1px solid $border;
+}
+
+.portal-docs__toc-link {
+  display: block;
+  padding: 5px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: $fg-muted;
+  text-decoration: none;
+  border-radius: $radius;
+  border-left: 2px solid transparent;
+  transition:
+    color 0.15s,
+    background 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    color: $fg;
+    background: $canvas-subtle;
+  }
+
+  &--h3 {
+    padding-left: 16px;
+  }
+
+  &--h4 {
+    padding-left: 24px;
+    font-size: 11px;
+  }
+
+  &--active {
+    color: $accent;
+    font-weight: 600;
+    background: #ddf4ff;
+    border-left-color: $accent;
+  }
+}
+
 .portal-docs__toolbar {
   display: flex;
   align-items: flex-start;
@@ -267,6 +446,13 @@ $canvas-dark-subtle: #161b22;
   &:hover {
     text-decoration: underline;
   }
+}
+
+.portal-docs__loading {
+  margin: 0;
+  padding: 48px 0;
+  text-align: center;
+  color: $fg-muted;
 }
 
 @media (max-width: 1024px) {

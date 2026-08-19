@@ -1,4 +1,5 @@
 <template>
+  <ElementPlusRoot>
   <div class="login-container">
     <div class="background" aria-hidden="true">
       <div class="bg-gradient" />
@@ -153,9 +154,11 @@
       </div>
     </div>
   </div>
+  </ElementPlusRoot>
 </template>
 
 <script setup lang="ts">
+import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
 import { ArrowRight } from '@element-plus/icons-vue'
 import SkyCloud from '@/components/common/SkyCloud.vue'
 import SlideCaptcha from '@/components/auth/SlideCaptcha.vue'

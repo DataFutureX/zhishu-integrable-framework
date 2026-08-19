@@ -1,23 +1,13 @@
 import MarkdownIt from 'markdown-it'
 
+import {
+  PORTAL_DOC_FILE_TO_ID,
+  portalDocPath,
+  type PortalDocId,
+} from '@/utils/portalDocRoutes'
+
 const REPO_BLOB = 'https://github.com/DataFutureX/yunqi-application-platform/blob/master/'
 const REPO_TREE = 'https://github.com/DataFutureX/yunqi-application-platform/tree/master/'
-
-/** 门户文档 id，对应路径 `/docs/<id>` */
-export const PORTAL_DOC_IDS = ['quickstart', 'sso', 'wanxiang', 'sso-sdk'] as const
-export type PortalDocId = (typeof PORTAL_DOC_IDS)[number]
-export const PORTAL_DOCS_BASE = '/docs'
-
-export function portalDocPath(id: PortalDocId): string {
-  return `${PORTAL_DOCS_BASE}/${id}`
-}
-
-const DOC_FILE_TO_ID: Record<string, PortalDocId> = {
-  'readme.md': 'quickstart',
-  '单点登录对接说明.md': 'sso',
-  '万象接入联调实现步骤.md': 'wanxiang',
-  '他方sso接入sdk使用说明.md': 'sso-sdk',
-}
 
 function fileBasename(href: string): string {
   const path = href.split('?')[0]?.split('#')[0] ?? href
@@ -36,6 +26,17 @@ function githubSlug(text: string): string {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\p{M}\s-]/gu, '')
     .replace(/\s+/g, '-')
+}
+
+export interface PortalDocTocItem {
+  id: string
+  text: string
+  level: 2 | 3 | 4
+}
+
+interface PortalMarkdownEnv {
+  slugCounts: Map<string, number>
+  toc: PortalDocTocItem[]
 }
 
 function headingText(
@@ -83,7 +84,6 @@ function looksLikeTableRow(line: string): boolean {
   return trimmed.includes('|') && !trimmed.startsWith('```')
 }
 
-/** GitHub Flavored Markdown 表格（markdown-it 核心不含 table） */
 function markdownItGfmTable(md: MarkdownIt): void {
   md.block.ruler.before('fence', 'gfm_table', (state, startLine, endLine, silent) => {
     const getLine = (line: number) =>
@@ -163,7 +163,7 @@ function rewriteHref(href: string): string {
   if (trimmed.startsWith('mailto:')) return trimmed
 
   const basename = fileBasename(trimmed).toLowerCase()
-  const docId = DOC_FILE_TO_ID[basename]
+  const docId = PORTAL_DOC_FILE_TO_ID[basename]
   if (docId) return portalDocPath(docId)
 
   const normalized = trimmed.replace(/\\/g, '/').replace(/^\.\//, '')
@@ -215,12 +215,25 @@ function createMarkdownRenderer(): MarkdownIt {
     ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options))
 
   md.renderer.rules.heading_open = (tokens, idx, options, env, self) => {
-    const slugCounts = (env.slugCounts ??= new Map<string, number>()) as Map<string, number>
+    const renderEnv = env as PortalMarkdownEnv
+    const slugCounts = (renderEnv.slugCounts ??= new Map<string, number>())
     const base = githubSlug(headingText(tokens, idx)) || 'section'
     const seen = slugCounts.get(base) ?? 0
     slugCounts.set(base, seen + 1)
     const id = seen === 0 ? base : `${base}-${seen}`
     tokens[idx].attrSet('id', id)
+
+    const tag = tokens[idx].tag
+    const level = Number(tag.slice(1))
+    if (level >= 2 && level <= 4) {
+      const toc = (renderEnv.toc ??= [])
+      toc.push({
+        id,
+        text: headingText(tokens, idx),
+        level: level as PortalDocTocItem['level'],
+      })
+    }
+
     return defaultHeadingOpen(tokens, idx, options, env, self)
   }
 
@@ -246,7 +259,6 @@ export function preparePortalMarkdown(
 
 export function prepareQuickStartMarkdown(source: string): string {
   let text = source
-    // 门户文档页已有标题区与侧栏，去掉 README 内重复的目录与截图章
     .replace(/^## 目录[\s\S]*?(?=^## )/m, '')
     .replace(/^## 界面一览[\s\S]*?(?=^## )/m, '')
     .replace(/!\[[^\]]*\]\([^)]*\)\s*/g, '')
@@ -257,48 +269,51 @@ export function prepareQuickStartMarkdown(source: string): string {
 }
 
 export function renderPortalMarkdown(source: string): string {
-  return md.render(source, { slugCounts: new Map<string, number>() })
+  return renderPortalMarkdownWithToc(source).html
 }
 
-export function isPortalDocId(value: string): value is PortalDocId {
-  return (PORTAL_DOC_IDS as readonly string[]).includes(value)
+export function renderPortalMarkdownWithToc(source: string): {
+  html: string
+  toc: PortalDocTocItem[]
+} {
+  const env: PortalMarkdownEnv = { slugCounts: new Map(), toc: [] }
+  const html = md.render(source, env)
+  return { html, toc: env.toc }
 }
 
-function parseDocHash(hash: string): PortalDocId | null {
-  const h = hash.replace(/^#/, '')
-  if (!h) return null
-  if (h === 'quickstart' || h === 'docs') return 'quickstart'
-  if (h.startsWith('docs/')) {
-    const id = h.slice('docs/'.length).split('/')[0] ?? ''
-    return isPortalDocId(id) ? id : 'quickstart'
-  }
-  return isPortalDocId(h) ? h : null
+/** 按文档 id 渲染 Markdown 原文为 HTML 与目录 */
+export function renderDocContent(
+  id: PortalDocId,
+  source: string,
+): { html: string; toc: PortalDocTocItem[] } {
+  const prepared =
+    id === 'quickstart' ? prepareQuickStartMarkdown(source) : preparePortalMarkdown(source)
+  return renderPortalMarkdownWithToc(prepared)
 }
 
-/** 兼容路径 `/docs/sso` 与旧锚点 `#docs/sso` */
-export function parsePortalDocRef(ref: string): PortalDocId | null {
-  const raw = decodeURIComponent(ref.trim())
-  if (!raw) return null
+/** @deprecated 使用 renderDocContent */
+export function renderDocHtml(id: PortalDocId, source: string): string {
+  return renderDocContent(id, source).html
+}
 
-  const withoutOrigin = raw.replace(/^https?:\/\/[^/]+/i, '')
-  const [pathPart, hashPart] = withoutOrigin.split('#')
-  const path = (pathPart ?? '').split('?')[0] ?? ''
+const DOC_SOURCE_LOADERS: Record<
+  PortalDocId,
+  () => Promise<{ default: string }>
+> = {
+  quickstart: () => import('../../../../README.md?raw'),
+  sso: () => import('../../../../docs/单点登录对接说明.md?raw'),
+  wanxiang: () => import('../../../../docs/万象接入联调实现步骤.md?raw'),
+  'sso-sdk': () => import('../../../../docs/他方SSO接入SDK使用说明.md?raw'),
+}
 
-  const pathMatch = path.match(/\/docs(?:\/([^/]*))?$/)
-  // 仅匹配门户路由 `/docs/<id>`；`../docs/xxx.md` 留给下方文件名解析
-  if (pathMatch && !/\.md$/i.test(path)) {
-    const id = pathMatch[1]
-    if (!id) return hashPart ? (parseDocHash(hashPart) ?? 'quickstart') : 'quickstart'
-    return isPortalDocId(id) ? id : 'quickstart'
-  }
+export async function loadPortalDocContent(
+  id: PortalDocId,
+): Promise<{ html: string; toc: PortalDocTocItem[] }> {
+  const { default: source } = await DOC_SOURCE_LOADERS[id]()
+  return renderDocContent(id, source)
+}
 
-  if (hashPart) return parseDocHash(hashPart)
-
-  const basename = fileBasename(withoutOrigin || raw).toLowerCase()
-  if (basename.endsWith('.md') && DOC_FILE_TO_ID[basename]) {
-    return DOC_FILE_TO_ID[basename]
-  }
-
-  if (!path.startsWith('/')) return parseDocHash(raw)
-  return null
+export async function loadPortalDocHtml(id: PortalDocId): Promise<string> {
+  const { html } = await loadPortalDocContent(id)
+  return html
 }

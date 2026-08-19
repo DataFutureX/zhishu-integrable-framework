@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { ElNotification } from 'element-plus'
 import { isDemoMode } from '@/config/demo'
 import {
   getRecentAnnouncementsApi,
@@ -80,14 +79,16 @@ export const useAnnouncementStore = defineStore('announcement', () => {
 
   function showAnnouncementPopup(announcement: AnnouncementVO) {
     const priorityLabel = ANNOUNCEMENT_PRIORITY_LABEL[announcement.priority ?? 0] ?? '普通'
-    ElNotification({
-      title: `新公告 · ${priorityLabel}`,
-      message: announcement.title || '系统公告',
-      type: announcement.priority === 2 ? 'warning' : 'info',
-      position: 'top-right',
-      duration: POPUP_AUTO_CLOSE_MS,
-      showClose: true,
-      offset: 60,
+    void import('element-plus').then(({ ElNotification }) => {
+      ElNotification({
+        title: `新公告 · ${priorityLabel}`,
+        message: announcement.title || '系统公告',
+        type: announcement.priority === 2 ? 'warning' : 'info',
+        position: 'top-right',
+        duration: POPUP_AUTO_CLOSE_MS,
+        showClose: true,
+        offset: 60,
+      })
     })
   }
 

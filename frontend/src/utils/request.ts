@@ -4,8 +4,8 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios'
-import { ElMessage } from 'element-plus'
 import { isDemoMode } from '@/config/demo'
+import { showErrorMessage } from '@/utils/uiMessage'
 
 export interface ApiResponse<T = unknown> {
   code: number
@@ -90,7 +90,7 @@ service.interceptors.request.use(
 )
 
 const handleUnauthorized = (message?: string) => {
-  ElMessage.error(message || '登录已失效，请重新登录')
+  showErrorMessage(message || '登录已失效，请重新登录')
   void import('@/utils/logout').then(({ logoutAndRedirect }) => {
     void logoutAndRedirect(undefined, { silent: true, notifyServer: false })
   })
@@ -108,7 +108,7 @@ service.interceptors.response.use(
         return Promise.reject(new Error(res.message || '未授权'))
       }
 
-      if (!silent) ElMessage.error(res.message || '请求失败')
+      if (!silent) showErrorMessage(res.message || '请求失败')
       return Promise.reject(new Error(res.message || '请求失败'))
     }
 
@@ -154,7 +154,7 @@ service.interceptors.response.use(
       message = '网络连接异常'
     }
 
-    ElMessage.error(message)
+    showErrorMessage(message)
     return Promise.reject(error)
   },
 )

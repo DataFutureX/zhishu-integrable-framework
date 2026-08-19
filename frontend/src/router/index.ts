@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
-import { useMenuStore } from '@/stores/useMenuStore'
-import { useUserStore } from '@/stores/useUserStore'
 import { HOME_DASHBOARD_PATH } from '@/constants/app'
-import { LAYOUT_ROUTE_NAME } from '@/router/dynamicRoutes'
+import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
 import { collectRoutePermissions, matchPermissions } from '@/utils/permission'
+import { isPortalPublicPath } from '@/utils/portalPublicRoute'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -105,7 +104,7 @@ function canAccessRoute(
   matched: RouteRecordRaw['children'] extends infer _T
     ? typeof router.currentRoute.value.matched
     : never,
-  userStore: ReturnType<typeof useUserStore>,
+  userStore: { permissions: string[]; isAdmin: boolean },
 ) {
   const required = collectRoutePermissions(matched)
   if (!required.length) return true
@@ -114,6 +113,15 @@ function canAccessRoute(
 
 // 路由守卫
 router.beforeEach(async (to, _from, next) => {
+  if (!isPortalPublicPath(to.path)) {
+    try {
+      const { ensureElementPlus } = await import('@/plugins/elementPlus')
+      await ensureElementPlus()
+    } catch (error) {
+      console.error('加载 Element Plus 失败:', error)
+    }
+  }
+
   const token = localStorage.getItem('token')
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
@@ -149,6 +157,10 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (token) {
+    const [{ useMenuStore }, { useUserStore }] = await Promise.all([
+      import('@/stores/useMenuStore'),
+      import('@/stores/useUserStore'),
+    ])
     const menuStore = useMenuStore()
     const userStore = useUserStore()
     userStore.initUserInfo()

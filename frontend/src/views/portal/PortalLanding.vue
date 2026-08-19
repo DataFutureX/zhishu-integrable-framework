@@ -24,12 +24,12 @@
           <p class="portal-hero__tagline">{{ heroTagline }}</p>
           <p class="portal-hero__desc">{{ heroSupport }}</p>
           <div class="portal-hero__actions">
-            <el-button type="primary" size="large" class="portal-btn-primary" @click="goLogin">
+            <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
               立即体验
-            </el-button>
-            <el-button size="large" class="portal-btn-ghost" @click="goDocs('quickstart')">
+            </button>
+            <button type="button" class="portal-btn-ghost portal-btn-ghost--lg" @click="goDocs('quickstart')">
               快速开始
-            </el-button>
+            </button>
           </div>
         </div>
       </section>
@@ -107,9 +107,7 @@
               <span class="portal-feature__index">{{ String(index + 1).padStart(2, '0') }}</span>
               <div class="portal-feature__body">
                 <div class="portal-feature__head">
-                  <el-icon :size="20" class="portal-feature__icon">
-                    <component :is="feature.icon" />
-                  </el-icon>
+                  <component :is="feature.icon" class="portal-feature__icon" />
                   <h3 class="portal-feature__title">{{ feature.title }}</h3>
                 </div>
                 <p class="portal-feature__desc">{{ feature.desc }}</p>
@@ -147,17 +145,12 @@
             云起应用平台提供模块化开发底座，帮助企业更快交付数字化与智能化应用。
           </p>
           <div class="portal-cta__actions">
-            <el-button
-              type="primary"
-              size="large"
-              class="portal-btn-primary portal-btn-primary--lg"
-              @click="goLogin"
-            >
+            <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
               登录体验
-            </el-button>
-            <el-button size="large" class="portal-btn-ghost" @click="goDocs('quickstart')">
+            </button>
+            <button type="button" class="portal-btn-ghost portal-btn-ghost--lg" @click="goDocs('quickstart')">
               查看文档
-            </el-button>
+            </button>
             <a
               class="portal-cta__link"
               href="https://github.com/DataFutureX/yunqi-application-platform"
@@ -176,13 +169,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Connection, Cpu, Grid, Key, Odometer, Setting } from '@element-plus/icons-vue'
+import {
+  PortalConnectionIcon,
+  PortalCpuIcon,
+  PortalGridIcon,
+  PortalKeyIcon,
+  PortalOdometerIcon,
+  PortalSettingIcon,
+} from './portalIcons'
 import SkyCloud from '@/components/common/SkyCloud.vue'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEFAULT_SYSTEM_INTRODUCTION, DEFAULT_SYSTEM_NAME } from '@/stores/useSystemConfigStore'
 import PortalPublicLayout from './PortalPublicLayout.vue'
 import { PORTAL_SECTION_NAV, SOURCE_REPOS } from './portalMeta'
-import { parsePortalDocRef, portalDocPath, type PortalDocId } from './portalMarkdown'
+import { parsePortalDocRef, portalDocPath, type PortalDocId } from '@/utils/portalDocRoutes'
 
 /** 门户预览图：放 public，不进 JS 包；路由守卫会更早 preload */
 const previewWebp = '/portal/dashboard.webp'
@@ -231,32 +231,32 @@ const features = [
   {
     title: '统一技术架构',
     desc: 'Vue 3 + Spring Boot 4 前后端一体交付，约定统一、工程边界清晰，降低应用搭建成本。',
-    icon: Cpu,
+    icon: PortalCpuIcon,
   },
   {
     title: '业务组件开箱',
     desc: '用户、角色、菜单、单位、系统配置、公告与操作日志等能力即用，支撑组织与运维闭环。',
-    icon: Grid,
+    icon: PortalGridIcon,
   },
   {
     title: '权限安全体系',
     desc: 'RBAC + JWT；本地登录（滑动验证码 + RSA）与伙伴 SSO（Ticket 换票，RS256 / 国密 SM2）并存。',
-    icon: Key,
+    icon: PortalKeyIcon,
   },
   {
     title: '伙伴系统接入',
     desc: '万象、数智 IoT 等通过 Partner SDK 签发短期 Ticket，经 /sso/callback 换票进入云起，沿用本地 RBAC。',
-    icon: Connection,
+    icon: PortalConnectionIcon,
   },
   {
     title: '行业扩展能力',
     desc: '业务模块可插拔扩展，按行业沉淀组件与流程；新增 SSO 来源只需登记公钥，不必新增换票接口。',
-    icon: Setting,
+    icon: PortalSettingIcon,
   },
   {
     title: '运维观测闭环',
     desc: '工作台总览运行状态；系统监控覆盖 JVM / 数据库 / Web 服务；操作日志按月分表，关键操作可审计。',
-    icon: Odometer,
+    icon: PortalOdometerIcon,
   },
 ]
 
@@ -442,46 +442,59 @@ $max: 1120px;
   gap: 8px;
 }
 
+.portal-btn-primary,
+.portal-btn-ghost {
+  cursor: pointer;
+  font-family: inherit;
+  appearance: none;
+  line-height: 1.2;
+}
+
 .portal-btn-primary {
-  height: 40px !important;
-  padding: 0 16px !important;
-  border: 1px solid rgba(31, 35, 40, 0.15) !important;
-  border-radius: $radius !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: #fff !important;
-  background: $success !important;
-  box-shadow: none !important;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(31, 35, 40, 0.15);
+  border-radius: $radius;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: $success;
+  box-shadow: none;
 
   &:hover,
   &:focus {
-    background: $success-hover !important;
-    border-color: rgba(31, 35, 40, 0.15) !important;
-    color: #fff !important;
+    background: $success-hover;
+    border-color: rgba(31, 35, 40, 0.15);
+    color: #fff;
   }
 
   &--lg {
-    height: 44px !important;
-    padding: 0 20px !important;
+    height: 44px;
+    padding: 0 20px;
   }
 }
 
 .portal-btn-ghost {
-  height: 40px !important;
-  padding: 0 16px !important;
-  border: 1px solid $border !important;
-  border-radius: $radius !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: $fg !important;
-  background: $canvas-subtle !important;
-  box-shadow: none !important;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid $border;
+  border-radius: $radius;
+  font-size: 14px;
+  font-weight: 500;
+  color: $fg;
+  background: $canvas-subtle;
+  box-shadow: none;
 
   &:hover,
   &:focus {
-    color: $fg !important;
-    background: #eff2f5 !important;
-    border-color: $border-muted !important;
+    color: $fg;
+    background: #eff2f5;
+    border-color: $border-muted;
+  }
+
+  &--lg {
+    height: 44px;
+    padding: 0 20px;
   }
 }
 
@@ -692,6 +705,9 @@ $max: 1120px;
   }
 
   &__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
     color: $accent;
   }
 

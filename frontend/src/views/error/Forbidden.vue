@@ -1,4 +1,5 @@
 <template>
+  <ElementPlusRoot>
   <div class="error-page">
     <div class="error-page__code">403</div>
     <h1 class="error-page__title">无权访问</h1>
@@ -8,9 +9,11 @@
       <el-button @click="goBack">返回上一页</el-button>
     </div>
   </div>
+  </ElementPlusRoot>
 </template>
 
 <script setup lang="ts">
+import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
 import { useRouter } from 'vue-router'
 import { HOME_DASHBOARD_PATH } from '@/constants/app'
 

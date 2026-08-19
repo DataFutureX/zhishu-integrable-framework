@@ -1,4 +1,5 @@
 <template>
+  <ElementPlusRoot>
   <DemoBanner />
   <el-container
     class="layout-container"
@@ -108,9 +109,11 @@
       </el-container>
     </el-container>
   </el-container>
+  </ElementPlusRoot>
 </template>
 
 <script setup lang="ts">
+import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox } from 'element-plus'

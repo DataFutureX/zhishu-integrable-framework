@@ -60,9 +60,9 @@
               <path fill="currentColor" :d="repo.iconPath" />
             </svg>
           </a>
-          <el-button type="primary" class="portal-header__cta" @click="goLogin">
+          <button type="button" class="portal-header__cta" @click="goLogin">
             在线体验
-          </el-button>
+          </button>
           <button
             type="button"
             class="portal-header__menu"
@@ -154,7 +154,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEFAULT_COPYRIGHT, DEFAULT_SYSTEM_NAME } from '@/stores/useSystemConfigStore'
 import { PORTAL_SECTION_NAV, SOURCE_REPOS, STUDIO_PORTAL } from './portalMeta'
-import { portalDocPath, type PortalDocId } from './portalMarkdown'
+import { portalDocPath, type PortalDocId } from '@/utils/portalDocRoutes'
 
 const props = withDefaults(
   defineProps<{
@@ -403,18 +403,22 @@ $max: 1120px;
     margin-left: 6px;
     height: 32px;
     padding: 0 12px;
-    border: 1px solid rgba(31, 35, 40, 0.15) !important;
-    border-radius: $radius !important;
+    border: 1px solid rgba(31, 35, 40, 0.15);
+    border-radius: $radius;
     font-size: 14px;
     font-weight: 600;
-    color: #fff !important;
-    background: $success !important;
+    font-family: inherit;
+    color: #fff;
+    background: $success;
+    cursor: pointer;
+    appearance: none;
 
     &:hover,
     &:focus {
-      background: $success-hover !important;
-      border-color: rgba(31, 35, 40, 0.15) !important;
-      color: #fff !important;
+      background: $success-hover;
+      border-color: rgba(31, 35, 40, 0.15);
+      color: #fff;
+      outline: none;
     }
   }
 

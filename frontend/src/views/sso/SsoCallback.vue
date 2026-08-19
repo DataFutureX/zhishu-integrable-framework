@@ -1,4 +1,5 @@
 <template>
+  <ElementPlusRoot>
   <div class="sso-callback">
     <div class="sso-callback__card">
       <template v-if="phase === 'loading'">
@@ -19,9 +20,11 @@
       </template>
     </div>
   </div>
+  </ElementPlusRoot>
 </template>
 
 <script setup lang="ts">
+import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'

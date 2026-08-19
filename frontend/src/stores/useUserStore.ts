@@ -11,7 +11,7 @@ import { getCurrentUserPermissionsApi } from '@/api/menu'
 import { encryptWithRsaPublicKey } from '@/utils/rsaEncrypt'
 import { matchPermissions } from '@/utils/permission'
 import { useLayoutStore } from '@/stores/useLayoutStore'
-import { ElMessage } from 'element-plus'
+import { showErrorMessage, showSuccessMessage } from '@/utils/uiMessage'
 
 interface UserInfo {
   id: string | number
@@ -89,7 +89,7 @@ export const useUserStore = defineStore('user', () => {
       const publicKeyData = await getPublicKeyApi()
       if (!publicKeyData?.keyId || !publicKeyData.publicKey) {
         const message = '获取登录公钥失败'
-        ElMessage.error(message)
+        showErrorMessage(message)
         throw new Error(message)
       }
 
@@ -107,7 +107,7 @@ export const useUserStore = defineStore('user', () => {
 
       if (!loginData?.token) {
         const message = '登录响应数据异常'
-        ElMessage.error(message)
+        showErrorMessage(message)
         throw new Error(message)
       }
 
@@ -148,7 +148,7 @@ export const useUserStore = defineStore('user', () => {
 
     clearLocalSession()
     if (!options?.silent) {
-      ElMessage.success('已退出登录')
+      showSuccessMessage('已退出登录')
     }
   }
 

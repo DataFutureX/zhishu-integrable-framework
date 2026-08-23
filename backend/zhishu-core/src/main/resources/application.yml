@@ -164,11 +164,11 @@ wanxiang:
     engine: ${WANXIANG_AGENT_ENGINE:chatclient}
   kg:
     # 默认关闭；配置 Neo4j 后设置 WANXIANG_KG_ENABLED=true 启用 GraphRAG
-    enabled: ${WANXIANG_KG_ENABLED:false}
+    enabled: ${WANXIANG_KG_ENABLED:true}
     neo4j:
       uri: ${NEO4J_URI:bolt://127.0.0.1:7687}
       username: ${NEO4J_USERNAME:neo4j}
-      password: ${NEO4J_PASSWORD:}
+      password: ${NEO4J_PASSWORD:12345678}
       database: ${NEO4J_DATABASE:neo4j}
 
 zhishu:

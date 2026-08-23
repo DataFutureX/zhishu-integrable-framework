@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "登记他方 MCP Server")
 public record McpUpstreamUpsertDTO(
         @NotBlank
-        @Pattern(regexp = "^[a-z][a-z0-9_]{1,31}$", message = "编码需小写字母开头，仅含小写字母数字下划线")
+        @Pattern(regexp = "^[a-z][a-z0-9_-]{1,63}$", message = "编码需小写字母开头，仅含小写字母、数字、下划线和连字符")
         String code,
         @NotBlank @Size(max = 128) String name,
         String protocol,

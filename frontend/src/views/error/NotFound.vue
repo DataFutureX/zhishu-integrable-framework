@@ -14,13 +14,14 @@
 
 <script setup lang="ts">
 import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
+import { useMenuStore } from '@/stores/useMenuStore'
 import { useRouter } from 'vue-router'
-import { HOME_DASHBOARD_PATH } from '@/constants/app'
 
 const router = useRouter()
+const menuStore = useMenuStore()
 
 const goHome = () => {
-  void router.replace(HOME_DASHBOARD_PATH)
+  void router.replace(menuStore.defaultPath)
 }
 
 const goBack = () => {

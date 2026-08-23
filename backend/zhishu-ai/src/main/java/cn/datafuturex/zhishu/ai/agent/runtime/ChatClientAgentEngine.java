@@ -150,7 +150,13 @@ public class ChatClientAgentEngine implements AgentEngine {
         trace(traces, request, AgentTraceEvent.of("NODE_START", "意图澄清", "LLM", null));
         long t1 = System.currentTimeMillis();
         ChatClient clarify = chatClientSupport.buildClient(
-                "你是意图澄清助手。用一两句中文重述用户监测或巡检相关需求要点；日报/月报/年报未指定日期时分别按当日/当月/当年理解（以系统注入时间为准），不要编造数据与日期，不要调用工具。",
+                """
+                你是意图澄清助手。用中文重述用户监测或巡检相关需求要点。
+                硬性要求：
+                1. 如果用户请求涉及报告、简报、日报、月报、年报或综合概览，必须逐条列出需要获取的数据类别及对应工具名（如在线状态 → getTerminalOnlineOverview，告警趋势 → queryRecentAlerts / queryAlertTrends，巡检 → listInspectionPlans / listInspectionTasks）。
+                2. 日报/月报/年报未指定日期时分别按当日/当月/当年理解（以系统注入时间为准）。
+                3. 不要编造数据与日期，不要调用工具。
+                """,
                 List.of(), options, false);
         String clarified = chatClientSupport.call(clarify, userText, null, false);
         trace(traces, request, AgentTraceEvent.of("NODE_END", "意图澄清", clarified == null ? "" : clarified,
@@ -164,6 +170,14 @@ public class ChatClientAgentEngine implements AgentEngine {
 
                 意图澄清结果：
                 %s
+
+                【执行要求】
+                - 必须逐一调用所有相关工具获取每一类数据（在线状态、告警、巡检等），禁止只调用一个工具就输出结论。
+                - 每个工具调用完成后，记录返回的关键数据。
+                - 所有工具调用完成后，将全部数据综合整理为一份结构化的 Markdown 报告。
+                - 报告需包含用户要求的各章节（如在线概览、告警趋势、巡检摘要、建议关注等）。
+                - 禁止只输出站点列表或单一工具的原始返回结果。
+                - 若某类工具不可用或调用失败，在报告中明确标注该部分数据缺失及原因，不要用其他数据替代。
                 """.formatted(userText, clarified == null ? "" : clarified);
         List<ToolCallback> tools = chatClientSupport.resolveTools(
                 capabilities, traces, request.onProgress(), agent.getId());
@@ -182,10 +196,15 @@ public class ChatClientAgentEngine implements AgentEngine {
                 中间结果：
                 %s
 
-                请润色为最终回答。
+                【润色要求】
+                1. 将中间结果整理为清晰专业的中文 Markdown 报告，保留所有关键数据与表格。
+                2. 若用户要求的是报告/简报/概览，输出必须包含用户要求的各章节结构（如在线概览、告警趋势、巡检摘要、建议关注等），不要只输出站点列表。
+                3. 若中间结果缺少某些章节的数据（如只有在线状态而无告警或巡检数据），请在对应章节标注「该部分数据未获取」，不要编造。
+                4. 保留正确的报告周期，不要编造日期或数据。
+                5. 综合总结，避免简单罗列工具返回的原始 JSON 或表格。
                 """.formatted(userText, worked == null ? "" : worked);
         ChatClient polish = chatClientSupport.buildClient(
-                "你是结果润色助手。将上一阶段结果整理为清晰专业的中文 Markdown，保留关键数据、表格与正确的报告周期，不要编造日期或数据。",
+                "你是结果润色助手。将上一阶段结果整理为清晰专业的中文 Markdown 报告，保留关键数据、表格与正确的报告周期，不要编造日期或数据。",
                 List.of(), options, false);
         Consumer<String> tokenCb = request.streamingTokens() ? request::emitToken : null;
         String polished = chatClientSupport.callOrStream(polish, polishInput, null, false, tokenCb);

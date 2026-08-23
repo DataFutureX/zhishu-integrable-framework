@@ -37,8 +37,12 @@ public class OpenAppSchemaInitializer implements ApplicationRunner {
             if (dropBriefing.exists()) {
                 populator.addScript(dropBriefing);
             }
+            ClassPathResource aksk = new ClassPathResource("db/patch_open_app_aksk.sql");
+            if (aksk.exists()) {
+                populator.addScript(aksk);
+            }
             populator.execute(dataSource);
-            log.info("已检查/初始化 open_app / open_app_credential");
+            log.info("已检查/初始化 open_app / open_app_credential（含 AK/SK 字段）");
         } catch (Exception e) {
             log.warn("open_app 表初始化跳过或失败（可手动执行 init_ai.sql）: {}", e.getMessage());
         }

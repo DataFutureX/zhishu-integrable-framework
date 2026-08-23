@@ -245,9 +245,8 @@ ON CONFLICT (id) DO UPDATE SET
     system_introduction = EXCLUDED.system_introduction;
 
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(1, 0, '工作台', '/home', 'Home', '/home/briefings', 'HomeFilled', 'DIRECTORY', 1, 1, 1, NULL, NULL, 1),
+(1, 0, '工作台', '/home', 'Home', '/home/dashboard', 'HomeFilled', 'DIRECTORY', 1, 1, 1, NULL, NULL, 1),
 (11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 0, 1, 9, 'views/dashboard/Dashboard.vue', NULL, 1),
-(107, 1, 'AI 简报', '/home/briefings', 'AIBriefings', NULL, 'Bell', 'MENU', 1, 1, 1, 'views/ai/BriefingManage.vue', '{"title":"AI 简报"}', 1),
 (103, 1, 'Agent 会话', '/home/chat', 'AIChat', NULL, 'ChatLineRound', 'MENU', 1, 1, 2, 'views/ai/AIChat.vue', '{"title":"Agent 会话"}', 1),
 (5, 0, '账号管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
 (61, 5, '用户管理', '/permission/user', 'User', NULL, 'User', 'MENU', 1, 1, 1, 'views/user/UserList.vue', NULL, 1),

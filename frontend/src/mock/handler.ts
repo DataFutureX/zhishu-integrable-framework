@@ -199,7 +199,7 @@ ZX2DyIQ6ggb67B0cNwIDAQAB
     const redirect =
       typeof _body.redirect === 'string' && _body.redirect.startsWith('/') && !_body.redirect.startsWith('//')
         ? _body.redirect
-        : '/home/briefings'
+        : '/home/dashboard'
     return {
       token: DEMO_TOKEN,
       expiration: Date.now() + 86400000,

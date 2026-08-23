@@ -38,13 +38,6 @@ import type {
   WorkflowTemplateVO,
 } from '@/types/aiAgent'
 import type {
-  BriefingDeliveryPageResult,
-  BriefingDeliveryVO,
-  BriefingScheduleUpsertDTO,
-  BriefingScheduleVO,
-  BriefingStatsVO,
-} from '@/types/briefing'
-import type {
   KnowledgesCategoryCreateDTO,
   KnowledgesCategoryUpdateDTO,
   KnowledgesCategoryVO,
@@ -693,13 +686,6 @@ export function listAgentCapabilities(): Promise<CapabilityVO[]> {
         toolNames: [],
       },
       {
-        code: 'BRIEFING',
-        label: 'AI 简报',
-        description: '调度生成与投递',
-        toolBased: false,
-        toolNames: [],
-      },
-      {
         code: 'WORKFLOW_GRAPH',
         label: '工作流 Graph',
         description: '可视化编排',
@@ -815,94 +801,6 @@ export function getAgentRuntimeHealth(): Promise<Record<string, unknown>> {
     return Promise.resolve({ configured: 'chatclient', active: 'chatclient', engines: [] })
   }
   return aiService.get('/agents/runtime-health')
-}
-
-// ==================== AI 简报 Briefings ====================
-
-export function getBriefingLatest(): Promise<BriefingDeliveryVO | null> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingLatest())
-  }
-  return aiService.get('/briefings/latest')
-}
-
-export function getBriefingsPage(params: {
-  pageNum?: number
-  pageSize?: number
-  status?: string
-}): Promise<BriefingDeliveryPageResult> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingsPage(params))
-  }
-  return aiService.get('/briefings', { params })
-}
-
-export function getBriefingUnreadCount(): Promise<{ count: number }> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingUnreadCount())
-  }
-  return aiService.get('/briefings/unread-count')
-}
-
-export function getBriefingRecent(limit = 10): Promise<BriefingDeliveryVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingRecent(limit))
-  }
-  return aiService.get('/briefings/recent', { params: { limit } })
-}
-
-export function getBriefingStats(): Promise<BriefingStatsVO> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingStats())
-  }
-  return aiService.get('/briefings/deliveries/stats')
-}
-
-export function getBriefingDetail(id: number | string): Promise<BriefingDeliveryVO> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockGetBriefingDetail(id))
-  }
-  return aiService.get(`/briefings/${encodeURIComponent(String(id))}`)
-}
-
-export function markBriefingRead(id: number | string): Promise<void> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockMarkBriefingRead(id))
-  }
-  return aiService.post(`/briefings/${encodeURIComponent(String(id))}/read`)
-}
-
-export function listBriefingSchedules(): Promise<BriefingScheduleVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockListBriefingSchedules())
-  }
-  return aiService.get('/briefings/schedules')
-}
-
-export function createBriefingSchedule(data: BriefingScheduleUpsertDTO): Promise<BriefingScheduleVO> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockCreateBriefingSchedule(data))
-  }
-  return aiService.post('/briefings/schedules', data)
-}
-
-export function updateBriefingSchedule(
-  id: number | string,
-  data: BriefingScheduleUpsertDTO,
-): Promise<BriefingScheduleVO> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockUpdateBriefingSchedule(id, data))
-  }
-  return aiService.put(`/briefings/schedules/${encodeURIComponent(String(id))}`, data)
-}
-
-export function runBriefingScheduleNow(
-  id: number | string,
-): Promise<{ scheduleId: number; message: string }> {
-  if (isDemoMode) {
-    return import('@/mock/briefing').then((m) => m.mockRunBriefingScheduleNow(id))
-  }
-  return aiService.post(`/briefings/schedules/${encodeURIComponent(String(id))}/run-now`)
 }
 
 // ==================== 知识图谱 Knowledge Graph ====================

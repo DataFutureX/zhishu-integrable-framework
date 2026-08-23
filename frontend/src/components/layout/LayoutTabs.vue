@@ -56,7 +56,7 @@ import { nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown, Close } from '@element-plus/icons-vue'
 import { useTabsStore } from '@/stores/useTabsStore'
-import { HOME_DASHBOARD_PATH } from '@/constants/app'
+import { useMenuStore } from '@/stores/useMenuStore'
 import type { LayoutTab } from '@/types/tabs'
 
 defineProps<{
@@ -66,6 +66,7 @@ defineProps<{
 const route = useRoute()
 const router = useRouter()
 const tabsStore = useTabsStore()
+const menuStore = useMenuStore()
 
 const scrollRef = ref<HTMLElement>()
 const tabRefs = new Map<string, HTMLElement>()
@@ -103,7 +104,7 @@ const navigateAfterClose = (closedFullPath: string, removedIndex: number) => {
   if (route.fullPath !== closedFullPath) return
 
   if (!tabsStore.tabs.length) {
-    router.push(HOME_DASHBOARD_PATH)
+    router.push(menuStore.defaultPath)
     return
   }
 
@@ -113,7 +114,7 @@ const navigateAfterClose = (closedFullPath: string, removedIndex: number) => {
 }
 
 const navigateToHomeDashboard = () => {
-  router.push(HOME_DASHBOARD_PATH)
+  router.push(menuStore.defaultPath)
 }
 
 const handleClose = (fullPath: string) => {

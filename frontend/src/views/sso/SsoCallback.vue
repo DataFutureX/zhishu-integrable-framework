@@ -29,7 +29,6 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Loading } from '@element-plus/icons-vue'
 import { exchangeSsoTicketApi } from '@/api/auth'
-import { HOME_DASHBOARD_PATH } from '@/constants/app'
 import { useLayoutStore } from '@/stores/useLayoutStore'
 import { useMenuStore } from '@/stores/useMenuStore'
 import { useUserStore } from '@/stores/useUserStore'
@@ -43,10 +42,9 @@ const layoutStore = useLayoutStore()
 const phase = ref<'loading' | 'error'>('loading')
 const errorMessage = ref('单点登录失败，请返回登录页重试')
 
-function sanitizeRedirect(raw: unknown): string {
-  if (typeof raw !== 'string' || !raw.trim()) {
-    return HOME_DASHBOARD_PATH
-  }
+/** 校验外部传入的 redirect URL 是否安全，不安全时返回 null */
+function resolveSafeRedirect(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw.trim()) return null
   const value = raw.trim()
   if (
     !value.startsWith('/') ||
@@ -54,7 +52,7 @@ function sanitizeRedirect(raw: unknown): string {
     value.includes('://') ||
     value.includes('\\')
   ) {
-    return HOME_DASHBOARD_PATH
+    return null
   }
   return value
 }
@@ -71,7 +69,7 @@ function goLogin() {
 
 onMounted(async () => {
   const ticket = typeof route.query.ticket === 'string' ? route.query.ticket.trim() : ''
-  const redirect = sanitizeRedirect(route.query.redirect)
+  const queryRedirect = resolveSafeRedirect(route.query.redirect)
 
   // 尽快去掉地址栏中的 ticket，避免残留
   clearTicketFromUrl()
@@ -83,7 +81,7 @@ onMounted(async () => {
   }
 
   try {
-    const data = await exchangeSsoTicketApi({ ticket, redirect })
+    const data = await exchangeSsoTicketApi({ ticket, redirect: queryRedirect })
     if (!data?.token) {
       throw new Error('换票响应异常')
     }
@@ -94,7 +92,8 @@ onMounted(async () => {
     menuStore.reset(router)
     await menuStore.fetchAndRegisterRoutes(router)
 
-    const target = sanitizeRedirect(data.redirect || redirect)
+    // 菜单已加载，优先后端指定 → 外部 query → 首个可访问菜单
+    const target = resolveSafeRedirect(data.redirect) || queryRedirect || menuStore.defaultPath
     await router.replace(target)
   } catch (error: unknown) {
     console.error('SSO 换票失败:', error)

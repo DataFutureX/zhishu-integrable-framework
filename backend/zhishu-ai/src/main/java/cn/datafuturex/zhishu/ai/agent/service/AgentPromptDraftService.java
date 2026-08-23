@@ -184,7 +184,6 @@ public class AgentPromptDraftService {
             switch (cap) {
                 case MCP_TOOLS -> rules.add("监测/巡检/告警等业务数据请调用已绑定的上游 MCP 工具，禁止编造");
                 case KNOWLEDGE_GRAPH -> rules.add("图谱问题走知识图谱引擎；无图谱数据时如实说明");
-                case BRIEFING -> rules.add("简报须基于工具或知识库真实结果，禁止编造");
                 case MEMORY, WORKFLOW_GRAPH -> {
                 }
                 case RAG -> {

@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { RouteLocationNormalized } from 'vue-router'
-import { HOME_DASHBOARD_PATH } from '@/constants/app'
 import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
+import { useMenuStore } from '@/stores/useMenuStore'
 import type { LayoutTab } from '@/types/tabs'
 
 const resolveTabTitle = (route: RouteLocationNormalized) => {
@@ -54,7 +54,7 @@ export const useTabsStore = defineStore('tabs', () => {
 
   const closeAllTabs = () => {
     tabs.value = []
-    return HOME_DASHBOARD_PATH
+    return useMenuStore().defaultPath
   }
 
   const reset = () => {

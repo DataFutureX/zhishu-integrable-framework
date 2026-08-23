@@ -8,7 +8,6 @@ import {
   Monitor,
   Notebook,
   OfficeBuilding,
-  Reading,
   Search,
   Tools,
   User,
@@ -48,14 +47,6 @@ export const DASHBOARD_QUICK_ACTIONS: DashboardQuickActionDef[] = [
     path: '/ai/qa',
     icon: Search,
     accent: 'success',
-  },
-  {
-    key: 'briefing',
-    label: 'AI 简报',
-    desc: '监测态势与巡检要点',
-    path: '/home/briefings',
-    icon: Reading,
-    accent: 'info',
   },
   {
     key: 'agents',

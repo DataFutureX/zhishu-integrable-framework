@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cn.datafuturex.zhishu.ai.biztools.api.TerminalOverviewPort;
 import cn.datafuturex.zhishu.ai.mcp.client.McpUpstreamConnectionManager;
 import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpUpstreamEntity;
+import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpUpstreamToolEntity;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamMapper;
+import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamToolMapper;
 import cn.datafuturex.zhishu.ai.shared.vo.structured.StationCompareResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class McpTerminalOverviewPort implements TerminalOverviewPort {
     private static final String TOOL_SUFFIX = "getTerminalOnlineOverview";
 
     private final AiMcpUpstreamMapper upstreamMapper;
+    private final AiMcpUpstreamToolMapper upstreamToolMapper;
     private final McpUpstreamConnectionManager connectionManager;
     private final ObjectMapper objectMapper;
 
@@ -76,7 +79,31 @@ public class McpTerminalOverviewPort implements TerminalOverviewPort {
     }
 
     private ToolCallback findOverviewTool(Long upstreamId) {
+        // 1. 先检查 DB 工具缓存：管理员是否禁用了该工具
+        if (!isToolEnabledInDb(upstreamId, TOOL_SUFFIX)) {
+            log.debug("工具 {} 在 DB 中未启用 upstreamId={}", TOOL_SUFFIX, upstreamId);
+            return null;
+        }
+        // 2. 从活跃连接获取工具（原名的 ToolCallback）
         List<ToolCallback> tools = connectionManager.callbacks(upstreamId);
+        ToolCallback found = matchTool(tools);
+        // 3. 活跃连接未找到 → 强制重连再试一次（对端可能更新了工具列表）
+        if (found == null) {
+            log.info("活跃连接未找到 {} upstreamId={}，尝试重新连接", TOOL_SUFFIX, upstreamId);
+            AiMcpUpstreamEntity entity = upstreamMapper.selectById(upstreamId);
+            if (entity != null) {
+                try {
+                    tools = connectionManager.connectAndList(entity);
+                    found = matchTool(tools);
+                } catch (Exception e) {
+                    log.warn("重连上游 MCP 失败 id={}: {}", upstreamId, e.getMessage());
+                }
+            }
+        }
+        return found;
+    }
+
+    private static ToolCallback matchTool(List<ToolCallback> tools) {
         for (ToolCallback cb : tools) {
             String name = cb.getToolDefinition().name();
             if (name != null && name.endsWith(TOOL_SUFFIX)) {
@@ -84,6 +111,23 @@ public class McpTerminalOverviewPort implements TerminalOverviewPort {
             }
         }
         return null;
+    }
+
+    /**
+     * 检查 DB 工具缓存中是否存在原名以指定后缀结尾且已启用的工具。
+     * 尊重管理员在 MCP Hub 中的启用/禁用设置。
+     */
+    private boolean isToolEnabledInDb(Long upstreamId, String suffix) {
+        List<AiMcpUpstreamToolEntity> rows = upstreamToolMapper.selectList(
+                new LambdaQueryWrapper<AiMcpUpstreamToolEntity>()
+                        .eq(AiMcpUpstreamToolEntity::getUpstreamId, upstreamId));
+        for (AiMcpUpstreamToolEntity row : rows) {
+            if (row.getOriginalName() != null && row.getOriginalName().endsWith(suffix)) {
+                return !Boolean.FALSE.equals(row.getEnabled());
+            }
+        }
+        // DB 中无记录（尚未探测过）→ 视为未确认，允许尝试
+        return rows.isEmpty();
     }
 
     private Overview parse(String raw, int limit, String sourceName) {

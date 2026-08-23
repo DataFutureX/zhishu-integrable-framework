@@ -130,6 +130,12 @@ public class McpUpstreamConnectionManager {
             throw e;
         } catch (RuntimeException e) {
             String target = (upstream.getBaseUrl() == null ? "" : upstream.getBaseUrl()) + endpoint;
+            log.warn("连接上游 MCP 异常 id={} target={}: {}", upstream.getId(), target, e.toString());
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                log.warn("  Caused by: {} - {}", cause.getClass().getName(), cause.getMessage());
+                cause = cause.getCause();
+            }
             String reason = explainFailure(e, target);
             markHealth(upstream.getId(), "DOWN", reason);
             throw new BusinessException("连接上游 MCP 失败: " + reason, e);

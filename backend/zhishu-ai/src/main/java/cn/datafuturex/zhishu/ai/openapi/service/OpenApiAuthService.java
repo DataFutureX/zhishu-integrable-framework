@@ -3,10 +3,11 @@ package cn.datafuturex.zhishu.ai.openapi.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
-import cn.datafuturex.zhishu.ai.openapi.domain.entity.OpenAppCredentialEntity;
+import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.ai.openapi.domain.entity.OpenAppEntity;
-import cn.datafuturex.zhishu.ai.openapi.mapper.OpenAppCredentialMapper;
 import cn.datafuturex.zhishu.ai.openapi.mapper.OpenAppMapper;
+import cn.datafuturex.zhishu.ai.openapi.support.OpenApiCrypto;
+import cn.datafuturex.zhishu.ai.openapi.support.OpenApiCrypto.TokenPayload;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,37 +28,56 @@ public class OpenApiAuthService {
     };
 
     private final OpenAppMapper openAppMapper;
-    private final OpenAppCredentialMapper credentialMapper;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+    private final ModelConfigProperties modelConfigProperties;
 
+    /**
+     * AK/SK Token 鉴权。
+     * <p>
+     * Token 格式：{@code {ak}:{timestampMs}:{signature}}
+     */
     public AuthenticatedOpenApp authenticate(String rawToken) {
         if (!StringUtils.hasText(rawToken)) {
             throw new OpenApiAuthException(401, "缺少开放应用凭证");
         }
-        String token = rawToken.trim();
-        String prefix = McpCrypto.keyPrefix(token);
-        OpenAppCredentialEntity cred = credentialMapper.selectOne(new LambdaQueryWrapper<OpenAppCredentialEntity>()
-                .eq(OpenAppCredentialEntity::getKeyPrefix, prefix)
-                .eq(OpenAppCredentialEntity::getStatus, "ENABLED")
+        // 1. 解析 Token 获取 AK
+        TokenPayload payload;
+        try {
+            payload = OpenApiCrypto.parseToken(rawToken.trim());
+        } catch (OpenApiCrypto.TokenParseException e) {
+            throw new OpenApiAuthException(401, "Token 格式无效: " + e.getMessage());
+        }
+        // 2. 通过 AK 查找应用
+        OpenAppEntity app = openAppMapper.selectOne(new LambdaQueryWrapper<OpenAppEntity>()
+                .eq(OpenAppEntity::getAccessKey, payload.ak())
                 .last("LIMIT 1"));
-        if (cred == null) {
-            throw new OpenApiAuthException(401, "开放应用凭证无效");
+        if (app == null) {
+            throw new OpenApiAuthException(401, "Access Key 无效");
         }
-        if (cred.getExpiresAt() != null && cred.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new OpenApiAuthException(401, "开放应用凭证已过期");
-        }
-        if (!McpCrypto.sha256Hex(token).equalsIgnoreCase(cred.getSecretHash())) {
-            throw new OpenApiAuthException(401, "开放应用凭证无效");
-        }
-        OpenAppEntity app = openAppMapper.selectById(cred.getAppId());
-        if (app == null || !"ENABLED".equalsIgnoreCase(app.getStatus())) {
+        if (!"ENABLED".equalsIgnoreCase(app.getStatus())) {
             throw new OpenApiAuthException(403, "开放应用已停用");
         }
+        // 3. 解密 SK 并验签
+        if (!StringUtils.hasText(app.getSecretKeyEnc())) {
+            throw new OpenApiAuthException(401, "该应用未配置 AK/SK，请先生成凭证");
+        }
+        String sk;
+        try {
+            sk = McpCrypto.decrypt(app.getSecretKeyEnc(), modelConfigProperties.getCryptoKey());
+        } catch (Exception e) {
+            throw new OpenApiAuthException(500, "服务端解密失败");
+        }
+        try {
+            OpenApiCrypto.verifyToken(rawToken.trim(), sk);
+        } catch (OpenApiCrypto.TokenParseException e) {
+            throw new OpenApiAuthException(401, e.getMessage());
+        }
+        // 4. 解析 scopes 并更新最近使用时间
         Set<String> scopes = parseScopes(app.getAllowedScopes());
-        credentialMapper.update(null, new LambdaUpdateWrapper<OpenAppCredentialEntity>()
-                .eq(OpenAppCredentialEntity::getId, cred.getId())
-                .set(OpenAppCredentialEntity::getLastUsedAt, LocalDateTime.now()));
+        openAppMapper.update(null, new LambdaUpdateWrapper<OpenAppEntity>()
+                .eq(OpenAppEntity::getId, app.getId())
+                .set(OpenAppEntity::getLastUsedAt, LocalDateTime.now()));
         return new AuthenticatedOpenApp(app.getId(), app.getCode(), scopes);
     }
 

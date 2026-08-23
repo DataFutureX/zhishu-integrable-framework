@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
-import { HOME_DASHBOARD_PATH } from '@/constants/app'
 import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
 import { notFoundRoute } from '@/router/notFoundRoute'
 import { collectRoutePermissions, matchPermissions } from '@/utils/permission'
@@ -69,10 +68,6 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/ai/chat',
     redirect: '/home/chat',
-  },
-  {
-    path: '/ai/briefings',
-    redirect: '/home/briefings',
   },
   {
     path: '/ai/document-qa',
@@ -216,7 +211,7 @@ router.beforeEach(async (to, _from, next) => {
         ])
 
         if (to.path === '/' || to.path === '') {
-          next({ path: HOME_DASHBOARD_PATH, replace: true })
+          next({ path: menuStore.defaultPath, replace: true })
           return
         }
 
@@ -237,7 +232,7 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     if (to.path === '/' || to.path === '') {
-      next({ path: HOME_DASHBOARD_PATH, replace: true })
+      next({ path: menuStore.defaultPath, replace: true })
       return
     }
 

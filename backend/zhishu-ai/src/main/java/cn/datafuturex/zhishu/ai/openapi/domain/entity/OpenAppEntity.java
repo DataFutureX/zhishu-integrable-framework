@@ -26,6 +26,18 @@ public class OpenAppEntity {
 
     private String remark;
 
+    @TableField("access_key")
+    private String accessKey;
+
+    @TableField("secret_key_enc")
+    private String secretKeyEnc;
+
+    @TableField("aksk_generated_at")
+    private LocalDateTime akskGeneratedAt;
+
+    @TableField("last_used_at")
+    private LocalDateTime lastUsedAt;
+
     @TableField("created_by")
     private String createdBy;
 

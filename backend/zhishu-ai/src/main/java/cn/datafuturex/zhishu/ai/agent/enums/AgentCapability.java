@@ -13,8 +13,7 @@ public enum AgentCapability {
     MEMORY("多轮记忆", "会话窗口记忆（非 Tool）", false, List.of()),
     WORKFLOW_GRAPH("工作流 Graph", "可视化编排执行（非 Tool）", false, List.of()),
     MCP_TOOLS("MCP 上游工具", "调用已绑定的外部 MCP（如万象监测）", false, List.of()),
-    KNOWLEDGE_GRAPH("知识图谱引擎", "图谱检索骨架；业务拓扑由接入方投喂", false, List.of()),
-    BRIEFING("AI 简报", "调度生成与投递（非内嵌监测 Tool）", false, List.of());
+    KNOWLEDGE_GRAPH("知识图谱引擎", "图谱检索骨架；业务拓扑由接入方投喂", false, List.of());
 
     private final String label;
     private final String description;

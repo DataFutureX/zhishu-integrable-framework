@@ -1,7 +1,7 @@
 <template>
   <el-popover
     v-model:visible="popoverVisible"
-    placement="bottom-end"
+    :placement="placement"
     :width="400"
     trigger="click"
     popper-class="notification-popover"
@@ -115,9 +115,17 @@ import type { AnnouncementVO } from '@/types/announcement'
 import { ANNOUNCEMENT_PRIORITY_LABEL } from '@/types/announcement'
 import { formatDateTime } from '@/utils/format'
 
-defineProps<{
-  onPrimary?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    onPrimary?: boolean
+    /** 弹出层位置，顶栏场景用 bottom-end，侧栏底部场景用 top-start/right-start */
+    placement?: 'bottom-end' | 'top-start' | 'right-start'
+  }>(),
+  {
+    onPrimary: false,
+    placement: 'bottom-end',
+  },
+)
 
 const router = useRouter()
 const announcementStore = useAnnouncementStore()

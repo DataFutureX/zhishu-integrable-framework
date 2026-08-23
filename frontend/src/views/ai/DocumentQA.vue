@@ -4,7 +4,7 @@
       <!-- 左侧：检索记录（会话） -->
       <aside class="session-rail">
         <div class="session-rail__brand">
-          <span class="session-rail__eyebrow">知识库</span>
+          <span class="session-rail__eyebrow">智能中心</span>
           <h2 class="session-rail__title">检索记录</h2>
         </div>
         <el-button
@@ -590,8 +590,9 @@ const handleDeleteSession = async (session: ChatSessionVO) => {
     await refreshSessionList()
     if (conversationId.value === session.conversationId) {
       if (sessions.value.length) {
-        conversationId.value = sessions.value[0].conversationId
-        await loadSessionMessages(conversationId.value, { force: true })
+        const nextId = sessions.value[0].conversationId
+        conversationId.value = nextId
+        await loadSessionMessages(nextId, { force: true })
       } else {
         conversationId.value = undefined
         await handleCreateSession({ silent: true })
@@ -783,8 +784,9 @@ const loadPage = async () => {
     if (!sessions.value.length) {
       await handleCreateSession({ silent: true })
     } else if (!conversationId.value) {
-      conversationId.value = sessions.value[0].conversationId
-      await loadSessionMessages(conversationId.value, { force: true })
+      const nextId = sessions.value[0].conversationId
+      conversationId.value = nextId
+      await loadSessionMessages(nextId, { force: true })
     } else {
       await loadSessionMessages(conversationId.value, { force: true })
     }

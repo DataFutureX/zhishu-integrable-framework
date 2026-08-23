@@ -8,9 +8,7 @@
       </template>
 
       <div class="user-info-section">
-        <el-avatar :size="80" class="user-avatar">
-          {{ userStore.userName?.charAt(0) || 'U' }}
-        </el-avatar>
+        <el-avatar :size="80" class="user-avatar" :icon="UserFilled" />
         <div class="user-details">
           <h3>{{ userStore.userName }}</h3>
           <p class="user-role">{{ userStore.userRole || '未分配角色' }}</p>
@@ -67,6 +65,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { UserFilled } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { getCurrentUserApi, updateCurrentProfileApi } from '@/api/user'
 import { useUserStore } from '@/stores/useUserStore'
@@ -183,9 +182,10 @@ onMounted(() => {
     padding: 8px 0 4px;
 
     .user-avatar {
-      background-color: var(--app-primary);
-      font-size: 32px;
-      font-weight: bold;
+      --el-avatar-bg-color: #e8eef4;
+      --el-avatar-text-size: 36px;
+      background: #e8eef4;
+      color: #5b6b7c;
     }
 
     .user-details {

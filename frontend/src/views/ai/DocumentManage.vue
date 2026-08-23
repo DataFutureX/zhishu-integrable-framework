@@ -3,7 +3,7 @@
     :loading="loading"
     :show-hero="true"
     :hero-title="heroTitle"
-    :hero-eyebrow="inDocsView ? '知识库' : '数智中枢'"
+    :hero-eyebrow="inDocsView ? '知识库' : '智能中心'"
     :hero-eyebrow-icon="FolderOpened"
     :hero-metrics="heroMetrics"
     :hero-enable-rate="inDocsView ? processedRate : undefined"

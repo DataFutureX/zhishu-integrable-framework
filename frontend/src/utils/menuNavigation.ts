@@ -16,6 +16,17 @@ export function isProfileRoute(path: string): boolean {
   return path === '/profile' || path.startsWith('/profile/')
 }
 
+/** 菜单库里的 Setting 与顶栏布局按钮同名，动态组件下经常解析失败 */
+const MENU_ICON_ALIASES: Record<string, string> = {
+  Setting: 'SetUp',
+}
+
+export function resolveMenuIcon(icon?: string, fallback = 'Folder') {
+  const name = icon?.trim()
+  if (!name) return fallback
+  return MENU_ICON_ALIASES[name] || name
+}
+
 /** 从导航菜单中排除个人中心（可按布局模式决定是否展示） */
 export function filterNavigationMenus(
   menus: MenuVO[],

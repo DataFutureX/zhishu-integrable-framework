@@ -3,7 +3,7 @@
     :loading="loading"
     :show-hero="true"
     hero-title="Tools"
-    hero-eyebrow="数智中枢"
+    hero-eyebrow="智能中心"
     :hero-eyebrow-icon="Operation"
     :hero-metrics="heroMetrics"
   >

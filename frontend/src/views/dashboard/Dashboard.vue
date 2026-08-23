@@ -22,7 +22,7 @@
           :icon="Monitor"
           @click="goTo('/monitor/ops')"
         >
-          系统监控
+          运维监控
         </el-button>
       </div>
     </section>
@@ -319,7 +319,7 @@ const todayLabel = computed(() => {
 
 const welcomeSubtitle = computed(() => {
   const name = systemConfigStore.systemName || '知枢可集成框架'
-  return `${name} 工作台 · 组织权限、公告运维与审计一站总览`
+  return `${name} 工作台 · 智能协作、知识检索与平台治理一站总览`
 })
 
 const loading = ref(false)

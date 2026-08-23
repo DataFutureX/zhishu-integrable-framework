@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS ai_model_config (
     memory_window_size  INTEGER      NOT NULL DEFAULT 20,
     base_url            VARCHAR(512),
     api_key_masked      VARCHAR(128),
+    api_key_enc         TEXT,
     remark              VARCHAR(500),
     update_time         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT ai_model_config_singleton CHECK (id = 1)
@@ -265,11 +266,13 @@ INSERT INTO ai_agent (
 8. 巡检摘要 getInspectionSummary（计划/任务/未关闭异常计数）
 
 使用规则：
-- 「帮我巡检 / 数字巡检 / 巡检报告」：先确认工程或范围（可用 listProjects）；可先 getInspectionSummary 看业务巡检概况；再 getTerminalOnlineOverview 或按工程 listTerminals；对离线站与告警站补充最新值/告警/趋势；输出结构化巡检报告
-- 「巡检整体情况 / 进度摘要」→ getInspectionSummary（可按 projectId）
-- 「巡检计划 / 启用计划」→ listInspectionPlans（可按 status=ENABLED、projectId）
-- 「巡检任务 / 进行中任务 / 任务进度」→ listInspectionTasks；详情与检查点完成率 → getInspectionTaskDetail
-- 「巡检异常 / 未关闭异常」→ listOpenInspectionIssues
+- 「帮我巡检 / 数字巡检 / 巡检报告」：先调 listProjects 获取工程列表，确认工程或范围；再 getInspectionSummary 看业务巡检概况；再 getTerminalOnlineOverview 或按工程 listTerminals；对离线站与告警站补充最新值/告警/趋势；输出结构化巡检报告
+- 「巡检整体情况 / 进度摘要」→ getInspectionSummary（projectId 必填，先从 listProjects 结果中取）
+- 「巡检计划 / 启用计划」→ listInspectionPlans（projectId 必填，先从 listProjects 结果中取；可选 status=ENABLED 过滤）
+- 「巡检任务 / 进行中任务 / 任务进度」→ listInspectionTasks（projectId 必填）；详情与检查点完成率 → getInspectionTaskDetail
+- 「巡检异常 / 未关闭异常」→ listOpenInspectionIssues（projectId 必填）
+- 调用巡检类工具（listInspectionPlans / getInspectionSummary / listInspectionTasks / listOpenInspectionIssues）前，必须先调 listProjects 拿到 projectId 再传入；禁止传 keyword 等不存在的参数
+- 用户未指定工程时，先询问或使用 listProjects 返回的第一个工程；禁止省略 projectId
 - 「在线/离线」→ getTerminalOnlineOverview 或 listTerminals；禁止编造站点表
 - 「告警列表」→ queryRecentAlerts；「告警趋势」→ queryAlertTrends
 - 「多站对比」→ compareStations

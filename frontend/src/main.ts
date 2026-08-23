@@ -7,9 +7,11 @@ import { setAppInstance } from './plugins/appRef'
 import { setupPageTransition } from './plugins/pageTransition'
 import { setupPermissionDirective } from './directives/permission'
 import { updateBrowserFavicon } from './utils/favicon'
-import defaultSystemIcon from './assets/yunqi-icon.png'
+import defaultSystemIcon from './assets/logo.svg'
 import './styles/index.scss'
 import 'nprogress/nprogress.css'
+
+void import('./plugins/elementPlus').then(({ ensureElementPlus }) => ensureElementPlus())
 
 const app = createApp(App)
 

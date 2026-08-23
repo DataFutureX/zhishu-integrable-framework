@@ -5,6 +5,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 import { isDemoMode } from '@/config/demo'
+import { getValidToken, isPublicAppPath } from '@/utils/session'
 import { showErrorMessage } from '@/utils/uiMessage'
 
 export interface ApiResponse<T = unknown> {
@@ -77,7 +78,7 @@ if (isDemoMode) {
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 直接读 localStorage，避免 request → useUserStore → api → request 循环依赖
-    const token = localStorage.getItem('token')
+    const token = getValidToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -90,6 +91,8 @@ service.interceptors.request.use(
 )
 
 const handleUnauthorized = (message?: string) => {
+  if (isPublicAppPath(window.location.pathname)) return
+
   showErrorMessage(message || '登录已失效，请重新登录')
   void import('@/utils/logout').then(({ logoutAndRedirect }) => {
     void logoutAndRedirect(undefined, { silent: true, notifyServer: false })

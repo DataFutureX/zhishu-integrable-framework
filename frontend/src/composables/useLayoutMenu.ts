@@ -58,8 +58,8 @@ export function useLayoutMenu() {
   })
 
   const showSecondaryAside = computed(() => {
-    // 侧边栏模式：所有菜单已在左侧主导航展示，不再显示二级侧栏
-    if (layoutStore.isSidebarLayout) return false
+    // 侧边栏/无顶栏模式：所有菜单已在左侧主导航展示，不再显示二级侧栏
+    if (layoutStore.isSidebarLayout || layoutStore.isImmersiveLayout) return false
     if (isProfileRoute(route.path)) {
       return profileSecondaryMenus.value.length > 0
     }

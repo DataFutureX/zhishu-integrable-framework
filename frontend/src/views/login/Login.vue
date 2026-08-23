@@ -319,10 +319,11 @@ $foam: #ffffff;
     backdrop-filter: blur(8px);
 
     &__icon {
-      width: 16px;
-      height: 16px;
+      width: 22px;
+      height: 22px;
       object-fit: contain;
       flex-shrink: 0;
+      border-radius: 5px;
     }
   }
 

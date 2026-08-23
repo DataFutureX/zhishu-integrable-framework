@@ -2,7 +2,7 @@
   <ListPageShell
     :loading="loading"
     hero-title="用户管理"
-    hero-eyebrow="系统管理"
+    hero-eyebrow="账号管理"
     :hero-eyebrow-icon="UserFilled"
     :hero-metrics="heroMetrics"
     :hero-enable-rate="pageEnableRate"

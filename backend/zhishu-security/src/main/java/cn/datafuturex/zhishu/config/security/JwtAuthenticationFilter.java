@@ -41,7 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(contextPath) && path != null && path.startsWith(contextPath)) {
             path = path.substring(contextPath.length());
         }
-        return path != null && path.startsWith("/open/");
+        return path != null && (path.startsWith("/open/") || path.equals("/mcp") || path.startsWith("/mcp/"));
     }
 
     @Override

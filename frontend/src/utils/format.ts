@@ -4,10 +4,12 @@
  * @param format 格式字符串，默认 'YYYY-MM-DD HH:mm:ss'
  */
 export const formatDateTime = (
-  date: Date | string | number,
+  date?: Date | string | number | null,
   format = 'YYYY-MM-DD HH:mm:ss'
 ): string => {
+  if (date == null || date === '') return ''
   const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return ''
 
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')

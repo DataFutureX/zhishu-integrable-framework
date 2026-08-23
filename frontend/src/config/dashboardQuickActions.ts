@@ -1,11 +1,15 @@
 import type { Component } from 'vue'
 import {
   Bell,
+  ChatDotRound,
+  Cpu,
   Document,
   Lock,
   Monitor,
   Notebook,
   OfficeBuilding,
+  Reading,
+  Search,
   Tools,
   User,
   UserFilled,
@@ -27,8 +31,40 @@ export interface DashboardQuickActionDef {
   accent: DashboardQuickActionAccent
 }
 
-/** 仪表盘快捷操作（对齐当前菜单域：permission / monitor / system） */
+/** 仪表盘快捷操作（对齐工作台 / 智能中心 / 账号管理 / 系统设置） */
 export const DASHBOARD_QUICK_ACTIONS: DashboardQuickActionDef[] = [
+  {
+    key: 'chat',
+    label: 'Agent 会话',
+    desc: '与智能体对话协作',
+    path: '/home/chat',
+    icon: ChatDotRound,
+    accent: 'primary',
+  },
+  {
+    key: 'qa',
+    label: '知识检索',
+    desc: '基于知识库问答检索',
+    path: '/ai/qa',
+    icon: Search,
+    accent: 'success',
+  },
+  {
+    key: 'briefing',
+    label: 'AI 简报',
+    desc: '监测态势与巡检要点',
+    path: '/home/briefings',
+    icon: Reading,
+    accent: 'info',
+  },
+  {
+    key: 'agents',
+    label: 'Agents',
+    desc: '智能体人设与工作流',
+    path: '/ai/agents',
+    icon: Cpu,
+    accent: 'warning',
+  },
   {
     key: 'users',
     label: '用户管理',
@@ -71,7 +107,7 @@ export const DASHBOARD_QUICK_ACTIONS: DashboardQuickActionDef[] = [
   },
   {
     key: 'monitor',
-    label: '系统监控',
+    label: '运维监控',
     desc: '服务与资源运行状态',
     path: '/monitor/ops',
     icon: Monitor,
@@ -87,7 +123,7 @@ export const DASHBOARD_QUICK_ACTIONS: DashboardQuickActionDef[] = [
   },
   {
     key: 'settings',
-    label: '系统设置',
+    label: '参数配置',
     desc: '品牌名称与登录策略',
     path: '/system/config',
     icon: Tools,

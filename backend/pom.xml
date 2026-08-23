@@ -46,7 +46,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>3.1.0</springdoc.version>
         <spring-modulith.version>2.1.0</spring-modulith.version>
-        <!-- 控制台统一 UTF-8；Windows 请先 chcp 65001 或使用 scripts/verify-api.bat -->
+        <!-- 控制台与源码统一 UTF-8；Windows CMD 启动脚本已 chcp 65001 -->
         <console.encoding>UTF-8</console.encoding>
     </properties>
 
@@ -171,7 +171,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
-                        <!-- file 用 UTF-8；控制台跟 OS 对齐（Windows=GBK），避免中文乱码 -->
+                        <!-- file / 控制台均 UTF-8 -->
                         <argLine>-Dfile.encoding=UTF-8 -Dstdout.encoding=${console.encoding} -Dstderr.encoding=${console.encoding} -Dsun.stdout.encoding=${console.encoding} -Dsun.stderr.encoding=${console.encoding} -DCONSOLE_LOG_CHARSET=${console.encoding}</argLine>
                         <encoding>UTF-8</encoding>
                         <systemPropertyVariables>

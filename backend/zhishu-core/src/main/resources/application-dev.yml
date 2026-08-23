@@ -3,7 +3,6 @@ spring:
   config:
     activate:
       on-profile: dev
-    import: optional:classpath:application-ai.yml
   devtools:
     restart:
       enabled: true

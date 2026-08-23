@@ -13,7 +13,7 @@
         <filter class="cn.datafuturex.zhishu.common.logging.ConsoleLogFilter"/>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <!-- 由启动类设置 CONSOLE_LOG_CHARSET（Windows=GBK，其它=UTF-8） -->
+            <!-- 由启动类 / JVM 参数设置 CONSOLE_LOG_CHARSET，默认 UTF-8 -->
             <charset>${CONSOLE_LOG_CHARSET:-UTF-8}</charset>
         </encoder>
     </appender>

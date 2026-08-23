@@ -12,22 +12,18 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * 云起应用平台启动类
  */
-@SpringBootApplication(scanBasePackages = {
-        "cn.datafuturex.zhishu",
-        "com.datafuturex.assistant"  // 过渡期：ai-assistant 迁入后保留至包名迁移完成
-})
-@MapperScan(basePackages = {
-        "cn.datafuturex.zhishu",
-        "com.datafuturex.assistant"
-}, annotationClass = Mapper.class)
+@SpringBootApplication(scanBasePackages = "cn.datafuturex.zhishu")
+@MapperScan(basePackages = "cn.datafuturex.zhishu", annotationClass = Mapper.class)
 @EnableCaching
 public class YqapApplication {
+
+    static {
+        configureConsoleCharset();
+    }
 
     private static final Logger log = LoggerFactory.getLogger(YqapApplication.class);
 
     public static void main(String[] args) {
-        configureConsoleCharset();
-
         ConfigurableApplicationContext context = SpringApplication.run(YqapApplication.class, args);
 
         String devToolsStatus = "未检测到DevTools";
@@ -49,14 +45,18 @@ public class YqapApplication {
     }
 
     /**
-     * 控制台日志编码与终端对齐：中文 Windows 使用 GBK，其它系统使用 UTF-8。
-     * 可在启动参数中通过 -DCONSOLE_LOG_CHARSET=xxx 覆盖。
+     * 控制台统一 UTF-8（Cursor / Windows Terminal / start-dev.bat 均为 UTF-8）。
+     * 可通过 -DCONSOLE_LOG_CHARSET=xxx 覆盖。
      */
     private static void configureConsoleCharset() {
-        if (System.getProperty("CONSOLE_LOG_CHARSET") != null) {
-            return;
+        setDefaultProperty("CONSOLE_LOG_CHARSET", "UTF-8");
+        setDefaultProperty("stdout.encoding", "UTF-8");
+        setDefaultProperty("stderr.encoding", "UTF-8");
+    }
+
+    private static void setDefaultProperty(String key, String value) {
+        if (System.getProperty(key) == null) {
+            System.setProperty(key, value);
         }
-        String os = System.getProperty("os.name", "").toLowerCase();
-        System.setProperty("CONSOLE_LOG_CHARSET", os.contains("win") ? "GBK" : "UTF-8");
     }
 }

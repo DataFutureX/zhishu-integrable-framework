@@ -12,16 +12,16 @@
     "sort 为同级菜单排序，数值越小越靠前",
     "meta.layout 为 dashboard 时使用仪表盘布局预设（默认隐藏左侧二级侧栏）",
     "meta.hideSecondaryAside 可覆盖预设；主页仪表盘设为 false 以在顶部菜单模式下展示左侧二级菜单",
-    "权限管理域使用 /permission/*；监控使用 /monitor/ops；开发工具使用 /devtools/api"
+    "账号管理域使用 /permission/*；监控使用 /monitor/ops；开发工具使用 /devtools/api"
   ],
   "menuTree": [
     {
       "id": 1,
       "parentId": 0,
-      "title": "主页",
+      "title": "工作台",
       "path": "/home",
       "routeName": "Home",
-      "redirect": "/home/dashboard",
+      "redirect": "/home/briefings",
       "icon": "HomeFilled",
       "menuType": "DIRECTORY",
       "visible": true,
@@ -29,6 +29,21 @@
       "sort": 1,
       "component": null,
       "children": [
+        {
+          "id": 77,
+          "parentId": 1,
+          "title": "AI 简报",
+          "path": "/home/briefings",
+          "routeName": "AIBriefings",
+          "redirect": null,
+          "icon": "Bell",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 1,
+          "component": "views/ai/BriefingManage.vue",
+          "meta": { "title": "AI 简报" }
+        },
         {
           "id": 11,
           "parentId": 1,
@@ -38,9 +53,9 @@
           "redirect": null,
           "icon": "Odometer",
           "menuType": "MENU",
-          "visible": true,
+          "visible": false,
           "requiresAuth": true,
-          "sort": 1,
+          "sort": 9,
           "component": "views/dashboard/Dashboard.vue",
           "meta": { "layout": "dashboard", "hideSecondaryAside": false }
         }
@@ -49,7 +64,7 @@
     {
       "id": 2,
       "parentId": 0,
-      "title": "权限管理",
+      "title": "账号管理",
       "path": "/permission",
       "routeName": "Permission",
       "redirect": "/permission/user",
@@ -213,6 +228,21 @@
           "children": [
             { "id": 3301, "parentId": 33, "title": "日志查询", "path": null, "routeName": "system:operlog:query", "redirect": null, "icon": null, "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1, "component": null }
           ]
+        },
+        {
+          "id": 34,
+          "parentId": 3,
+          "title": "开放能力",
+          "path": "/system/open-api",
+          "routeName": "OpenApiCapabilities",
+          "redirect": null,
+          "icon": "Connection",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 4,
+          "component": "views/system/OpenApiCapabilities.vue",
+          "meta": { "title": "开放能力" }
         }
       ]
     },
@@ -385,21 +415,6 @@
           "sort": 6,
           "component": "views/ai/KnowledgeGraph.vue",
           "meta": { "title": "知识图谱" }
-        },
-        {
-          "id": 77,
-          "parentId": 7,
-          "title": "AI 简报",
-          "path": "/ai/briefings",
-          "routeName": "AIBriefings",
-          "redirect": null,
-          "icon": "Bell",
-          "menuType": "MENU",
-          "visible": true,
-          "requiresAuth": true,
-          "sort": 7,
-          "component": "views/ai/BriefingManage.vue",
-          "meta": { "title": "AI 简报" }
         }
       ]
     },

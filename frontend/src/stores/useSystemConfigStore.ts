@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { resolveAssetUrl } from '@/utils/asset'
 import { updateBrowserFavicon } from '@/utils/favicon'
 import type { SystemConfigVO } from '@/types/systemConfig'
-import defaultSystemIcon from '@/assets/yunqi-icon.png'
+import defaultSystemIcon from '@/assets/logo.svg'
 
 let configFetchPromise: Promise<void> | null = null
 

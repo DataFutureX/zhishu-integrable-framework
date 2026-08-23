@@ -94,6 +94,7 @@
                 <configuration>
                     <skip>false</skip>
                     <mainClass>cn.datafuturex.zhishu.YqapApplication</mainClass>
+                    <jvmArguments>-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -DCONSOLE_LOG_CHARSET=UTF-8</jvmArguments>
                 </configuration>
             </plugin>
             <plugin>

@@ -53,7 +53,9 @@ public class SecurityConfig {
                 auth.requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/system-config").permitAll()
                     .requestMatchers("/api/v1/system/health").permitAll()
+                    .requestMatchers("/error").permitAll()
                     .requestMatchers("/open/v1/**").permitAll()
+                    .requestMatchers("/mcp", "/mcp/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll();
                 permitApiDocsIfEnabled(auth);
                 auth.anyRequest().authenticated();
@@ -66,12 +68,21 @@ public class SecurityConfig {
     }
 
     /**
-     * 避免 Spring Boot 将 SwaggerFrameOptionsFilter 再注册为 Servlet Filter（已挂在 Security 链）。
+     * 避免 Spring Boot 将已挂在 Security 链的 Filter 再注册为 Servlet Filter。
      */
     @Bean
     public FilterRegistrationBean<SwaggerFrameOptionsFilter> swaggerFrameOptionsFilterRegistration(
             SwaggerFrameOptionsFilter filter) {
         FilterRegistrationBean<SwaggerFrameOptionsFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<CommittedResponseSecurityExceptionFilter> committedResponseFilterRegistration(
+            CommittedResponseSecurityExceptionFilter filter) {
+        FilterRegistrationBean<CommittedResponseSecurityExceptionFilter> registration =
+                new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }

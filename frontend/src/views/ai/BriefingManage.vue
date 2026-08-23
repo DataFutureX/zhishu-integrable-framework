@@ -10,7 +10,7 @@
         <span class="briefing-masthead__bar" />
       </div>
       <div class="briefing-masthead__text">
-        <p class="briefing-masthead__eyebrow">AI MONITORING BRIEFING</p>
+        <p class="briefing-masthead__eyebrow">工作台</p>
         <h2 class="briefing-masthead__title">AI 简报</h2>
         <p class="briefing-masthead__desc">
           汇总监测态势、告警与巡检要点 · 支持站内通知与邮件投递
@@ -946,10 +946,11 @@ async function handleRunNow(row: BriefingScheduleVO | Record<string, unknown>) {
   runningId.value = schedule.id
   try {
     const res = await runBriefingScheduleNow(schedule.id)
-    ElMessage.success(`已触发生成，本次投递 ${res?.generated ?? 0} 条`)
+    ElMessage.success(res?.message || '已提交后台生成，完成后可在简报列表中查看')
     await loadSchedules()
-  } catch {
-    // ignore
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : '生成失败，请稍后重试'
+    ElMessage.error(msg)
   } finally {
     runningId.value = null
   }

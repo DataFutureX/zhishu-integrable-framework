@@ -7,7 +7,7 @@ VALUES (
     'wanxiang-monitor',
     '万象监测平台',
     'ENABLED',
-    '["chat","knowledges","briefings","kg"]',
+    '["chat","knowledges","kg"]',
     '万象 BFF 代调知枢开放 API',
     'system'
 )
@@ -24,6 +24,6 @@ WHERE a.code = 'wanxiang-monitor'
 ON CONFLICT (key_prefix) DO NOTHING;
 
 UPDATE open_app
-SET allowed_scopes = '["chat","knowledges","briefings","kg"]',
+SET allowed_scopes = '["chat","knowledges","kg"]',
     update_time = CURRENT_TIMESTAMP
 WHERE code = 'wanxiang-monitor';

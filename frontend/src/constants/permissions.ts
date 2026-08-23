@@ -34,6 +34,15 @@ export const PERMISSIONS = {
   SYSTEM_ANNOUNCEMENT_PUBLISH: 'system:announcement:publish',
 
   DEVTOOLS_API_QUERY: 'devtools:api:query',
+
+  AI_AGENT_QUERY: 'ai:agent:query',
+  AI_AGENT_ADD: 'ai:agent:add',
+  AI_AGENT_EDIT: 'ai:agent:edit',
+  AI_AGENT_REMOVE: 'ai:agent:remove',
+  AI_AGENT_GRAPH: 'ai:agent:graph',
+  AI_MCP_EDIT: 'ai:mcp:edit',
+  AI_KG_SYNC: 'ai:kg:sync',
+  AI_QA_QUERY: 'ai:qa:query',
 } as const
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

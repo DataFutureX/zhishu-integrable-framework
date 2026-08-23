@@ -1,6 +1,6 @@
 <template>
   <el-popover
-    placement="bottom-end"
+    :placement="placement"
     :width="236"
     trigger="click"
     popper-class="layout-settings-popover"
@@ -11,7 +11,7 @@
         :class="{ 'layout-settings-trigger--on-primary': onPrimary }"
         circle
       >
-        <el-icon :size="18"><Setting /></el-icon>
+        <el-icon :size="18"><Brush /></el-icon>
       </el-button>
     </template>
 
@@ -36,10 +36,12 @@
 
         <div class="setting-item">
           <label class="setting-item__label">菜单模式</label>
-          <el-radio-group v-model="layoutMode" class="setting-radio-group">
+          <el-radio-group v-model="layoutMode" class="setting-radio-group setting-radio-group--triple">
             <el-radio-button value="hybrid">顶部菜单</el-radio-button>
             <el-radio-button value="sidebar">侧边栏</el-radio-button>
+            <el-radio-button value="immersive">无顶栏</el-radio-button>
           </el-radio-group>
+          <p class="setting-hint">无顶栏模式下，门户、通知、设置与账户入口固定在侧栏底部</p>
         </div>
       </section>
 
@@ -113,7 +115,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Setting } from '@element-plus/icons-vue'
+import { Brush } from '@element-plus/icons-vue'
 import { ThemeStyle } from '@/types'
 import { themeConfigs, themeLabels, themeOrder } from '@/config/themes'
 import {
@@ -126,9 +128,17 @@ import {
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_VERSION } from '@/constants/app'
 
-defineProps<{
-  onPrimary?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    onPrimary?: boolean
+    /** 弹出层位置，顶栏场景用 bottom-end，侧栏底部场景用 top-start/right-start */
+    placement?: 'bottom-end' | 'top-start' | 'right-start'
+  }>(),
+  {
+    onPrimary: false,
+    placement: 'bottom-end',
+  },
+)
 
 const layoutStore = useLayoutStore()
 const themeStore = useThemeStore()

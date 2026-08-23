@@ -1,0 +1,39 @@
+# Cursor 索引忽略（语法同 .gitignore）
+# 仅排除代码库检索；仍可通过 @ 引用手动读取。
+# .gitignore 中的路径已被 Cursor 自动忽略，此处补充仍入库、但不适合索引的内容。
+
+# ── 生成型 Wiki（体积大、易过时） ──
+**/.qoder/repowiki/
+
+# ── 截图资源 ──
+screenshot/
+
+# ── 本地测试报告与密钥产物 ──
+docs/api-test-report/
+docs/e2e-test-report/
+docs/unit-test-report/
+docs/dev-keys/out/
+
+# ── 构建与依赖 ──
+**/node_modules/
+**/target/
+**/dist/
+**/.wrangler/
+**/coverage/
+
+# ── 前端自动生成类型 ──
+frontend/src/types/auto-imports.d.ts
+frontend/src/types/components.d.ts
+
+# ── Playwright 产物 ──
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+frontend/html/
+
+# ── 日志与临时文件 ──
+**/logs/
+*.log
+*.tmp
+*.bak

@@ -39,6 +39,18 @@ export const AUTH_PAGES: AuthPageFixture[] = [
     titleSelector: '.dash-hero__title',
   },
   {
+    name: 'agent-chat',
+    path: '/home/chat',
+    title: 'Agent 会话',
+    titleSelector: '.session-rail__title',
+  },
+  {
+    name: 'knowledge-qa',
+    path: '/ai/qa',
+    title: '检索记录',
+    titleSelector: '.session-rail__title',
+  },
+  {
     name: 'user',
     path: '/permission/user',
     title: '用户管理',
@@ -65,7 +77,7 @@ export const AUTH_PAGES: AuthPageFixture[] = [
   {
     name: 'system-config',
     path: '/system/config',
-    title: '系统设置',
+    title: '参数配置',
     titleSelector: '.page-header__title',
   },
   {
@@ -83,7 +95,7 @@ export const AUTH_PAGES: AuthPageFixture[] = [
   {
     name: 'monitor',
     path: '/monitor/ops',
-    title: '系统监控',
+    title: '运维监控',
     titleSelector: '.monitor-hero__title',
   },
   {

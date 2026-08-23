@@ -2,7 +2,7 @@
   <div class="unit-list-page list-page">
     <PageHero
       title="单位管理"
-      eyebrow="系统管理"
+      eyebrow="账号管理"
       :eyebrow-icon="OfficeBuilding"
       :metrics="heroMetrics"
       :enable-rate="pageEnableRate"

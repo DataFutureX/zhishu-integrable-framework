@@ -151,7 +151,7 @@ function buildChatReply(message: string, enableRag?: boolean): string {
       `| 终端 | 青溪水文站 → 含东区雨量站等 |\n` +
       `| 告警影响 | 雨量二级告警 → 东区雨量站 → 青溪防洪工程 |\n` +
       `| 巡检链路 | 周巡计划 → 本周任务 → 离线异常 → 东区雨量站 |\n\n` +
-      `可在「数智中枢 / 知识图谱」查看子图、搜索实体、分析路径与告警影响面；也可切换 **知识图谱智能体（kg_agent）** 对话研判。` +
+      `可在「智能中心 / 知识图谱」查看子图、搜索实体、分析路径与告警影响面；也可切换 **知识图谱智能体（kg_agent）** 对话研判。` +
       ragHint
     )
   }
@@ -315,7 +315,7 @@ const demoHistory: QaHistoryVO[] = [
     question: '现在平台有多少遥测站在线？',
     answer: buildChatReply('现在平台有多少遥测站在线？'),
     model: 'demo-mock',
-    documentId: null,
+    documentId: undefined,
     conversationId: 'demo-chat-seed',
     createTime: daysAgoStr(0, 9, 12),
   },
@@ -325,7 +325,7 @@ const demoHistory: QaHistoryVO[] = [
     question: '青溪站水位怎么样？',
     answer: buildChatReply('青溪站水位怎么样？'),
     model: 'demo-mock',
-    documentId: null,
+    documentId: undefined,
     conversationId: 'demo-chat-seed',
     createTime: daysAgoStr(0, 9, 15),
   },
@@ -335,7 +335,7 @@ const demoHistory: QaHistoryVO[] = [
     question: '当前有哪些告警？',
     answer: buildChatReply('当前有哪些告警？'),
     model: 'demo-mock',
-    documentId: null,
+    documentId: undefined,
     conversationId: 'demo-chat-seed',
     createTime: daysAgoStr(0, 9, 20),
   },
@@ -345,7 +345,7 @@ const demoHistory: QaHistoryVO[] = [
     question: '本周巡检进度如何？',
     answer: buildChatReply('本周巡检进度如何？'),
     model: 'demo-mock',
-    documentId: null,
+    documentId: undefined,
     conversationId: 'demo-inspection-seed',
     createTime: daysAgoStr(0, 9, 25),
   },
@@ -379,8 +379,8 @@ function pushHistory(
     question,
     answer,
     model,
-    documentId: documentId ?? null,
-    conversationId: conversationId ?? null,
+    documentId: documentId,
+    conversationId: conversationId,
     createTime: nowStr(),
   })
 }
@@ -711,7 +711,7 @@ export async function mockChatStream(data: ChatRequestDTO, handlers: AiSseHandle
     if (token.includes('\n')) wait += 40
     if (/[，。！？、；：]/.test(token)) wait += 36
     await delay(wait)
-    handlers.onMessage(token)
+    handlers.onMessage?.(token)
   }
 
   handlers.onTrace?.(JSON.stringify(traces))
@@ -899,7 +899,7 @@ export async function mockDocumentQaStream(
   const chunkSize = 16
   for (let i = 0; i < text.length; i += chunkSize) {
     await delay(35)
-    handlers.onMessage(text.slice(i, i + chunkSize))
+    handlers.onMessage?.(text.slice(i, i + chunkSize))
   }
   handlers.onDone?.(conversationId)
 }

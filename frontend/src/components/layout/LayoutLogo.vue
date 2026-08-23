@@ -7,26 +7,27 @@
       'logo-container--hydro': variant === 'hydro',
       'logo-container--light': variant === 'light',
     }"
+    :title="`${systemConfigStore.systemName} · ${systemConfigStore.displayEnglishTitle}`"
   >
     <div class="logo-mark">
       <span class="logo-glow" aria-hidden="true" />
       <img
         v-if="systemConfigStore.iconUrl"
         :src="systemConfigStore.iconUrl"
-        alt="系统图标"
+        alt=""
         class="logo-image"
       />
-      <el-icon v-else :size="22" class="logo-icon"><Odometer /></el-icon>
+      <el-icon v-else :size="22" class="logo-icon"><Aim /></el-icon>
     </div>
     <div v-if="!collapse" class="logo-text">
-      <span class="logo-eyebrow">{{ systemConfigStore.displayEnglishTitle }}</span>
       <span class="logo-title">{{ systemConfigStore.systemName }}</span>
+      <span class="logo-eyebrow">{{ systemConfigStore.displayEnglishTitle }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Odometer } from '@element-plus/icons-vue'
+import { Aim } from '@element-plus/icons-vue'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 
 defineProps<{
@@ -42,13 +43,17 @@ const systemConfigStore = useSystemConfigStore()
 .logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 56px;
-  padding: 8px 16px;
+  padding: 8px 12px 8px 14px;
+  overflow: hidden;
   background: var(--app-header-bg, linear-gradient(135deg, #0969da 0%, #0550ae 100%));
   box-shadow: var(--app-header-shadow, 0 2px 8px rgba(9, 105, 218, 0.28));
 
   &--collapse {
+    justify-content: center;
+    padding: 8px;
+
     .logo-mark {
       margin-right: 0;
     }
@@ -56,11 +61,11 @@ const systemConfigStore = useSystemConfigStore()
 
   &--compact {
     width: auto;
-    min-width: 220px;
-    max-width: none;
+    min-width: 0;
+    max-width: 300px;
     height: 56px;
     justify-content: flex-start;
-    padding: 8px 20px 8px 18px;
+    padding: 8px 16px 8px 16px;
     box-shadow: none;
     border-radius: 0;
 
@@ -72,25 +77,27 @@ const systemConfigStore = useSystemConfigStore()
 
     .logo-image,
     .logo-icon {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
     }
 
     .logo-text {
-      overflow: visible;
+      overflow: hidden;
     }
 
     .logo-title {
-      font-size: 15px;
-      letter-spacing: 0.04em;
-      overflow: visible;
-      text-overflow: clip;
-      max-width: none;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
 
     .logo-eyebrow {
-      font-size: 9px;
-      letter-spacing: 0.12em;
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
     }
   }
 
@@ -119,8 +126,9 @@ const systemConfigStore = useSystemConfigStore()
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     min-width: 0;
+    overflow: hidden;
   }
 
   &:not(.logo-container--light):not(.logo-container--hydro) {
@@ -139,8 +147,8 @@ const systemConfigStore = useSystemConfigStore()
       height: 28px;
       object-fit: contain;
       background: transparent;
-      /* 深蓝/主色顶栏上转为白色，保证对比度 */
-      filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+      border-radius: 7px;
+      filter: drop-shadow(0 1px 4px rgba(3, 32, 74, 0.28));
       animation: logo-icon-float 4.8s ease-in-out infinite;
       flex-shrink: 0;
     }
@@ -148,20 +156,24 @@ const systemConfigStore = useSystemConfigStore()
     .logo-eyebrow {
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.12em;
-      line-height: 1;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
       color: rgba(255, 255, 255, 0.72);
-      white-space: nowrap;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .logo-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      line-height: 1.15;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
       white-space: nowrap;
-      overflow: visible;
-      text-overflow: clip;
+      overflow: hidden;
+      text-overflow: ellipsis;
       background: linear-gradient(
         105deg,
         #ffffff 0%,
@@ -208,6 +220,7 @@ const systemConfigStore = useSystemConfigStore()
       height: 28px;
       object-fit: contain;
       background: transparent;
+      border-radius: 7px;
       filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.12));
       animation: logo-icon-float 4.8s ease-in-out infinite;
       flex-shrink: 0;
@@ -216,20 +229,24 @@ const systemConfigStore = useSystemConfigStore()
     .logo-eyebrow {
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.14em;
-      line-height: 1;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
       color: #86909c;
-      white-space: nowrap;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .logo-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      line-height: 1.15;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
       white-space: nowrap;
-      overflow: visible;
-      text-overflow: clip;
+      overflow: hidden;
+      text-overflow: ellipsis;
       background: none;
       -webkit-background-clip: border-box;
       background-clip: border-box;
@@ -258,9 +275,12 @@ const systemConfigStore = useSystemConfigStore()
         radial-gradient(circle at 50% 50%, rgba(8, 145, 178, 0.22) 0%, transparent 72%);
     }
 
-    .logo-image,
     .logo-icon {
-      filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(125, 211, 252, 0.45));
+      filter: drop-shadow(0 0 8px rgba(125, 211, 252, 0.45));
+    }
+
+    .logo-image {
+      filter: drop-shadow(0 1px 6px rgba(8, 145, 178, 0.35));
     }
 
     .logo-eyebrow {
@@ -268,13 +288,13 @@ const systemConfigStore = useSystemConfigStore()
     }
 
     .logo-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      line-height: 1.15;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
       white-space: nowrap;
-      overflow: visible;
-      text-overflow: clip;
+      overflow: hidden;
+      text-overflow: ellipsis;
       background: linear-gradient(
         105deg,
         #f0fdff 0%,
@@ -306,16 +326,21 @@ const systemConfigStore = useSystemConfigStore()
       height: 28px;
       object-fit: contain;
       background: transparent;
+      border-radius: 7px;
       flex-shrink: 0;
     }
 
     .logo-eyebrow {
       font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.12em;
-      line-height: 1;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
       color: rgba(125, 211, 252, 0.72);
-      white-space: nowrap;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
   }
 }

@@ -199,7 +199,7 @@ ZX2DyIQ6ggb67B0cNwIDAQAB
     const redirect =
       typeof _body.redirect === 'string' && _body.redirect.startsWith('/') && !_body.redirect.startsWith('//')
         ? _body.redirect
-        : '/home/dashboard'
+        : '/home/briefings'
     return {
       token: DEMO_TOKEN,
       expiration: Date.now() + 86400000,
@@ -528,7 +528,7 @@ function handleSystem(
     return mockState.systemConfig
   }
   if (method === 'POST' && path === '/system-config/icon') {
-    const iconUrl = '/yunqi-icon.png'
+    const iconUrl = '/logo.svg'
     mockState.systemConfig.systemIcon = iconUrl
     mockState.systemConfig.updateTime = nowStr()
     return iconUrl

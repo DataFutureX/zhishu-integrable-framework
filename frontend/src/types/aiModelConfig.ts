@@ -10,6 +10,7 @@ export interface AiModelConfigVO {
   memoryWindowSize: number
   baseUrl?: string | null
   apiKeyMasked?: string | null
+  apiKeyConfigured?: boolean | null
   remark?: string | null
   chatModelOptions: string[]
   embeddingModelOptions: string[]
@@ -24,5 +25,7 @@ export interface AiModelConfigUpdateDTO {
   topP: number
   enableRagDefault: boolean
   memoryWindowSize: number
+  baseUrl?: string | null
+  apiKey?: string | null
   remark?: string | null
 }

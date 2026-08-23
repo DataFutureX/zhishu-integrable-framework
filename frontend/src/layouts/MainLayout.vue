@@ -5,9 +5,9 @@
     class="layout-container"
     :class="{
       'layout-container--hybrid': layoutStore.isHybridLayout,
+      'layout-container--immersive': layoutStore.isImmersiveLayout,
       'layout-container--hydro': isHydroTheme,
       'layout-container--light': isLightTheme,
-      'layout-container--default': isDefaultTheme,
     }"
   >
     <el-header v-if="layoutStore.isHybridLayout" class="hybrid-top-header">
@@ -26,8 +26,6 @@
         <LayoutHeaderActions
           class="hybrid-top-header__actions"
           :on-primary="headerActionsOnPrimary"
-          :user-initial="getUserInitial"
-          :avatar-color="getUserAvatarColor"
           :user-name="userStore.userName || '管理员'"
           @command="handleCommand"
         />
@@ -36,13 +34,22 @@
 
     <el-container :class="layoutStore.isHybridLayout ? 'hybrid-body' : 'layout-body'">
       <LayoutAside
-        v-if="layoutStore.isSidebarLayout"
+        v-if="layoutStore.isSidebarLayout || layoutStore.isImmersiveLayout"
         variant="primary"
         :collapse="isCollapse"
         :menus="menuStore.sidebarNavigationMenus"
         :active-menu="activeMenu"
         :copyright="sidebarCopyright"
-      />
+      >
+        <template v-if="layoutStore.isImmersiveLayout" #actions>
+          <LayoutAsideActions
+            :collapse="isCollapse"
+            :user-name="userStore.userName || '管理员'"
+            @command="handleCommand"
+            @toggle-collapse="toggleCollapse"
+          />
+        </template>
+      </LayoutAside>
 
       <LayoutAside
         v-if="routeLayout.effectiveShowSecondaryAside"
@@ -76,8 +83,6 @@
             @toggle-collapse="toggleCollapse"
           />
           <LayoutHeaderActions
-            :user-initial="getUserInitial"
-            :avatar-color="getUserAvatarColor"
             :user-name="userStore.userName || '管理员'"
             @command="handleCommand"
           />
@@ -128,6 +133,7 @@ import { useRouteLayout } from '@/composables/useRouteLayout'
 import LayoutLogo from '@/components/layout/LayoutLogo.vue'
 import DemoBanner from '@/components/common/DemoBanner.vue'
 import LayoutAside from '@/components/layout/LayoutAside.vue'
+import LayoutAsideActions from '@/components/layout/LayoutAsideActions.vue'
 import TopNavMenu from '@/components/layout/TopNavMenu.vue'
 import LayoutHeaderActions from '@/components/layout/LayoutHeaderActions.vue'
 import LayoutNavBar from '@/components/layout/LayoutNavBar.vue'
@@ -159,11 +165,10 @@ const showHybridCopyrightBar = computed(
 
 const isHydroTheme = computed(() => themeStore.currentTheme === ThemeStyle.BLUE)
 const isLightTheme = computed(() => themeStore.currentTheme === ThemeStyle.LIGHT)
-const isDefaultTheme = computed(() => themeStore.currentTheme === ThemeStyle.DEFAULT)
 
 const logoVariant = computed(() => {
   if (isHydroTheme.value) return 'hydro'
-  if (isLightTheme.value || isDefaultTheme.value) return 'light'
+  if (isLightTheme.value) return 'light'
   return 'default'
 })
 
@@ -176,21 +181,6 @@ const hybridNavTheme = computed(() => {
   if (themeStore.currentTheme === ThemeStyle.BLUE) return 'hydro'
   if (themeStore.currentTheme === ThemeStyle.DARK) return 'default'
   return 'light'
-})
-
-const getUserInitial = computed(() => {
-  const name = userStore.userName || '管理员'
-  return name.charAt(0).toUpperCase()
-})
-
-const getUserAvatarColor = computed(() => {
-  const name = userStore.userName || 'admin'
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const hue = Math.abs(hash % 360)
-  return `hsl(${hue}, 70%, 50%)`
 })
 
 const announcementStore = useAnnouncementStore()
@@ -216,6 +206,11 @@ const handleCommand = async (command: string) => {
 
   if (command === 'profile') {
     router.push('/profile/info')
+    return
+  }
+
+  if (command === 'password') {
+    router.push('/profile/password')
   }
 }
 
@@ -268,8 +263,9 @@ onUnmounted(() => {
   &__logo {
     position: relative;
     z-index: 1;
-    flex-shrink: 0;
-    min-width: max-content;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 300px;
   }
 
   &__nav {
@@ -297,7 +293,8 @@ onUnmounted(() => {
     background: transparent;
     box-shadow: none;
     width: auto;
-    min-width: max-content;
+    min-width: 0;
+    max-width: 300px;
   }
 }
 
@@ -348,30 +345,6 @@ onUnmounted(() => {
 
   .layout-header {
     box-shadow: 0 1px 0 #d0d7de;
-  }
-}
-
-.layout-container--default {
-  .hybrid-top-header {
-    border-bottom: 1px solid #d0d7de;
-    background: #ffffff;
-    color: #1f2328;
-
-    &__nav {
-      border-left: none;
-      border-right: none;
-    }
-  }
-
-  .layout-aside {
-    box-shadow: none;
-    border-right: 1px solid #30363d;
-  }
-
-  .layout-header {
-    box-shadow: 0 1px 0 #d0d7de;
-    background: #ffffff;
-    color: #1f2328;
   }
 }
 

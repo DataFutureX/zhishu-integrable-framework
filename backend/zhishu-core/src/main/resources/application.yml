@@ -3,12 +3,17 @@ spring:
     name: zhishu
   # 默认开发环境；可通过 --spring.profiles.active=test|prod 或环境变量 SPRING_PROFILES_ACTIVE 切换
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev,ai}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   servlet:
     multipart:
-      max-file-size: 2MB
-      max-request-size: 2MB
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=10m
 
   # Jackson 3（Boot 4）：日期默认已是字符串而非时间戳；自定义格式与时区如下
   jackson:
@@ -26,6 +31,50 @@ spring:
         logic-delete-field: deleted
         logic-delete-value: 1
         logic-not-delete-value: 0
+
+  ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+            platform: postgresql
+    openai:
+      # 仅作自动配置占位；运行时以「模型设置」入库加密密钥为准
+      api-key: ${OPENAI_API_KEY:${DASHSCOPE_API_KEY:}}
+      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      chat:
+        options:
+          model: ${OPENAI_CHAT_MODEL:qwen-plus}
+          temperature: 0.7
+          max-tokens: 2000
+          top-p: 0.9
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-v4}
+          dimensions: 1024
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 1024
+        distance-type: COSINE_DISTANCE
+        index-type: HNSW
+    mcp:
+      server:
+        enabled: ${ZHISHU_MCP_SERVER_ENABLED:true}
+        protocol: STREAMABLE
+        name: zhishu-integrable-framework
+        version: 1.0.0
+        type: SYNC
+        annotation-scanner:
+          enabled: true
+        streamable-http:
+          mcp-endpoint: /mcp
+      client:
+        enabled: true
+        type: SYNC
+        toolcallback:
+          enabled: true
 
 # JWT 配置（各环境可覆盖 secret）
 jwt:
@@ -45,6 +94,9 @@ springdoc:
 logging:
   file:
     name: logs/zhishu-backend.log
+  level:
+    cn.datafuturex.zhishu.ai: INFO
+    org.springframework.ai: INFO
 
 # 业务公共配置（数据库、端口见 application-{dev|test|prod}.yml）
 yunqi:
@@ -103,3 +155,36 @@ yunqi:
         months-behind: 6
         months-ahead: 1
         auto-create: true
+
+# 知枢 AI（与 zhishu-core 同进程，勿单独占用 :8180）
+wanxiang:
+  mcp:
+    server-enabled: false
+  agent:
+    engine: ${WANXIANG_AGENT_ENGINE:chatclient}
+  kg:
+    # 默认关闭；配置 Neo4j 后设置 WANXIANG_KG_ENABLED=true 启用 GraphRAG
+    enabled: ${WANXIANG_KG_ENABLED:false}
+    neo4j:
+      uri: ${NEO4J_URI:bolt://127.0.0.1:7687}
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:}
+      database: ${NEO4J_DATABASE:neo4j}
+
+zhishu:
+  ai:
+    # 仅用于加密入库的模型 Key，不是百炼/OpenAI 密钥。生产请覆盖。
+    crypto-key: ${ZHISHU_AI_CRYPTO_KEY:zhishu-dev-model-key-wrap}
+  briefing:
+    event-scan:
+      enabled: false
+    mail:
+      jdbc-enabled: false
+    webhook:
+      # 仅知枢内部简报可选外推，默认关闭。外部简报请自行调度并调用 /open/v1/chat
+      enabled: ${ZHISHU_BRIEFING_WEBHOOK_ENABLED:false}
+      url: ${ZHISHU_BRIEFING_WEBHOOK_URL:http://127.0.0.1:8180/api/v1/internal/briefings/notify}
+      api-key: ${ZHISHU_BRIEFING_WEBHOOK_KEY:dev-briefing-webhook-key}
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml

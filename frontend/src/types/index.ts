@@ -36,7 +36,6 @@ export enum Role {
 // 主题风格枚举（顺序即切换器展示顺序；云起浅色置顶且为默认）
 export enum ThemeStyle {
   LIGHT = 'light', // 云起浅色（默认）
-  DEFAULT = 'default', // 经典侧栏
   BLUE = 'blue', // 夜空
   DARK = 'dark', // 极客黑
 }

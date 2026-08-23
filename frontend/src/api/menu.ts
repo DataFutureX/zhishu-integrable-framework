@@ -12,13 +12,13 @@ export const getMenuTreeByRoleApi = (roleCode: string) => {
 }
 
 /** 查询当前用户菜单树 GET /api/v1/menus/current-user */
-export const getCurrentUserMenusApi = () => {
-  return get<MenuVO[]>('/menus/current-user')
+export const getCurrentUserMenusApi = (config?: import('@/utils/request').AppAxiosRequestConfig) => {
+  return get<MenuVO[]>('/menus/current-user', config)
 }
 
 /** 查询当前用户权限值 GET /api/v1/menus/current-user/permissions */
-export const getCurrentUserPermissionsApi = () => {
-  return get<string[]>('/menus/current-user/permissions')
+export const getCurrentUserPermissionsApi = (config?: import('@/utils/request').AppAxiosRequestConfig) => {
+  return get<string[]>('/menus/current-user/permissions', config)
 }
 
 /** 查询菜单详情 GET /api/v1/menus/{id} */

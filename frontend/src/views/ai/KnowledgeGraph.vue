@@ -4,7 +4,7 @@
     :loading="loading"
     :show-hero="true"
     hero-title="知识图谱"
-    hero-eyebrow="数智中枢"
+    hero-eyebrow="智能中心"
     :hero-eyebrow-icon="Share"
     :hero-metrics="heroMetrics"
   >

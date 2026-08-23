@@ -2,7 +2,7 @@
   <ListPageShell
     :loading="loading"
     hero-title="菜单管理"
-    hero-eyebrow="系统管理"
+    hero-eyebrow="账号管理"
     :hero-eyebrow-icon="Menu"
     :hero-metrics="heroMetrics"
     :hero-enable-rate="pageEnableRate"
@@ -169,7 +169,7 @@
       <el-table-column prop="icon" label="图标" width="88" align="center">
         <template #default="{ row }">
           <div v-if="row.icon" class="icon-cell" :title="row.icon">
-            <el-icon class="icon-cell__glyph"><component :is="row.icon" /></el-icon>
+            <el-icon class="icon-cell__glyph"><component :is="resolveMenuIcon(row.icon)" /></el-icon>
           </div>
           <span v-else class="text-muted">—</span>
         </template>
@@ -275,6 +275,7 @@ import { useRouteActivate } from '@/composables/useRouteActivate'
 import { menuTypes, useMenuList } from '@/composables/useMenuList'
 import type { MenuVO } from '@/types/menu'
 import { PERMISSIONS } from '@/constants/permissions'
+import { resolveMenuIcon } from '@/utils/menuNavigation'
 
 const {
   loading,

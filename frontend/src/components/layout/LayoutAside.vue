@@ -1,6 +1,6 @@
 <template>
   <el-aside
-    :width="collapse ? '64px' : '200px'"
+    :width="collapse ? '64px' : '224px'"
     class="layout-aside"
     :class="{ 'layout-aside--secondary': variant === 'secondary' }"
     :style="{ backgroundColor: themeStore.themeConfig.sidebarBgColor }"
@@ -24,7 +24,15 @@
       <SidebarMenuItems :menus="menus" />
     </el-menu>
 
-    <div v-if="copyright && !collapse" class="sidebar-footer">
+    <div v-if="$slots.actions" class="sidebar-bottom">
+      <slot name="actions" />
+      <div v-if="copyright && !collapse" class="sidebar-bottom__copyright">
+        <span class="sidebar-bottom__rule" aria-hidden="true" />
+        <p class="copyright">{{ copyright }}</p>
+      </div>
+    </div>
+
+    <div v-else-if="copyright && !collapse" class="sidebar-footer">
       <span class="sidebar-footer__rule" aria-hidden="true" />
       <p class="copyright">{{ copyright }}</p>
     </div>
@@ -116,6 +124,46 @@ const logoVariant = computed(() => {
         border-radius: 0;
         box-shadow: none;
       }
+    }
+  }
+
+  .sidebar-bottom {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid color-mix(in srgb, var(--app-sidebar-text, #bfcbd9) 14%, transparent);
+
+    &__copyright {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px 12px;
+    }
+
+    &__rule {
+      display: block;
+      width: 18px;
+      height: 1px;
+      border-radius: 1px;
+      background: color-mix(in srgb, var(--app-primary) 55%, transparent);
+      opacity: 0.8;
+    }
+
+    .copyright {
+      margin: 0;
+      max-width: 100%;
+      padding: 0 2px;
+      font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.35;
+      letter-spacing: 0.02em;
+      text-align: center;
+      color: color-mix(in srgb, var(--app-sidebar-text, #bfcbd9) 78%, transparent);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 

@@ -2,14 +2,14 @@
   <template v-for="menu in menus" :key="menu.id">
     <el-sub-menu v-if="hasVisibleChildren(menu)" :index="normalizePath(menu.path)">
       <template #title>
-        <el-icon><component :is="menu.icon || 'Folder'" /></el-icon>
+        <el-icon><component :is="resolveMenuIcon(menu.icon, 'Folder')" /></el-icon>
         <span>{{ menu.title }}</span>
       </template>
       <SidebarMenuItems :menus="getVisibleChildren(menu)" />
     </el-sub-menu>
 
     <el-menu-item v-else :index="normalizePath(menu.path)">
-      <el-icon><component :is="menu.icon || 'Document'" /></el-icon>
+      <el-icon><component :is="resolveMenuIcon(menu.icon, 'Document')" /></el-icon>
       <template #title>{{ menu.title }}</template>
     </el-menu-item>
   </template>
@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import type { MenuVO } from '@/types/menu'
 import SidebarMenuItems from './SidebarMenuItems.vue'
+import { resolveMenuIcon } from '@/utils/menuNavigation'
 
 defineOptions({ name: 'SidebarMenuItems' })
 

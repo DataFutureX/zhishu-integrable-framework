@@ -14,7 +14,10 @@
       <div class="portal-header__inner">
         <a class="portal-brand" href="/portal" @click.prevent="goHome">
           <img :src="systemIconUrl" alt="" class="portal-brand__icon" />
-          <span class="portal-brand__name">{{ systemName }}</span>
+          <span class="portal-brand__text">
+            <span class="portal-brand__name">{{ systemName }}</span>
+            <span class="portal-brand__en">{{ englishTitle }}</span>
+          </span>
         </a>
         <nav class="portal-nav" aria-label="页面导航">
           <a
@@ -180,6 +183,7 @@ const docsActive = computed(() => route.path.startsWith('/docs'))
 const headerSolid = computed(() => props.variant === 'page' || scrolled.value || menuOpen.value)
 const systemName = computed(() => systemConfigStore.systemName || DEFAULT_SYSTEM_NAME)
 const systemIconUrl = computed(() => systemConfigStore.iconUrl)
+const englishTitle = computed(() => systemConfigStore.displayEnglishTitle)
 const copyright = computed(() => systemConfigStore.copyright || DEFAULT_COPYRIGHT)
 
 function goHome() {
@@ -464,26 +468,49 @@ $max: 1120px;
 .portal-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
   text-decoration: none;
   color: $fg;
 
   &__icon {
     width: 32px;
     height: 32px;
-    border-radius: $radius;
+    border-radius: 8px;
     object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
   }
 
   &__name {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  &__en {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    color: $fg-muted;
+    white-space: nowrap;
   }
 }
 
 .portal-nav {
   display: flex;
   gap: 2px;
+  min-width: 0;
+  flex: 1;
 
   &__link {
     padding: 6px 10px;

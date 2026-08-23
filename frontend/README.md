@@ -1,6 +1,6 @@
-# 云起应用平台
+# 知枢可集成框架
 
-一套面向企业数字化应用建设的模块化开发基础平台，简称 **YQAP**（YunQi Application Platform）。前端基于 **Vue 3 + TypeScript + Element Plus**，通过统一技术架构、业务组件、AI 能力与行业扩展能力，帮助企业快速构建智能化应用系统。
+一套面向企业数字化应用建设的模块化开发基础平台，简称 **ZSIF**（ZhiShu Integrable Framework）。前端基于 **Vue 3 + TypeScript + Element Plus**，通过统一技术架构、业务组件、AI 能力与行业扩展能力，帮助企业快速构建智能化应用系统。
 
 [License: MIT](../LICENSE)
 [Vue](https://vuejs.org/)
@@ -19,8 +19,7 @@
 
 | 平台 | 仓库 | remote | 说明 |
 |------|------|--------|------|
-| GitHub | `git@github.com:DataFutureX/yunqi-application-platform.git` | `origin` | 主仓库 |
-| Gitee | `git@gitee.com:DataFutureX/yunqi-application-platform.git` | `gitee` | 国内镜像 |
+| GitHub | `git@github.com:DataFutureX/zhishu-integrable-framework.git` | `origin` | 主仓库 |
 
 | 路径 | 内容说明 |
 |------|----------|
@@ -31,12 +30,7 @@
 ### 克隆
 
 ```bash
-# GitHub（推荐 / origin）
-git clone git@github.com:DataFutureX/yunqi-application-platform.git
-cd zhishu-integrable-framework/frontend
-
-# 或 Gitee
-git clone git@gitee.com:DataFutureX/yunqi-application-platform.git
+git clone git@github.com:DataFutureX/zhishu-integrable-framework.git
 cd zhishu-integrable-framework/frontend
 ```
 
@@ -94,7 +88,7 @@ git push gitee main
 | 单点登录回调 | `/sso/callback`         | 伙伴 Ticket 换票登录     |
 | 登录     | `/login`                | 滑动验证码 + RSA       |
 | 仪表盘    | `/home/dashboard`       | 概览、公告、快捷入口        |
-| 权限管理   | `/permission/*`         | 用户 / 单位 / 角色 / 菜单 |
+| 账号管理   | `/permission/*`         | 用户 / 单位 / 角色 / 菜单 |
 | 系统设置   | `/system/config`        | 站点品牌与登录策略         |
 | 公告管理   | `/system/announcement`  | 发布 / 撤回 / 已读      |
 | 操作日志   | `/system/operation-log` | 审计查询              |
@@ -530,8 +524,7 @@ npm run test
 | [仓库快速开始](../README.md) | 根目录 README：演示模式与前后端联调 |
 | [门户文档](https://yunqi.datafuturex.cn/docs) | 独立文档页 `/docs`：快速开始与单点登录说明 |
 | [在线演示](https://yunqi.datafuturex.cn) | 线上体验地址 |
-| [GitHub 源码](https://github.com/DataFutureX/yunqi-application-platform) | `git@github.com:DataFutureX/yunqi-application-platform.git`（`origin` / `main`）；前端位于 `frontend/` |
-| [Gitee 镜像](https://gitee.com/DataFutureX/yunqi-application-platform) | `git@gitee.com:DataFutureX/yunqi-application-platform.git`（`gitee`）；前端位于 `frontend/` |
+| [GitHub 源码](https://github.com/DataFutureX/zhishu-integrable-framework) | `git@github.com:DataFutureX/zhishu-integrable-framework.git`（`origin` / `main`）；前端位于 `frontend/` |
 | [docs/MENU_ROUTES.json](docs/MENU_ROUTES.json)                   | 菜单树与路由、按钮权限对照      |
 | [docs/GUIDE.md](docs/GUIDE.md)                                   | 短说明（内容已并入本 README） |
 | [LICENSE](../LICENSE)                                             | MIT 许可证全文（仓库根目录） |

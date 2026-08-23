@@ -2,7 +2,7 @@
   <ListPageShell
     :loading="loading"
     hero-title="操作日志"
-    hero-eyebrow="系统管理"
+    hero-eyebrow="系统设置"
     :hero-eyebrow-icon="Document"
     :hero-metrics="heroMetrics"
     :hero-enable-rate="pageSuccessRate"

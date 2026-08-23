@@ -225,7 +225,7 @@ export async function mockUpdateBriefingSchedule(
 
 export async function mockRunBriefingScheduleNow(
   id: number | string,
-): Promise<{ scheduleId: number; generated: number }> {
+): Promise<{ scheduleId: number; message: string }> {
   await delay(200)
   const schedule = schedules.find((item) => String(item.id) === String(id))
   if (!schedule) throw new Error('计划不存在')
@@ -244,5 +244,5 @@ export async function mockRunBriefingScheduleNow(
   }
   deliveries.unshift(created)
   schedule.lastRunAt = nowStr()
-  return { scheduleId: Number(schedule.id), generated: 1 }
+  return { scheduleId: Number(schedule.id), message: '已提交后台生成，完成后可在简报列表中查看' }
 }

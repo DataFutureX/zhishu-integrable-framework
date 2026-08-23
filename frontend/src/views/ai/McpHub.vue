@@ -3,12 +3,12 @@
     :loading="loading"
     :show-hero="true"
     hero-title="MCPs"
-    hero-eyebrow="数智中枢"
+    hero-eyebrow="智能中心"
     :hero-eyebrow-icon="Link"
     :hero-metrics="heroMetrics"
   >
     <template #heroDescription>
-      对外提供只读监测 MCP（<code>/mcp</code>），并接入他方 MCP 供数智中枢 Agent 调用。接入工具不会再对外转发。
+      对外提供只读监测 MCP（<code>/mcp</code>），并接入他方 MCP 供智能中心 Agent 调用。接入工具不会再对外转发。
     </template>
     <template #heroActions>
       <el-button
@@ -553,7 +553,10 @@
           <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip />
           <el-table-column label="启用" width="90">
             <template #default="{ row }">
-              <el-switch :model-value="row.enabled" @change="(on) => toggleTool(row, on === true)" />
+              <el-switch
+                :model-value="row.enabled"
+                @change="(on: string | number | boolean) => toggleTool(row as McpUpstreamToolVO, on === true)"
+              />
             </template>
           </el-table-column>
         </el-table>
@@ -623,6 +626,8 @@ const outboundCaps = [
   { code: 'KNOWLEDGE_GRAPH', label: '知识图谱' },
 ]
 
+const clientVisible = ref(false)
+const clientEditingId = ref<number | null>(null)
 const clientForm = reactive({
   name: '',
   boundUserId: 1,
@@ -794,7 +799,7 @@ const capLabel = (code: string) => outboundCaps.find((c) => c.code === code)?.la
 const protocolLabel = (protocol: string) =>
   protocol === 'SSE' ? 'SSE' : 'Streamable HTTP'
 
-const healthTag = (status: string) => {
+const healthTag = (status?: string | null) => {
   if (status === 'UP') return 'success'
   if (status === 'DOWN') return 'danger'
   return 'info'
@@ -1001,9 +1006,9 @@ const openEditUpstream = (row: McpUpstreamVO) => {
   upstreamForm.name = row.name
   upstreamForm.protocol = row.protocol
   upstreamForm.baseUrl = row.baseUrl
-  upstreamForm.endpoint = row.endpoint
+  upstreamForm.endpoint = row.endpoint || '/mcp'
   upstreamForm.authHeader = ''
-  upstreamForm.requestTimeoutMs = row.requestTimeoutMs
+  upstreamForm.requestTimeoutMs = row.requestTimeoutMs ?? 20000
   upstreamForm.status = row.status
   resetUpstreamSnippet()
   upstreamVisible.value = true

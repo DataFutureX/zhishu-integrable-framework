@@ -69,6 +69,16 @@ import type {
   KgSyncStatusVO,
   KgTopologySummary,
 } from '@/types/knowledgeGraph'
+import type {
+  McpCallLogVO,
+  McpClientCreateDTO,
+  McpClientUpdateDTO,
+  McpClientVO,
+  McpOverviewVO,
+  McpUpstreamToolVO,
+  McpUpstreamUpsertDTO,
+  McpUpstreamVO,
+} from '@/types/mcp'
 import { postAiSse, type AiSseHandlers } from '@/utils/aiSse'
 import { resolveAiUserId } from '@/utils/aiUser'
 import { parseJsonWithBigInt } from '@/utils/parseJson'
@@ -370,7 +380,7 @@ export function createChatSession(data?: ChatSessionCreateDTO): Promise<ChatSess
       conversationId: `demo-session-${Date.now()}`,
       scene: data?.scene || 'CHAT',
       title: data?.title || '新会话',
-      agentId: data?.agentId ?? null,
+      agentId: data?.agentId,
       createTime: new Date().toISOString(),
       updateTime: new Date().toISOString(),
     }
@@ -452,6 +462,7 @@ export function getAiModelConfig(): Promise<AiModelConfigVO> {
       memoryWindowSize: 20,
       baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       apiKeyMasked: 'sk-****demo',
+      apiKeyConfigured: true,
       remark: '演示模式配置',
       chatModelOptions: ['qwen-plus', 'qwen-turbo', 'qwen-max'],
       embeddingModelOptions: ['qwen3.7-text-embedding', 'text-embedding-v3'],
@@ -466,8 +477,9 @@ export function updateAiModelConfig(data: AiModelConfigUpdateDTO): Promise<AiMod
   if (isDemoMode) {
     return Promise.resolve({
       ...data,
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-      apiKeyMasked: 'sk-****demo',
+      baseUrl: data.baseUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      apiKeyMasked: data.apiKey ? 'sk-****demo' : 'sk-****demo',
+      apiKeyConfigured: true,
       chatModelOptions: ['qwen-plus', 'qwen-turbo', 'qwen-max'],
       embeddingModelOptions: ['qwen3.7-text-embedding', 'text-embedding-v3'],
       updateTime: new Date().toISOString(),
@@ -560,7 +572,7 @@ const demoChatSessions: DemoChatSession[] = [
     conversationId: 'demo-doc-seed',
     scene: 'DOCUMENT_QA',
     title: '水位警戒处置',
-    agentId: null,
+    agentId: undefined,
     updateTime: new Date().toISOString(),
     createTime: new Date().toISOString(),
   },
@@ -886,7 +898,7 @@ export function updateBriefingSchedule(
 
 export function runBriefingScheduleNow(
   id: number | string,
-): Promise<{ scheduleId: number; generated: number }> {
+): Promise<{ scheduleId: number; message: string }> {
   if (isDemoMode) {
     return import('@/mock/briefing').then((m) => m.mockRunBriefingScheduleNow(id))
   }
@@ -980,7 +992,7 @@ export function getKgSyncStatus(): Promise<KgSyncStatusVO> {
   return aiService.get('/kg/sync/status')
 }
 
-export function getMcpOverview() {
+export function getMcpOverview(): Promise<McpOverviewVO> {
   if (isDemoMode) {
     return Promise.resolve({
       serverEnabled: false,
@@ -994,49 +1006,49 @@ export function getMcpOverview() {
   return aiService.get('/mcp/overview')
 }
 
-export function listMcpClients() {
+export function listMcpClients(): Promise<McpClientVO[]> {
   if (isDemoMode) return Promise.resolve([])
   return aiService.get('/mcp/clients')
 }
 
-export function createMcpClient(data: import('@/types/mcp').McpClientCreateDTO) {
+export function createMcpClient(data: McpClientCreateDTO): Promise<McpClientVO> {
   return aiService.post('/mcp/clients', data)
 }
 
-export function updateMcpClient(id: number, data: import('@/types/mcp').McpClientUpdateDTO) {
+export function updateMcpClient(id: number, data: McpClientUpdateDTO): Promise<McpClientVO> {
   return aiService.put(`/mcp/clients/${id}`, data)
 }
 
-export function rotateMcpClientKey(id: number) {
+export function rotateMcpClientKey(id: number): Promise<McpClientVO> {
   return aiService.post(`/mcp/clients/${id}/rotate-key`)
 }
 
-export function deleteMcpClient(id: number) {
+export function deleteMcpClient(id: number): Promise<void> {
   return aiService.delete(`/mcp/clients/${id}`)
 }
 
-export function listMcpUpstreams() {
+export function listMcpUpstreams(): Promise<McpUpstreamVO[]> {
   if (isDemoMode) return Promise.resolve([])
   return aiService.get('/mcp/upstreams')
 }
 
-export function createMcpUpstream(data: import('@/types/mcp').McpUpstreamUpsertDTO) {
+export function createMcpUpstream(data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
   return aiService.post('/mcp/upstreams', data)
 }
 
-export function updateMcpUpstream(id: number, data: import('@/types/mcp').McpUpstreamUpsertDTO) {
+export function updateMcpUpstream(id: number, data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
   return aiService.put(`/mcp/upstreams/${id}`, data)
 }
 
-export function deleteMcpUpstream(id: number) {
+export function deleteMcpUpstream(id: number): Promise<void> {
   return aiService.delete(`/mcp/upstreams/${id}`)
 }
 
-export function probeMcpUpstream(id: number) {
+export function probeMcpUpstream(id: number): Promise<McpUpstreamVO> {
   return aiService.post(`/mcp/upstreams/${id}/probe`)
 }
 
-export function listMcpUpstreamTools(id: number) {
+export function listMcpUpstreamTools(id: number): Promise<McpUpstreamToolVO[]> {
   if (isDemoMode) return Promise.resolve([])
   return aiService.get(`/mcp/upstreams/${id}/tools`)
 }
@@ -1044,11 +1056,11 @@ export function listMcpUpstreamTools(id: number) {
 export function patchMcpUpstreamTool(
   id: number,
   data: { originalName: string; enabled: boolean },
-) {
+): Promise<McpUpstreamToolVO> {
   return aiService.put(`/mcp/upstreams/${id}/tools`, data)
 }
 
-export function listMcpCalls(direction?: string, limit = 50) {
+export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLogVO[]> {
   if (isDemoMode) return Promise.resolve([])
   return aiService.get('/mcp/calls', { params: { direction, limit } })
 }

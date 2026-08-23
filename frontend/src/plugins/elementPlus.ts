@@ -10,15 +10,18 @@ export function ensureElementPlus(): Promise<void> {
 
   readyPromise = (async () => {
     await import('element-plus/dist/index.css')
+
     const icons = await import('@element-plus/icons-vue')
     const app = getAppInstance()
     if (app) {
       for (const [key, component] of Object.entries(icons)) {
+        if (key === 'default' || typeof component !== 'object' || component === null) continue
         if (!app.component(key)) {
           app.component(key, component)
         }
       }
     }
+
     ready = true
   })()
 

@@ -50,9 +50,11 @@ export const useUserStore = defineStore('user', () => {
     sessionStorage.setItem('permissions', JSON.stringify(permissions.value))
   }
 
-  const fetchUserPermissions = async () => {
+  const fetchUserPermissions = async (options?: { silent?: boolean }) => {
     try {
-      const codes = await getCurrentUserPermissionsApi()
+      const codes = await getCurrentUserPermissionsApi(
+        options?.silent ? { skipErrorMessage: true } : undefined,
+      )
       applyPermissions(codes || [])
     } catch (error) {
       console.error('获取用户权限失败:', error)

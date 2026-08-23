@@ -2,8 +2,10 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 
 import { HOME_DASHBOARD_PATH } from '@/constants/app'
 import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
+import { notFoundRoute } from '@/router/notFoundRoute'
 import { collectRoutePermissions, matchPermissions } from '@/utils/permission'
 import { isPortalPublicPath } from '@/utils/portalPublicRoute'
+import { clearStoredSession, getValidToken } from '@/utils/session'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -65,18 +67,44 @@ const routes: RouteRecordRaw[] = [
     redirect: '/permission/unit',
   },
   {
+    path: '/ai/chat',
+    redirect: '/home/chat',
+  },
+  {
+    path: '/ai/briefings',
+    redirect: '/home/briefings',
+  },
+  {
+    path: '/ai/document-qa',
+    redirect: '/ai/qa',
+  },
+  {
     path: '/',
     name: LAYOUT_ROUTE_NAME,
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
-    children: [],
+    children: [
+      {
+        path: 'monitor/ops',
+        name: 'OpsMonitor',
+        component: () => import('@/views/system/SystemMonitor.vue'),
+        meta: { title: '运维监控', requiresAuth: true },
+      },
+      {
+        path: 'devtools/api',
+        name: 'BackendApi',
+        component: () => import('@/views/devtools/SwaggerEmbed.vue'),
+        meta: {
+          title: '后端接口',
+          requiresAuth: true,
+          hideBreadcrumb: true,
+          fullBleed: true,
+        },
+      },
+    ],
   },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: () => import('@/views/error/NotFound.vue'),
-    meta: { title: '页面不存在', requiresAuth: false },
-  },
+  // 通配 404 放在最后；动态路由注册后会重新挂到末尾，避免抢先匹配
+  notFoundRoute,
 ]
 
 const router = createRouter({
@@ -111,18 +139,30 @@ function canAccessRoute(
   return matchPermissions(userStore.permissions, required, { isAdmin: userStore.isAdmin })
 }
 
+/** 按 path 重新进入，避免沿用首次匹配到的 NotFound name */
+function rematchByPath(fullPath: string) {
+  return { path: fullPath, replace: true as const }
+}
+
+/** 动态路由已注册后，若仍落在 NotFound，再按 path 解析一次 */
+function tryRecoverFromNotFound(fullPath: string) {
+  const resolved = router.resolve(fullPath)
+  const stillNotFound =
+    resolved.name === 'NotFound' ||
+    (resolved.matched.length > 0 && resolved.matched.every((record) => record.name === 'NotFound'))
+  if (!stillNotFound && resolved.matched.length > 0) {
+    return rematchByPath(fullPath)
+  }
+  return null
+}
+
 // 路由守卫
 router.beforeEach(async (to, _from, next) => {
   if (!isPortalPublicPath(to.path)) {
-    try {
-      const { ensureElementPlus } = await import('@/plugins/elementPlus')
-      await ensureElementPlus()
-    } catch (error) {
-      console.error('加载 Element Plus 失败:', error)
-    }
+    await import('@/plugins/elementPlus').then(({ ensureElementPlus }) => ensureElementPlus())
   }
 
-  const token = localStorage.getItem('token')
+  const token = getValidToken()
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
 
@@ -151,7 +191,10 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
 
-  if (requiresAuth && !token) {
+  // 深链刷新会先命中静态 NotFound（requiresAuth=false），仍需按有 token 走菜单加载
+  const needsAuthGate = requiresAuth || (Boolean(token) && to.name === 'NotFound')
+
+  if (needsAuthGate && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
     return
   }
@@ -169,7 +212,7 @@ router.beforeEach(async (to, _from, next) => {
       try {
         await Promise.all([
           menuStore.fetchAndRegisterRoutes(router),
-          userStore.fetchUserPermissions(),
+          userStore.fetchUserPermissions({ silent: true }),
         ])
 
         if (to.path === '/' || to.path === '') {
@@ -177,16 +220,14 @@ router.beforeEach(async (to, _from, next) => {
           return
         }
 
-        // 动态路由刚注册，需重新匹配（含原先落入 NotFound 的目标路径）
-        next({ path: to.fullPath, replace: true })
+        // 必须用 path 重匹配：首次命中 NotFound 时 to.name 仍是 NotFound，
+        // next({ ...to }) 会按 name 导航，导致刷新后一直 404
+        next(rematchByPath(to.fullPath))
         return
       } catch (error) {
         console.error('加载用户菜单失败:', error)
 
-        localStorage.removeItem('token')
-
-        sessionStorage.removeItem('userInfo')
-        sessionStorage.removeItem('permissions')
+        clearStoredSession()
 
         menuStore.reset(router)
 
@@ -201,6 +242,11 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     if (to.name === 'NotFound') {
+      const recovered = tryRecoverFromNotFound(to.fullPath)
+      if (recovered) {
+        next(recovered)
+        return
+      }
       next()
       return
     }

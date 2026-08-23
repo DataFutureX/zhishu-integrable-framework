@@ -56,4 +56,14 @@ public final class PermissionConstants {
     // 个人中心
     public static final String PROFILE_INFO_QUERY = "profile:info:query";
     public static final String PROFILE_PASSWORD_EDIT = "profile:password:edit";
+
+    // AI
+    public static final String AI_AGENT_QUERY = "ai:agent:query";
+    public static final String AI_AGENT_ADD = "ai:agent:add";
+    public static final String AI_AGENT_EDIT = "ai:agent:edit";
+    public static final String AI_AGENT_REMOVE = "ai:agent:remove";
+    public static final String AI_AGENT_GRAPH = "ai:agent:graph";
+    public static final String AI_MCP_EDIT = "ai:mcp:edit";
+    public static final String AI_KG_SYNC = "ai:kg:sync";
+    public static final String AI_QA_QUERY = "ai:qa:query";
 }

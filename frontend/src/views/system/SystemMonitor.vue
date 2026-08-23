@@ -10,7 +10,7 @@
           />
           <div>
             <div class="monitor-hero__title-row">
-              <h1 class="monitor-hero__title">系统监控</h1>
+              <h1 class="monitor-hero__title">运维监控</h1>
               <el-tag :type="healthTagType(overallStatus)" effect="plain" size="small">
                 {{ healthLabel(overallStatus) }}
               </el-tag>

@@ -6,7 +6,8 @@ import { ThemeStyle } from '@/types'
 
 export type { ContentScheme } from '@/config/contentScheme'
 
-export type LayoutMode = 'sidebar' | 'hybrid'
+/** immersive：无顶栏布局，顶栏右侧功能（门户/通知/设置/账户）收拢到侧栏底部 */
+export type LayoutMode = 'sidebar' | 'hybrid' | 'immersive'
 
 /** 页面导航上下文展示方式（标签栏与面包屑互斥） */
 export type NavContextDisplay = 'tabs' | 'breadcrumb' | 'none'
@@ -19,11 +20,13 @@ const BREADCRUMB_STORAGE_KEY = 'show_breadcrumb'
 const NAV_CONTEXT_STORAGE_KEY = 'nav_context_display'
 const DENSITY_STORAGE_KEY = 'layout_density'
 const CONTENT_SCHEME_STORAGE_KEY = 'content_scheme'
-const DEFAULT_LAYOUT_MODE: LayoutMode = 'hybrid'
-const DEFAULT_NAV_CONTEXT: NavContextDisplay = 'tabs'
+const DEFAULT_LAYOUT_MODE: LayoutMode = 'sidebar'
+const DEFAULT_NAV_CONTEXT: NavContextDisplay = 'breadcrumb'
 
 const isValidLayoutMode = (value: string | null): value is LayoutMode =>
-  value === 'sidebar' || value === 'hybrid'
+  value === 'sidebar' || value === 'hybrid' || value === 'immersive'
+
+const LAYOUT_MODE_CYCLE: LayoutMode[] = ['sidebar', 'hybrid', 'immersive']
 
 const isValidNavContextDisplay = (value: string | null): value is NavContextDisplay =>
   value === 'tabs' || value === 'breadcrumb' || value === 'none'
@@ -43,10 +46,15 @@ const readNavContextDisplay = (): NavContextDisplay => {
   const saved = localStorage.getItem(NAV_CONTEXT_STORAGE_KEY)
   if (isValidNavContextDisplay(saved)) return saved
 
-  const tabBarEnabled = localStorage.getItem(TAB_BAR_STORAGE_KEY) !== 'false'
-  const breadcrumbEnabled = localStorage.getItem(BREADCRUMB_STORAGE_KEY) === 'true'
-  if (tabBarEnabled) return 'tabs'
-  if (breadcrumbEnabled) return 'breadcrumb'
+  // 仅在存在旧版独立开关时做兼容迁移，否则走新默认值
+  const hasLegacyTab = localStorage.getItem(TAB_BAR_STORAGE_KEY) !== null
+  const hasLegacyBreadcrumb = localStorage.getItem(BREADCRUMB_STORAGE_KEY) !== null
+  if (hasLegacyTab || hasLegacyBreadcrumb) {
+    const tabBarEnabled = localStorage.getItem(TAB_BAR_STORAGE_KEY) !== 'false'
+    const breadcrumbEnabled = localStorage.getItem(BREADCRUMB_STORAGE_KEY) === 'true'
+    if (tabBarEnabled) return 'tabs'
+    if (breadcrumbEnabled) return 'breadcrumb'
+  }
   return DEFAULT_NAV_CONTEXT
 }
 
@@ -93,6 +101,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
   const isHybridLayout = computed(() => layoutMode.value === 'hybrid')
   const isSidebarLayout = computed(() => layoutMode.value === 'sidebar')
+  const isImmersiveLayout = computed(() => layoutMode.value === 'immersive')
 
   const setLayoutMode = (mode: LayoutMode) => {
     layoutMode.value = mode
@@ -100,7 +109,8 @@ export const useLayoutStore = defineStore('layout', () => {
   }
 
   const toggleLayoutMode = () => {
-    setLayoutMode(layoutMode.value === 'sidebar' ? 'hybrid' : 'sidebar')
+    const index = LAYOUT_MODE_CYCLE.indexOf(layoutMode.value)
+    setLayoutMode(LAYOUT_MODE_CYCLE[(index + 1) % LAYOUT_MODE_CYCLE.length])
   }
 
   const setNavContextDisplay = (mode: NavContextDisplay) => {
@@ -149,9 +159,10 @@ export const useLayoutStore = defineStore('layout', () => {
     setNavContextDisplay(showBreadcrumb.value ? 'none' : 'breadcrumb')
   }
 
-  /** 登录成功后应用默认顶部菜单布局 */
+  /** 登录成功后应用默认布局：侧边栏 + 面包屑 */
   const applyLoginDefaultLayout = () => {
     setLayoutMode(DEFAULT_LAYOUT_MODE)
+    setNavContextDisplay(DEFAULT_NAV_CONTEXT)
   }
 
   return {
@@ -163,6 +174,7 @@ export const useLayoutStore = defineStore('layout', () => {
     contentScheme,
     isHybridLayout,
     isSidebarLayout,
+    isImmersiveLayout,
     setLayoutMode,
     toggleLayoutMode,
     initLayoutMode,

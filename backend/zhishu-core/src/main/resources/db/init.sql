@@ -4,6 +4,7 @@
 -- 用法：
 --   psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
 --   psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init.sql
+--   psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init_ai.sql
 -- 说明：
 --   1. 本脚本已合并全部 admin 相关表结构与种子数据，请先创建目标库再执行
 --   2. 默认管理员：admin / admin123
@@ -244,22 +245,23 @@ ON CONFLICT (id) DO UPDATE SET
     system_introduction = EXCLUDED.system_introduction;
 
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(1, 0, '主页', '/home', 'Home', '/home/dashboard', 'HomeFilled', 'DIRECTORY', 1, 1, 1, NULL, NULL, 1),
-(11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 1, 1, 1, 'views/dashboard/Dashboard.vue', NULL, 1),
-(5, 0, '权限管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 2, NULL, NULL, 1),
+(1, 0, '工作台', '/home', 'Home', '/home/briefings', 'HomeFilled', 'DIRECTORY', 1, 1, 1, NULL, NULL, 1),
+(11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 0, 1, 9, 'views/dashboard/Dashboard.vue', NULL, 1),
+(107, 1, 'AI 简报', '/home/briefings', 'AIBriefings', NULL, 'Bell', 'MENU', 1, 1, 1, 'views/ai/BriefingManage.vue', '{"title":"AI 简报"}', 1),
+(103, 1, 'Agent 会话', '/home/chat', 'AIChat', NULL, 'ChatLineRound', 'MENU', 1, 1, 2, 'views/ai/AIChat.vue', '{"title":"Agent 会话"}', 1),
+(5, 0, '账号管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
 (61, 5, '用户管理', '/permission/user', 'User', NULL, 'User', 'MENU', 1, 1, 1, 'views/user/UserList.vue', NULL, 1),
 (63, 5, '菜单管理', '/permission/menu', 'MenuManage', NULL, 'Menu', 'MENU', 1, 1, 2, 'views/system/MenuList.vue', NULL, 1),
 (64, 5, '角色管理', '/permission/role', 'RoleManage', NULL, 'Avatar', 'MENU', 1, 1, 3, 'views/system/RoleList.vue', NULL, 1),
 (66, 5, '单位管理', '/permission/unit', 'UnitManage', NULL, 'OfficeBuilding', 'MENU', 1, 1, 4, 'views/system/UnitList.vue', NULL, 1),
-(6, 0, '系统管理', '/system', 'System', '/system/config', 'Setting', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
-(65, 6, '系统设置', '/system/config', 'SystemConfig', NULL, 'Tools', 'MENU', 1, 1, 1, 'views/system/SystemConfig.vue', NULL, 1),
+(6, 0, '系统设置', '/system', 'System', '/system/config', 'SetUp', 'DIRECTORY', 1, 1, 4, NULL, NULL, 1),
+(65, 6, '参数配置', '/system/config', 'SystemConfig', NULL, 'Tools', 'MENU', 1, 1, 1, 'views/system/SystemConfig.vue', NULL, 1),
 (68, 6, '操作日志', '/system/operation-log', 'OperationLog', NULL, 'Document', 'MENU', 1, 1, 2, 'views/system/OperationLogList.vue', NULL, 1),
 (69, 6, '公告管理', '/system/announcement', 'AnnouncementManage', NULL, 'Notification', 'MENU', 1, 1, 3, 'views/system/AnnouncementList.vue', NULL, 1),
-(8, 0, '系统监控', '/monitor', 'Monitor', '/monitor/ops', 'Monitor', 'DIRECTORY', 1, 1, 4, NULL, NULL, 1),
-(67, 8, '运维监控', '/monitor/ops', 'OpsMonitor', NULL, 'Odometer', 'MENU', 1, 1, 1, 'views/system/SystemMonitor.vue', NULL, 1),
-(9, 0, '开发工具', '/devtools', 'DevTools', '/devtools/api', 'Cpu', 'DIRECTORY', 1, 1, 5, NULL, NULL, 1),
-(91, 9, '后端接口', '/devtools/api', 'BackendApi', NULL, 'Document', 'MENU', 1, 1, 1, 'views/devtools/SwaggerEmbed.vue', '{"fullBleed":true,"hideTabBar":false,"hideBreadcrumb":true,"hideSecondaryAside":false}', 1),
-(7, 0, '个人中心', '/profile', 'Profile', '/profile/info', 'UserFilled', 'DIRECTORY', 1, 1, 6, NULL, NULL, 1),
+(67, 6, '运维监控', '/monitor/ops', 'OpsMonitor', NULL, 'Odometer', 'MENU', 1, 1, 4, 'views/system/SystemMonitor.vue', NULL, 1),
+(91, 6, '后端接口', '/devtools/api', 'BackendApi', NULL, 'Document', 'MENU', 1, 1, 5, 'views/devtools/SwaggerEmbed.vue', '{"fullBleed":true,"hideTabBar":false,"hideBreadcrumb":true,"hideSecondaryAside":false}', 1),
+(610, 6, '开放能力', '/system/open-api', 'OpenApiCapabilities', NULL, 'Connection', 'MENU', 1, 1, 6, 'views/system/OpenApiCapabilities.vue', '{"title":"开放能力"}', 1),
+(7, 0, '个人中心', '/profile', 'Profile', '/profile/info', 'UserFilled', 'DIRECTORY', 1, 1, 9, NULL, NULL, 1),
 (71, 7, '个人信息', '/profile/info', 'ProfileInfo', NULL, 'User', 'MENU', 1, 1, 1, 'views/user/UserProfile.vue', NULL, 1),
 (72, 7, '修改密码', '/profile/password', 'ChangePassword', NULL, 'Lock', 'MENU', 1, 1, 2, 'views/user/ChangePassword.vue', NULL, 1),
 (9001, 0, '登录', '/login', 'Login', NULL, NULL, 'PAGE', 0, 0, 0, 'views/login/Login.vue', NULL, 1)
@@ -278,17 +280,16 @@ ON CONFLICT (id) DO UPDATE SET
     meta = EXCLUDED.meta,
     status = EXCLUDED.status;
 
--- AI 管理菜单（知枢控制台，与 patch_ai_menus.sql 一致）
+-- 智能中心菜单（知枢控制台，与 patch_ai_menus.sql 一致）
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(10, 0, 'AI 管理', '/ai', 'AI', '/ai/agents', 'MagicStick', 'DIRECTORY', 1, 1, 6, NULL, NULL, 1),
-(101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 1, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
-(102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 2, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
-(103, 10, 'Agent 会话', '/ai/chat', 'AIChat', NULL, 'ChatLineRound', 'MENU', 1, 1, 3, 'views/ai/AIChat.vue', '{"title":"Agent 会话"}', 1),
-(104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 4, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
-(105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 5, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
-(106, 10, '知识图谱', '/ai/knowledge-graph', 'AIKnowledgeGraph', NULL, 'Connection', 'MENU', 1, 1, 6, 'views/ai/KnowledgeGraph.vue', '{"title":"知识图谱"}', 1),
-(107, 10, 'AI 简报', '/ai/briefings', 'AIBriefings', NULL, 'Bell', 'MENU', 1, 1, 7, 'views/ai/BriefingManage.vue', '{"title":"AI 简报"}', 1),
-(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 8, 'views/ai/AgentGraphEditor.vue', NULL, 1)
+(10, 0, '智能中心', '/ai', 'AI', '/ai/qa', 'MagicStick', 'DIRECTORY', 1, 1, 2, NULL, NULL, 1),
+(109, 10, '知识检索', '/ai/qa', 'AIDocumentQA', NULL, 'Search', 'MENU', 1, 1, 1, 'views/ai/DocumentQA.vue', '{"title":"知识检索"}', 1),
+(106, 10, '知识图谱', '/ai/knowledge-graph', 'AIKnowledgeGraph', NULL, 'Connection', 'MENU', 1, 1, 2, 'views/ai/KnowledgeGraph.vue', '{"title":"知识图谱"}', 1),
+(101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 3, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
+(102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 4, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
+(104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 5, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
+(105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 6, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
+(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 7, 'views/ai/AgentGraphEditor.vue', NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
     title = EXCLUDED.title,
@@ -304,7 +305,11 @@ ON CONFLICT (id) DO UPDATE SET
     meta = EXCLUDED.meta,
     status = EXCLUDED.status;
 
-UPDATE sys_menu SET sort = 7, update_time = CURRENT_TIMESTAMP WHERE id = 7;
+UPDATE sys_menu SET sort = 9, update_time = CURRENT_TIMESTAMP WHERE id = 7;
+
+-- 清理已废弃的顶层目录（系统监控、开发工具）
+DELETE FROM sys_role_menu WHERE menu_id IN (8, 9);
+DELETE FROM sys_menu WHERE id IN (8, 9);
 
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
 (1101, 11, '仪表盘查询', NULL, 'home:dashboard:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
@@ -326,8 +331,8 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (6602, 66, '单位新增', NULL, 'system:unit:add', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
 (6603, 66, '单位修改', NULL, 'system:unit:edit', NULL, NULL, 'BUTTON', 0, 1, 3, NULL, NULL, 1),
 (6604, 66, '单位删除', NULL, 'system:unit:remove', NULL, NULL, 'BUTTON', 0, 1, 4, NULL, NULL, 1),
-(6501, 65, '系统设置查询', NULL, 'system:config:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
-(6502, 65, '系统设置修改', NULL, 'system:config:edit', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
+(6501, 65, '参数配置查询', NULL, 'system:config:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(6502, 65, '参数配置修改', NULL, 'system:config:edit', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
 (6801, 68, '操作日志查询', NULL, 'system:operlog:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (6901, 69, '公告查询', NULL, 'system:announcement:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (6902, 69, '公告新增', NULL, 'system:announcement:add', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
@@ -337,7 +342,15 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (6701, 67, '运维监控查询', NULL, 'system:monitor:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (9101, 91, '后端接口查询', NULL, 'devtools:api:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (7101, 71, '个人信息查询', NULL, 'profile:info:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
-(7201, 72, '修改密码', NULL, 'profile:password:edit', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
+(7201, 72, '修改密码', NULL, 'profile:password:edit', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10101, 101, '智能体查询', NULL, 'ai:agent:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10102, 101, '智能体新增', NULL, 'ai:agent:add', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
+(10103, 101, '智能体修改', NULL, 'ai:agent:edit', NULL, NULL, 'BUTTON', 0, 1, 3, NULL, NULL, 1),
+(10104, 101, '智能体删除', NULL, 'ai:agent:remove', NULL, NULL, 'BUTTON', 0, 1, 4, NULL, NULL, 1),
+(10105, 101, '工作流编排', NULL, 'ai:agent:graph', NULL, NULL, 'BUTTON', 0, 1, 5, NULL, NULL, 1),
+(10401, 104, 'MCP 编辑', NULL, 'ai:mcp:edit', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10601, 106, '知识图谱同步', NULL, 'ai:kg:sync', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10901, 109, '知识检索查询', NULL, 'ai:qa:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     route_name = EXCLUDED.route_name,
@@ -356,12 +369,18 @@ ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
 INSERT INTO sys_role_menu (id, role_id, menu_id) VALUES
 (2001, 2, 1),
 (2011, 2, 11),
+(2103, 2, 103),
+(2010, 2, 10),
+(2109, 2, 109),
+(2107, 2, 107),
+(2106, 2, 106),
 (2005, 2, 7),
 (2071, 2, 71),
 (2072, 2, 72),
 (21101, 2, 1101),
 (27101, 2, 7101),
-(27201, 2, 7201)
+(27201, 2, 7201),
+(210901, 2, 10901)
 ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
 
 -- =============================================================================

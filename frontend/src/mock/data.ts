@@ -183,7 +183,7 @@ export const mockAnnouncements = [
     id: 9002,
     title: '权限域菜单结构调整通知',
     content:
-      '用户 / 单位 / 角色 / 菜单已迁移至「权限管理」域（/permission/*），旧 /system/* 路径仍可重定向访问。',
+      '用户 / 单位 / 角色 / 菜单已迁移至「账号管理」域（/permission/*），旧 /system/* 路径仍可重定向访问。',
     priority: 2,
     status: 1,
     publishTime: daysAgoStr(0, 11),

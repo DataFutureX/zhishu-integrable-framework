@@ -22,15 +22,17 @@ export const useMenuStore = defineStore('menu', () => {
 
   const navigationMenus = computed(() => filterNavigationMenus(sidebarMenus.value))
 
-  /** 侧边栏布局主导航（含个人中心） */
+  /** 侧边栏布局主导航（个人中心改走头像下拉，不占一级菜单） */
   const sidebarNavigationMenus = computed(() =>
-    filterNavigationMenus(sidebarMenus.value, { includeProfile: true }),
+    filterNavigationMenus(sidebarMenus.value, { includeProfile: false }),
   )
 
   const profileMenu = computed(() => sidebarMenus.value.find((menu) => isProfileMenu(menu)))
 
   const fetchAndRegisterRoutes = async (router: Router) => {
-    const menus = applyTerminologyToMenus(await getCurrentUserMenusApi())
+    const menus = applyTerminologyToMenus(
+      await getCurrentUserMenusApi({ skipErrorMessage: true }),
+    )
     menuTree.value = menus
     defaultPath.value = findFirstMenuPath(menus) || HOME_DASHBOARD_PATH
     addDynamicRoutes(router, menus)

@@ -4,7 +4,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 echo ========================================
-echo   YunQi Platform Backend - Dev Start
+echo   ZhiShu Integrable Framework - Dev Start
 echo ========================================
 echo.
 

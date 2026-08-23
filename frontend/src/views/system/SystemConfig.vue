@@ -3,7 +3,7 @@
     <section v-loading="loading" class="content-panel">
       <header class="page-header">
         <div class="page-header__main">
-          <h1 class="page-header__title">系统设置</h1>
+          <h1 class="page-header__title">参数配置</h1>
           <p class="page-header__desc">
             配置品牌标识、展示文案、项目地坐标与登录安全策略
           </p>
@@ -402,7 +402,7 @@ const handleSubmit = async () => {
       applyConfigToForm(config)
       systemConfigStore.applyConfig(config)
       document.title = config.systemName
-      ElMessage.success('系统设置保存成功')
+      ElMessage.success('参数配置保存成功')
     } catch (error) {
       console.error('保存系统配置失败:', error)
     } finally {

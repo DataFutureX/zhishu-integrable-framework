@@ -16,16 +16,18 @@
     <LayoutSettings :on-primary="onPrimary" />
     <el-dropdown @command="(command: string) => emit('command', command)">
       <div class="user-info">
-        <el-avatar :size="32" :style="{ backgroundColor: avatarColor }">
-          {{ userInitial }}
-        </el-avatar>
+        <el-avatar :size="32" class="user-avatar" :icon="UserFilled" />
         <span class="username">{{ userName }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item command="profile">
             <el-icon><User /></el-icon>
-            个人中心
+            个人信息
+          </el-dropdown-item>
+          <el-dropdown-item command="password">
+            <el-icon><Lock /></el-icon>
+            修改密码
           </el-dropdown-item>
           <el-dropdown-item command="logout" divided>
             <el-icon><SwitchButton /></el-icon>
@@ -39,13 +41,11 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { HomeFilled, User, SwitchButton } from '@element-plus/icons-vue'
+import { HomeFilled, User, UserFilled, Lock, SwitchButton } from '@element-plus/icons-vue'
 import LayoutSettings from '@/components/layout/LayoutSettings.vue'
 import NotificationBell from '@/components/layout/NotificationBell.vue'
 
 defineProps<{
-  userInitial: string
-  avatarColor: string
   userName: string
   onPrimary?: boolean
 }>()
@@ -108,6 +108,14 @@ const goPortal = () => {
   }
 }
 
+.user-avatar {
+  flex-shrink: 0;
+  --el-avatar-bg-color: #e8eef4;
+  --el-avatar-text-size: 16px;
+  background: #e8eef4;
+  color: #5b6b7c;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -156,6 +164,12 @@ const goPortal = () => {
 
     .username {
       color: rgba(255, 255, 255, 0.92);
+    }
+
+    .user-avatar {
+      --el-avatar-bg-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
     }
   }
 }

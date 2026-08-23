@@ -23,7 +23,7 @@ public final class OperationLogUtils {
             Map.entry("roles", "角色管理"),
             Map.entry("menus", "菜单管理"),
             Map.entry("units", "单位管理"),
-            Map.entry("system-config", "系统设置"),
+            Map.entry("system-config", "参数配置"),
             Map.entry("announcements", "公告管理"),
             Map.entry("operation-logs", "操作日志"),
             Map.entry("system", "运维监控"),

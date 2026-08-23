@@ -1,5 +1,5 @@
 /**
- * 知枢 AI 内核：Agent / RAG / 图谱 / MCP Hub / 开放 API / 简报。
+ * 知枢 AI 内核：Agent / RAG / 图谱 / MCP Hub / 开放 API；简报为内部控制台模块。
  * 与 {@code zhishu-core} 同进程启动，不单独暴露 :8180。
  */
 @org.springframework.modulith.ApplicationModule(

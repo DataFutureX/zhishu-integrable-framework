@@ -22,7 +22,7 @@
         :index="normalizeMenuPath(menu.path)"
       >
         <el-icon class="top-nav-menu__icon">
-          <component :is="menu.icon || 'Folder'" />
+          <component :is="resolveMenuIcon(menu.icon)" />
         </el-icon>
         <span class="top-nav-menu__label">{{ menu.title }}</span>
       </el-menu-item>
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { useLayoutMenu } from '@/composables/useLayoutMenu'
+import { resolveMenuIcon } from '@/utils/menuNavigation'
 
 withDefaults(
   defineProps<{

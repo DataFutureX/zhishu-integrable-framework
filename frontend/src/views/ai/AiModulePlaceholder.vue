@@ -20,7 +20,7 @@ const description = computed(
   () => (route.meta?.title as string | undefined) || 'AI 模块',
 )
 
-const hint = 'AI 能力已迁入知枢；简报管理请使用本页或万象工作台简报收件箱。'
+const hint = 'AI 能力已迁入知枢。简报是知枢内部控制台能力；外部系统请调用开放 Agent 对话接口自行实现。'
 </script>
 
 <style scoped lang="scss">

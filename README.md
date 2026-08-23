@@ -1,8 +1,12 @@
-# 知枢可集成框架 · 快速开始
+<p align="center">
+  <img src="./logo.svg" width="88" height="88" alt="知枢可集成框架">
+</p>
+
+<h1 align="center">知枢可集成框架 · 快速开始</h1>
 
 一套面向企业数字化与智能化应用集成的模块化开发底座（MIT），简称 **ZSIF**（ZhiShu Integrable Framework）。本工程基于 [云起应用平台](https://github.com/DataFutureX/yunqi-application-platform)（YQAP）构建，继承其前后端一体架构、权限体系与伙伴 SSO 能力，面向可集成、可扩展的应用场景二次演进。
 
-**上游底座**：[云起应用平台](https://github.com/DataFutureX/yunqi-application-platform)（`upstream` 远程）
+**源码仓库**：[DataFutureX/zhishu-integrable-framework](https://github.com/DataFutureX/zhishu-integrable-framework)（`origin`）
 
 ## 目录
 
@@ -63,7 +67,7 @@ npm install
 npm run dev:demo
 ```
 
-浏览器打开 [http://localhost:3000](http://localhost:3000)（可先看 `/portal`，再登录）。
+浏览器打开 [http://localhost:3100](http://localhost:3100)（可先看 `/portal`，再登录）。
 
 演示账号：`demo` / `demo123`（演示态任意账号密码均可登录）。
 
@@ -102,9 +106,9 @@ chmod +x start.sh
 
 | 地址 | 说明 |
 |------|------|
-| http://localhost:3000 | 前端 |
-| http://localhost:8080 | 后端 |
-| http://localhost:8080/swagger-ui.html | API 文档 |
+| http://localhost:3100 | 前端（`npm run dev`，见 `frontend/.env.development`） |
+| http://localhost:8180 | 后端（dev profile） |
+| http://localhost:8180/swagger-ui.html | API 文档 |
 
 ### 1. 启动后端
 
@@ -120,9 +124,10 @@ chmod +x start.sh
 cd backend
 psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
 psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init.sql
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init_ai.sql
 ```
 
-默认库名：`zhishu_integrable_framework`。
+默认库名：`zhishu_integrable_framework`。AI 能力（向量检索 / Agent / MCP / 简报）依赖 `init_ai.sql`（需 PostgreSQL `vector` 扩展）。
 
 #### 修改数据源
 
@@ -160,7 +165,7 @@ npm install
 npm run dev
 ```
 
-确认 `.env.development` 中 `VITE_API_BASE_URL=http://localhost:8080`。
+确认 `.env.development` 中 `VITE_API_BASE_URL=http://localhost:8180`。
 
 联调默认管理员：`admin` / `admin123`。
 
@@ -173,8 +178,8 @@ npm run dev
 
 ## 联调验证清单
 
-1. 打开 http://localhost:8080/api/v1/system/health ，确认后端健康
-2. 打开 http://localhost:3000/portal ，再进入登录页
+1. 打开 http://localhost:8180/api/v1/system/health ，确认后端健康
+2. 打开 http://localhost:3100/portal ，再进入登录页
 3. 使用 `admin / admin123` 完成滑动验证码登录
 4. 确认侧栏菜单由 `GET /menus/current-user` 动态加载
 5. （可选）`cd frontend && npm run test:e2e:integration`
@@ -213,14 +218,7 @@ npm run dev
 | 后端模块 | `zhishu-*`（继承云起工程结构） |
 | Java 包名 | `cn.datafuturex.zhishu` |
 | 数据库 | `zhishu_integrable_framework` |
-| 上游远程 | `upstream` → `git@github.com:DataFutureX/yunqi-application-platform.git` |
-
-从上游同步更新：
-
-```bash
-git fetch upstream
-git merge upstream/main
-```
+| 源码远程 | `origin` → `git@github.com:DataFutureX/zhishu-integrable-framework.git` |
 
 ## 常见问题
 
@@ -235,12 +233,12 @@ npm install
 
 **后端数据库连接被拒**
 
-- 确认 PostgreSQL 已启动，且已执行 `init.sql` 初始化 `zhishu_integrable_framework`
+- 确认 PostgreSQL 已启动，且已执行 `init.sql` 与 `init_ai.sql` 初始化 `zhishu_integrable_framework`
 - 检查 `backend/zhishu-core/src/main/resources/application-dev.yml` 中 `yunqi.datasource` 账号密码
 
 ## 下一步
 
-- 产品门户文档：本地 [http://localhost:3000/docs](http://localhost:3000/docs)
+- 产品门户文档：本地 [http://localhost:3100/docs](http://localhost:3100/docs)
 - 前端完整说明：[frontend/README.md](./frontend/README.md)
 - 后端完整说明：[backend/README.md](./backend/README.md)
 - 单点登录协议：[docs/单点登录对接说明.md](./docs/单点登录对接说明.md)

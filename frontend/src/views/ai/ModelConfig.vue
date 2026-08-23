@@ -4,7 +4,7 @@
       <div class="page-header__main">
         <h1 class="page-header__title">模型设置</h1>
         <p class="page-header__desc">
-          配置 AI 助手对话模型、向量模型与生成参数。保存后立即对后续对话生效；API Key / Base URL 仍由服务端环境变量管理。
+          配置对话模型、向量模型、生成参数与 API Key。密钥加密后写入数据库，接口只回脱敏值。
         </p>
       </div>
       <p v-if="formData.updateTime" class="page-header__meta">
@@ -100,15 +100,29 @@
         <div class="config-section__head">
           <el-icon :size="18"><Key /></el-icon>
           <div>
-            <div class="config-section__title">接入信息（只读）</div>
-            <div class="config-section__desc">来自服务端环境变量，页面不可修改密钥</div>
+            <div class="config-section__title">接入信息</div>
+            <div class="config-section__desc">
+              API Key 加密存库，页面不回显明文。留空保存表示不改动已有密钥。
+            </div>
           </div>
         </div>
-        <el-form-item label="Base URL">
-          <el-input :model-value="formData.baseUrl || '-'" readonly class="readonly-input" />
+        <el-form-item label="Base URL" prop="baseUrl">
+          <el-input
+            v-model="formData.baseUrl"
+            placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+            class="readonly-input"
+          />
         </el-form-item>
         <el-form-item label="API Key">
-          <el-input :model-value="formData.apiKeyMasked || '-'" readonly class="readonly-input" />
+          <el-input
+            v-model="formData.apiKey"
+            type="password"
+            show-password
+            clearable
+            :placeholder="formData.apiKeyConfigured ? '已保存，输入新值可更换' : '请输入模型 API Key'"
+            class="readonly-input"
+          />
+          <span v-if="formData.apiKeyMasked" class="form-hint">当前：{{ formData.apiKeyMasked }}</span>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input
@@ -157,7 +171,9 @@ const formData = reactive({
   enableRagDefault: false,
   memoryWindowSize: 20,
   baseUrl: '',
+  apiKey: '',
   apiKeyMasked: '',
+  apiKeyConfigured: false,
   remark: '',
   updateTime: '' as string | null,
 })
@@ -180,7 +196,9 @@ const applyConfig = (config: AiModelConfigVO) => {
   formData.enableRagDefault = !!config.enableRagDefault
   formData.memoryWindowSize = config.memoryWindowSize
   formData.baseUrl = config.baseUrl || ''
+  formData.apiKey = ''
   formData.apiKeyMasked = config.apiKeyMasked || ''
+  formData.apiKeyConfigured = !!config.apiKeyConfigured
   formData.remark = config.remark || ''
   formData.updateTime = config.updateTime || null
   chatModelOptions.value = config.chatModelOptions?.length
@@ -216,10 +234,12 @@ const handleSave = async () => {
       topP: formData.topP,
       enableRagDefault: formData.enableRagDefault,
       memoryWindowSize: formData.memoryWindowSize,
+      baseUrl: formData.baseUrl.trim() || null,
+      apiKey: formData.apiKey.trim() || null,
       remark: formData.remark || null,
     })
     applyConfig(config)
-    ElMessage.success('模型配置已保存，后续对话将使用新参数')
+    ElMessage.success('模型配置已保存，后续调用将使用新参数')
   } catch (error) {
     console.error('保存模型配置失败:', error)
   } finally {

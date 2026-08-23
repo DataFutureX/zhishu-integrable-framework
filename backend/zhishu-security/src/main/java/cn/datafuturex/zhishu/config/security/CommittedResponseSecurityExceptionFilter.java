@@ -13,12 +13,23 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * 异步/SSE 等场景下响应已提交时，权限/认证异常无法再写 403/401，
- * 捕获后仅打印简要提示，避免 Tomcat 输出完整 ERROR 堆栈。
+ * SSE / 异步完成后响应已提交时，ExceptionTranslationFilter 无法再写 401/403，
+ * 会抛 ServletException 并被 Tomcat 转到 /error，形成完整 ERROR 堆栈。
+ * 本过滤器在异步与 ERROR 分发上同样生效，吞掉这类已提交异常。
  */
 @Slf4j
 @Component
 public class CommittedResponseSecurityExceptionFilter extends OncePerRequestFilter {
+
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return false;
+    }
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,15 +38,9 @@ public class CommittedResponseSecurityExceptionFilter extends OncePerRequestFilt
         try {
             filterChain.doFilter(request, response);
         } catch (AccessDeniedException | AuthenticationException ex) {
-            handleIfCommitted(request, response, ex);
-        } catch (ServletException ex) {
-            if (response.isCommitted() && isSecurityDenied(ex)) {
-                logBrief(request, rootMessage(ex));
-                return;
-            }
-            throw ex;
-        } catch (RuntimeException ex) {
-            if (response.isCommitted() && isSecurityDenied(ex)) {
+            swallowIfCommitted(request, response, ex);
+        } catch (ServletException | RuntimeException ex) {
+            if (isCommittedSecurityFailure(response, ex)) {
                 logBrief(request, rootMessage(ex));
                 return;
             }
@@ -43,9 +48,9 @@ public class CommittedResponseSecurityExceptionFilter extends OncePerRequestFilt
         }
     }
 
-    private void handleIfCommitted(HttpServletRequest request,
-                                   HttpServletResponse response,
-                                   RuntimeException ex) {
+    private void swallowIfCommitted(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    RuntimeException ex) throws RuntimeException {
         if (response.isCommitted()) {
             logBrief(request, ex.getMessage());
             return;
@@ -54,9 +59,28 @@ public class CommittedResponseSecurityExceptionFilter extends OncePerRequestFilt
     }
 
     private void logBrief(HttpServletRequest request, String message) {
-        log.warn("权限拒绝（响应已提交）: {} {} - {}",
+        log.debug("安全异常（响应已提交，忽略）: {} {} - {}",
                 request.getMethod(), request.getRequestURI(),
                 message != null ? message : "Access Denied");
+    }
+
+    private static boolean isCommittedSecurityFailure(HttpServletResponse response, Throwable throwable) {
+        if (isCommittedMessage(throwable)) {
+            return true;
+        }
+        return response.isCommitted() && isSecurityDenied(throwable);
+    }
+
+    private static boolean isCommittedMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && message.contains("response is already committed")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private static boolean isSecurityDenied(Throwable throwable) {

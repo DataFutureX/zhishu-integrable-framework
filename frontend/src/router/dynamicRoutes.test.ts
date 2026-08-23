@@ -94,8 +94,54 @@ describe('menusToRoutes', () => {
     ])
 
     expect(routes).toHaveLength(1)
-    expect(routes[0].path).toBe('permission/user')
+    expect(routes[0].path).toBe('/permission/user')
     expect(routes[0].meta?.permissions).toEqual(['system:user:query', 'system:user:add'])
+  })
+
+  it('hoists children whose path is not under the parent directory', () => {
+    const routes = menusToRoutes([
+      menu({
+        id: 6,
+        title: '系统设置',
+        menuType: 'DIRECTORY',
+        path: '/system',
+        routeName: 'System',
+        children: [
+          menu({
+            id: 65,
+            title: '参数配置',
+            menuType: 'MENU',
+            path: '/system/config',
+            routeName: 'SystemConfig',
+            component: 'views/system/SystemConfig.vue',
+          }),
+          menu({
+            id: 67,
+            title: '运维监控',
+            menuType: 'MENU',
+            path: '/monitor/ops',
+            routeName: 'OpsMonitor',
+            component: 'views/system/SystemMonitor.vue',
+          }),
+          menu({
+            id: 91,
+            title: '后端接口',
+            menuType: 'MENU',
+            path: '/devtools/api',
+            routeName: 'BackendApi',
+            component: 'views/devtools/SwaggerEmbed.vue',
+          }),
+        ],
+      }),
+    ])
+
+    const paths = routes.map((route) => route.path)
+    expect(paths).toContain('/system')
+    expect(paths).toContain('/monitor/ops')
+    expect(paths).toContain('/devtools/api')
+
+    const system = routes.find((route) => route.path === '/system')
+    expect(system?.children?.map((child) => child.path)).toEqual(['config'])
   })
 
   it('findFirstMenuPath skips reserved and prefers redirect', () => {

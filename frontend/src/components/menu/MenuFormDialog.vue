@@ -48,7 +48,7 @@
           <el-input v-model="formModel.redirect" placeholder="如 /permission/user" maxlength="200" />
         </el-form-item>
         <el-form-item label="图标">
-          <el-input v-model="formModel.icon" placeholder="Element Plus 图标名，如 Setting" maxlength="50" />
+          <el-input v-model="formModel.icon" placeholder="Element Plus 图标名，如 SetUp" maxlength="50" />
         </el-form-item>
         <el-form-item label="组件路径">
           <el-input

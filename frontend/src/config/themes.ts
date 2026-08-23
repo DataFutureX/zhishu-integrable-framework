@@ -59,25 +59,6 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
     textRegular: lightThemePalette.textRegular,
     textSecondary: lightThemePalette.textSecondary,
   },
-  [ThemeStyle.DEFAULT]: {
-    style: ThemeStyle.DEFAULT,
-    sidebarBgColor: '#0d1117',
-    sidebarTextColor: '#c9d1d9',
-    sidebarActiveColor: '#58a6ff',
-    primaryColor: '#0969da',
-    primaryDark: '#0550ae',
-    headerBg: '#ffffff',
-    headerText: '#1f2328',
-    headerShadow: '0 1px 0 #d0d7de',
-    contentBg: lightThemePalette.contentBg,
-    contentBgGradient: lightThemePalette.contentBgGradient,
-    surfaceBg: lightThemePalette.surfaceBg,
-    surfaceMuted: lightThemePalette.surfaceMuted,
-    borderColor: lightThemePalette.borderColor,
-    textPrimary: lightThemePalette.textPrimary,
-    textRegular: lightThemePalette.textRegular,
-    textSecondary: lightThemePalette.textSecondary,
-  },
   [ThemeStyle.BLUE]: {
     style: ThemeStyle.BLUE,
     sidebarBgColor: hydroThemePalette.deep,
@@ -120,7 +101,6 @@ export const themeConfigs: Record<ThemeStyle, ThemeConfig> = {
 
 export const themeLabels: Record<ThemeStyle, string> = {
   [ThemeStyle.LIGHT]: '云起浅色',
-  [ThemeStyle.DEFAULT]: '经典侧栏',
   [ThemeStyle.BLUE]: '夜空',
   [ThemeStyle.DARK]: '极客黑',
 }
@@ -128,7 +108,6 @@ export const themeLabels: Record<ThemeStyle, string> = {
 /** 主题切换器展示顺序（云起浅色置顶） */
 export const themeOrder: ThemeStyle[] = [
   ThemeStyle.LIGHT,
-  ThemeStyle.DEFAULT,
   ThemeStyle.BLUE,
   ThemeStyle.DARK,
 ]

@@ -31,16 +31,16 @@ try {
 
 Write-Host ""
 
-$frontendDir = Join-Path $PSScriptRoot 'frontend'
-$backendDir = Join-Path $PSScriptRoot 'backend'
+$frontendDir = Join-Path $PSScriptRoot 'zhishu-frontend'
+$backendDir = Join-Path $PSScriptRoot 'zhishu-backend'
 
 if (-not (Test-Path (Join-Path $backendDir 'pom.xml'))) {
-    Write-Host "[ERROR] Missing backend\pom.xml" -ForegroundColor Red
+    Write-Host "[ERROR] Missing zhishu-backend\pom.xml" -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
 }
 if (-not (Test-Path (Join-Path $frontendDir 'package.json'))) {
-    Write-Host "[ERROR] Missing frontend\package.json" -ForegroundColor Red
+    Write-Host "[ERROR] Missing zhishu-frontend\package.json" -ForegroundColor Red
     Read-Host "Press Enter to exit"
     exit 1
 }

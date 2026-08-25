@@ -22,9 +22,9 @@ need_cmd npm
 echo "[信息] Node.js: $(node -v)  npm: $(npm -v)"
 echo ""
 
-if [ ! -d "frontend/node_modules" ]; then
+if [ ! -d "zhishu-frontend/node_modules" ]; then
     echo "[提示] 首次运行，正在安装前端依赖..."
-    (cd frontend && npm install)
+    (cd zhishu-frontend && npm install)
     echo "[成功] 前端依赖安装完成"
     echo ""
 fi
@@ -51,7 +51,7 @@ mkdir -p logs
 
 echo "[启动] 后端: mvn -pl zhishu-core -am spring-boot:run"
 (
-    cd "${ROOT}/backend"
+    cd "${ROOT}/zhishu-backend"
     mvn -pl zhishu-core -am spring-boot:run -DskipTests
 ) >"${ROOT}/logs/zhishu-backend-dev.log" 2>&1 &
 BACKEND_PID=$!
@@ -61,7 +61,7 @@ sleep 2
 
 echo "[启动] 前端: npm run dev"
 (
-    cd "${ROOT}/frontend"
+    cd "${ROOT}/zhishu-frontend"
     npm run dev
 ) >"${ROOT}/logs/zhishu-frontend-dev.log" 2>&1 &
 FRONTEND_PID=$!

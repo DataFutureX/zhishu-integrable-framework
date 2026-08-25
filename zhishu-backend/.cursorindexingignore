@@ -1,4 +1,3 @@
-# 指定在索引时要忽略的文件或文件夹。与.gitignore匹配规则一致，支持 my-security/ 和 *.log 等通配符模式。
 # Cursor 索引忽略（语法同 .gitignore）
 # 仅排除代码库检索；仍可通过 @ 引用手动读取。
 # .gitignore 中的路径已被 Cursor 自动忽略，此处补充仍入库、但不适合索引的内容。
@@ -23,19 +22,18 @@ docs/dev-keys/out/
 **/coverage/
 
 # ── 前端自动生成类型 ──
-zhishu-frontend/src/types/auto-imports.d.ts
-zhishu-frontend/src/types/components.d.ts
+frontend/src/types/auto-imports.d.ts
+frontend/src/types/components.d.ts
 
 # ── Playwright 产物 ──
-zhishu-frontend/test-results/
-zhishu-frontend/playwright-report/
-zhishu-frontend/blob-report/
-zhishu-frontend/playwright/.cache/
-zhishu-frontend/html/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+frontend/html/
 
 # ── 日志与临时文件 ──
 **/logs/
 *.log
 *.tmp
 *.bak
-

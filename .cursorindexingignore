@@ -22,15 +22,15 @@ docs/dev-keys/out/
 **/coverage/
 
 # ── 前端自动生成类型 ──
-frontend/src/types/auto-imports.d.ts
-frontend/src/types/components.d.ts
+zhishu-frontend/src/types/auto-imports.d.ts
+zhishu-frontend/src/types/components.d.ts
 
 # ── Playwright 产物 ──
-frontend/test-results/
-frontend/playwright-report/
-frontend/blob-report/
-frontend/playwright/.cache/
-frontend/html/
+zhishu-frontend/test-results/
+zhishu-frontend/playwright-report/
+zhishu-frontend/blob-report/
+zhishu-frontend/playwright/.cache/
+zhishu-frontend/html/
 
 # ── 日志与临时文件 ──
 **/logs/

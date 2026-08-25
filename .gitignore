@@ -37,7 +37,7 @@ pnpm-debug.log*
 *.key
 !**/src/**/*.key
 # 允许入库的伙伴公钥（私钥仍忽略）
-!backend/zhishu-core/src/main/resources/sso/*.pem
+!zhishu-backend/zhishu-core/src/main/resources/sso/*.pem
 !**/src/main/resources/sso/*.pem
 
 # ── Temp ──

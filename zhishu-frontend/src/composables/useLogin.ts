@@ -1,7 +1,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Connection, Cpu, Grid, Key } from '@element-plus/icons-vue'
+import { Connection, Cpu, Grid, MagicStick } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/useUserStore'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEMO_CREDENTIALS, isDemoMode } from '@/config/demo'
@@ -22,22 +22,22 @@ export function useLogin() {
     {
       icon: Cpu,
       label: '统一技术架构',
-      desc: 'Vue 3 + Spring Boot 模块化交付，降低应用搭建与维护成本',
+      desc: 'Vue 3 + Spring Boot 模块化交付，约定统一、工程边界清晰',
     },
     {
       icon: Grid,
       label: '业务组件开箱',
-      desc: '组织权限、系统配置、公告审计与运维监控即用',
-    },
-    {
-      icon: Key,
-      label: '权限安全体系',
-      desc: 'RBAC、JWT、验证码与登录锁定，保障访问安全',
+      desc: '用户角色菜单单位、系统配置、公告审计与运维监控即用',
     },
     {
       icon: Connection,
-      label: 'AI 与行业扩展',
-      desc: '预留智能化与行业能力接入路径，快速构建应用系统',
+      label: '权限与伙伴 SSO',
+      desc: 'RBAC + JWT；本地登录与伙伴 Ticket 换票（RS256 / 国密 SM2）',
+    },
+    {
+      icon: MagicStick,
+      label: '智能中心能力',
+      desc: 'Agents、知识库、MCP Hub、模型配置与知识图谱已落地',
     },
   ]
 

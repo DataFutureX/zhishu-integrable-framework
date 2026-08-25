@@ -11,7 +11,7 @@ export const DEFAULT_ENGLISH_TITLE = 'ZhiShu Integrable Framework'
 export const DEFAULT_SYSTEM_ICON = defaultSystemIcon
 export const DEFAULT_COPYRIGHT = '© 2026 知枢可集成框架 · MIT 开源'
 export const DEFAULT_SYSTEM_INTRODUCTION =
-  '一套面向企业数字化与智能化应用集成的模块化开发底座，通过统一技术架构、业务组件、伙伴 SSO 与行业扩展能力，帮助企业快速构建可集成、可扩展的应用系统。'
+  '一套面向企业数字化与智能化应用集成的模块化开发底座，沉淀业务组件、伙伴 SSO、运维观测与智能中心（Agents / 知识库 / MCP Hub）能力，帮助企业快速构建可集成、可扩展的应用系统。'
 export const DEFAULT_LOGIN_RETRY_LIMIT_ENABLED = true
 export const DEFAULT_LOGIN_MAX_RETRY_ATTEMPTS = 5
 export const DEFAULT_LOGIN_LOCK_MINUTES = 30

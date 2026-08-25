@@ -81,7 +81,7 @@ onMounted(async () => {
   }
 
   try {
-    const data = await exchangeSsoTicketApi({ ticket, redirect: queryRedirect })
+    const data = await exchangeSsoTicketApi({ ticket, redirect: queryRedirect ?? undefined })
     if (!data?.token) {
       throw new Error('换票响应异常')
     }

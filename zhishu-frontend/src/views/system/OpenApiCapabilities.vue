@@ -95,7 +95,7 @@
         </el-button>
       </header>
 
-      <el-table :data="apps" v-loading="appsLoading" stripe style="width: 100%">
+      <el-table :data="apps" v-loading="appsLoading" stripe style="width: 100%" row-key="id">
         <el-table-column prop="name" label="应用名称" min-width="140" />
         <el-table-column prop="code" label="编码" min-width="140" />
         <el-table-column label="Access Key" min-width="200">
@@ -132,10 +132,10 @@
         </el-table-column>
         <el-table-column label="操作" width="380" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="openEditDialog(row)">
+            <el-button type="primary" link size="small" @click="openEditDialog(row as OpenAppVO)">
               编辑
             </el-button>
-            <el-button type="primary" link size="small" @click="handleGenerateAkSk(row)">
+            <el-button type="primary" link size="small" @click="handleGenerateAkSk(row as OpenAppVO)">
               {{ row.accessKey ? '重新生成 AK/SK' : '生成 AK/SK' }}
             </el-button>
             <el-button
@@ -143,7 +143,7 @@
               type="warning"
               link
               size="small"
-              @click="handleRegenerateSk(row)"
+              @click="handleRegenerateSk(row as OpenAppVO)"
             >
               轮换 SK
             </el-button>
@@ -151,11 +151,11 @@
               :type="row.status === 'ENABLED' ? 'danger' : 'success'"
               link
               size="small"
-              @click="handleToggleStatus(row)"
+              @click="handleToggleStatus(row as OpenAppVO)"
             >
               {{ row.status === 'ENABLED' ? '停用' : '启用' }}
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDeleteApp(row)">
+            <el-button type="danger" link size="small" @click="handleDeleteApp(row as OpenAppVO)">
               移除
             </el-button>
           </template>
@@ -492,8 +492,10 @@ const openApiCount = computed(() =>
     .reduce((sum, cat) => sum + cat.endpoints.length, 0),
 )
 
-function methodTagType(method: string) {
-  const map: Record<string, string> = {
+type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
+
+function methodTagType(method: string): TagType {
+  const map: Record<string, TagType> = {
     GET: 'success',
     POST: 'primary',
     PUT: 'warning',

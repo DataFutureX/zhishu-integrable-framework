@@ -51,7 +51,7 @@
           <h1 class="brand-title">{{ systemName }}</h1>
           <p v-if="systemIntroduction" class="brand-desc">{{ systemIntroduction }}</p>
           <p v-else class="brand-desc">
-            一套面向企业数字化应用建设的模块化开发基础平台，通过统一技术架构、业务组件、AI 能力和行业扩展能力，帮助企业快速构建智能化应用系统。
+            一套面向企业数字化与智能化应用集成的模块化开发底座，沉淀业务组件、伙伴 SSO、运维观测与智能中心能力，帮助企业快速构建可集成、可扩展的应用系统。
           </p>
           <ul class="feature-list">
             <li v-for="feature in features" :key="feature.label" class="feature-item">
@@ -76,7 +76,7 @@
           <div class="login-header">
             <p class="login-eyebrow">{{ englishTitle }}</p>
             <h2 class="title">欢迎登录</h2>
-            <p class="subtitle">登录后进入工作台，构建与管理企业数字化应用</p>
+            <p class="subtitle">登录后进入工作台，管理业务组件与智能中心能力</p>
           </div>
 
           <el-form

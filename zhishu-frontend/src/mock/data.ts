@@ -46,7 +46,7 @@ export const mockSystemConfig: SystemConfigVO = {
   systemName: '知枢可集成框架',
   englishTitle: 'ZhiShu Integrable Framework',
   systemIntroduction:
-    '一套面向企业数字化应用建设的模块化开发基础平台，通过统一技术架构、业务组件、AI能力和行业扩展能力，帮助企业快速构建智能化应用系统。',
+    '一套面向企业数字化与智能化应用集成的模块化开发底座，沉淀业务组件、伙伴 SSO、运维观测与智能中心（Agents / 知识库 / MCP Hub）能力，帮助企业快速构建可集成、可扩展的应用系统。',
   copyright: '© 2026 知枢可集成框架 · MIT 开源',
   projectSite: '演示项目地 · 云起科技园',
   loginRetryLimitEnabled: true,

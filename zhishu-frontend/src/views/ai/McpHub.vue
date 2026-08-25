@@ -16,17 +16,17 @@
         type="primary"
         size="small"
         :icon="Plus"
-        @click="openCreateClient"
+        @click="openCreateUpstream"
       >
-        签发 Client
+        登记上游
       </el-button>
       <el-button
         v-permission="PERMISSIONS.AI_MCP_EDIT"
         size="small"
         :icon="Plus"
-        @click="openCreateUpstream"
+        @click="openCreateClient"
       >
-        登记上游
+        签发 Client
       </el-button>
       <el-button size="small" :icon="Refresh" :loading="loading" @click="reload">刷新</el-button>
     </template>
@@ -50,8 +50,8 @@
           :prefix-icon="Search"
         />
         <el-radio-group v-model="tab" size="default">
-          <el-radio-button value="out">对外 Client</el-radio-button>
           <el-radio-button value="in">接入上游</el-radio-button>
+          <el-radio-button value="out">对外 Client</el-radio-button>
           <el-radio-button value="log">调用审计</el-radio-button>
         </el-radio-group>
         <el-radio-group v-if="tab === 'log'" v-model="logDirection" size="default" @change="loadLogs">
@@ -604,7 +604,7 @@ import {
 
 const loading = ref(false)
 const saving = ref(false)
-const tab = ref<'out' | 'in' | 'log'>('out')
+const tab = ref<'out' | 'in' | 'log'>('in')
 const keyword = ref('')
 const overview = ref<McpOverviewVO>({
   serverEnabled: false,
@@ -741,17 +741,17 @@ const openClientAccess = (row: McpClientVO, options?: { apiKey?: string; justRev
 
 const heroMetrics = computed(() => [
   {
-    key: 'clients',
-    label: '对外 Client',
-    value: clients.value.length,
-    icon: Key,
-    accent: 'primary' as const,
-  },
-  {
     key: 'upstreams',
     label: '接入上游',
     value: upstreams.value.length,
     icon: Connection,
+    accent: 'primary' as const,
+  },
+  {
+    key: 'clients',
+    label: '对外 Client',
+    value: clients.value.length,
+    icon: Key,
     accent: 'primary' as const,
   },
   {

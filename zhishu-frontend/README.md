@@ -1,6 +1,6 @@
 # 知枢可集成框架
 
-一套面向企业数字化应用建设的模块化开发基础平台，简称 **ZSIF**（ZhiShu Integrable Framework）。前端基于 **Vue 3 + TypeScript + Element Plus**，通过统一技术架构、业务组件、AI 能力与行业扩展能力，帮助企业快速构建智能化应用系统。
+一套面向企业数字化与智能化应用集成的模块化开发底座，简称 **ZSIF**（ZhiShu Integrable Framework）。前端基于 **Vue 3 + TypeScript + Element Plus**，沉淀业务组件、伙伴 SSO、运维观测与智能中心（Agents / 知识库 / MCP Hub）能力，帮助企业快速构建可集成、可扩展的应用系统。
 
 [License: MIT](../LICENSE)
 [Vue](https://vuejs.org/)
@@ -69,9 +69,11 @@ git push gitee main
 | 能力    | 说明                                                                |
 | ----- | ----------------------------------------------------------------- |
 | 动态权限  | 后端菜单驱动路由；按钮 `v-permission`；路由 `meta.permissions` 二次兜底，无权限进 `/403` |
-| 安全登录  | 滑动验证码 + RSA 加密传输（演示与生产同一登录链路）                                     |
+| 安全登录  | 滑动验证码 + RSA 加密传输；登录失败锁定策略可配置                                     |
+| 伙伴 SSO | 伙伴 Ticket 换票登录（RS256 / 国密 SM2），`/sso/callback` 换票后沿用本地 RBAC        |
 | 多布局主题 | 侧栏 / 混合布局，标签页或面包屑，多主题与内容密度                                        |
-| 系统运维  | 公告、操作日志、运行监控                                                      |
+| 系统运维  | 公告、操作日志、运行监控、开放能力（AK/SK 应用与接口目录）                                  |
+| 智能中心  | Agents、知识库、Agent 会话、MCP Hub、模型设置与知识图谱                                  |
 | 演示模式  | `npm run dev:demo` 纯前端 Mock，无需后端即可完整体验                            |
 | 工程化   | Vite 5、ESLint 9 flat、Prettier、Vitest、Husky + lint-staged          |
 
@@ -87,13 +89,21 @@ git push gitee main
 | 文档       | `/docs`                 | 快速开始与单点登录说明   |
 | 单点登录回调 | `/sso/callback`         | 伙伴 Ticket 换票登录     |
 | 登录     | `/login`                | 滑动验证码 + RSA       |
+| AI 简报  | `/home/briefings`       | 工作台 AI 简报          |
 | 仪表盘    | `/home/dashboard`       | 概览、公告、快捷入口        |
 | 账号管理   | `/permission/*`         | 用户 / 单位 / 角色 / 菜单 |
 | 系统设置   | `/system/config`        | 站点品牌与登录策略         |
 | 公告管理   | `/system/announcement`  | 发布 / 撤回 / 已读      |
 | 操作日志   | `/system/operation-log` | 审计查询              |
+| 开放能力   | `/system/open-api`      | 开放应用 AK/SK 与接口目录   |
 | 系统监控   | `/monitor/ops`          | 运行状态与健康检查         |
 | API 文档 | `/devtools/api`         | 内嵌 Swagger        |
+| Agents | `/ai/agents`            | Agent 编排与管理        |
+| 知识库    | `/ai/knowledges`        | 文档入库与检索           |
+| Agent 会话 | `/ai/chat`              | 多轮对话与工具调用         |
+| MCP Hub | `/ai/mcp`               | 接入上游 MCP / 对外 Client |
+| 模型设置   | `/ai/model-config`      | 大模型与推理参数配置        |
+| 知识图谱   | `/ai/knowledge-graph`   | 知识图谱可视化与探索        |
 | 个人中心   | `/profile/*`            | 资料与改密             |
 | 错误页    | `/403`、通配 404           | 无权访问 / 页面不存在      |
 
@@ -234,8 +244,9 @@ zhishu-integrable-framework/
     │   ├── types/               # TS 类型与 RouteMeta 扩展
     │   ├── utils/               # request、permission、RSA、登出…
     │   ├── views/
-    │   │   ├── dashboard|login|portal|devtools|profile…
-    │   │   ├── system/          # 配置、公告、日志、监控、菜单/单位/角色
+    │   │   ├── dashboard|login|portal|devtools|profile|sso…
+    │   │   ├── ai/              # Agents、知识库、会话、MCP Hub、模型与图谱
+    │   │   ├── system/          # 配置、公告、日志、监控、开放能力、菜单/单位/角色
     │   │   ├── user/            # 用户列表、资料、改密
     │   │   └── error/           # Forbidden / NotFound
     │   ├── App.vue              # el-config-provider（zh-CN）
@@ -386,7 +397,7 @@ HTML 报告：[`docs/unit-test-report/index.html`](../docs/unit-test-report/inde
 
 ### 前端界面冒烟（Playwright）
 
-覆盖门户、登录与登录后业务页（仪表盘、用户/单位/角色/菜单、系统设置、公告、操作日志、监控、API 文档、个人信息、修改密码）：页面可打开且关键 UI 可见。不含完整 CRUD。
+覆盖门户、登录与登录后业务页（仪表盘、用户/单位/角色/菜单、系统设置、公告、操作日志、开放能力、监控、API 文档、智能中心、个人信息、修改密码）：页面可打开且关键 UI 可见。不含完整 CRUD。
 
 首次或换机后需安装浏览器：
 

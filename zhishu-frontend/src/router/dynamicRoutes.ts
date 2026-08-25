@@ -114,11 +114,6 @@ export function filterVisibleMenus(menus: MenuVO[]): MenuVO[] {
     .filter((menu) => menu.menuType !== 'DIRECTORY' || (menu.children && menu.children.length > 0))
 }
 
-function menuToRoute(menu: MenuVO, parentFullPath?: string): RouteRecordRaw | null {
-  const routes = convertMenu(menu, parentFullPath)
-  return routes[0] ?? null
-}
-
 /**
  * 将菜单转为当前层级的路由列表。
  * 侧栏分组（如系统设置）下的子页 path 若不以父 path 为前缀

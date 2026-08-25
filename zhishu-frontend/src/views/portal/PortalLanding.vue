@@ -436,11 +436,12 @@ $max: 1120px;
 
 .portal-hero__tagline {
   margin: 0 0 12px;
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: clamp(28px, 3.4vw, 36px);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.25;
   color: $fg;
+  white-space: nowrap;
 }
 
 .portal-hero__desc {

@@ -1,6 +1,6 @@
 <template>
   <div class="portal-docs">
-    <nav class="portal-docs__nav" aria-label="文档目录">
+    <nav ref="navRef" class="portal-docs__nav" aria-label="文档目录">
       <div v-for="group in docGroups" :key="group.name" class="portal-docs__group">
         <p class="portal-docs__group-name">{{ group.name }}</p>
         <a
@@ -104,7 +104,7 @@ const docs: PortalDocMeta[] = [
     label: '单点登录对接',
     navHint: '协议与换票',
     title: '单点登录对接说明',
-    summary: '伙伴签发短期 Ticket，云起验签换票并签发业务 JWT。支持 RS256 与国密 SM2。',
+    summary: '伙伴签发短期 Ticket，知枢验签换票并签发业务 JWT。支持 RS256 与国密 SM2。',
     repoUrl: `${GITHUB_BLOB}/docs/单点登录对接说明.md`,
   },
   {
@@ -112,7 +112,7 @@ const docs: PortalDocMeta[] = [
     label: '万象接入联调',
     navHint: '逐步清单',
     title: '万象接入联调实现步骤',
-    summary: '万象（iss=wanxiang）→ 云起单向 SSO：环境地址、公钥登记、签发跳转与验收用例。',
+    summary: '万象（iss=wanxiang）→ 知枢单向 SSO：环境地址、公钥登记、签发跳转与验收用例。',
     repoUrl: `${GITHUB_BLOB}/docs/万象接入联调实现步骤.md`,
   },
   {
@@ -123,11 +123,23 @@ const docs: PortalDocMeta[] = [
     summary: '伙伴侧 Java SDK：生成 RSA / SM2 密钥、签发 Ticket、拼装 /sso/callback 回调地址。',
     repoUrl: `${GITHUB_BLOB}/docs/他方SSO接入SDK使用说明.md`,
   },
+  {
+    id: 'openapi-sdk',
+    label: 'OpenAPI SDK',
+    navHint: 'AK/SK 签名',
+    title: '知枢 Open API 接入 SDK',
+    summary: '外部系统经 AK/SK HMAC-SHA256 签名调用 AI 对话、知识问答、知识图谱能力；附 Java SDK 与多语言签名协议。',
+    repoUrl: `${GITHUB_BLOB}/docs/知枢OpenAPI接入SDK使用说明.md`,
+  },
 ]
 
 const docGroups = [
   { name: '上手', items: docs.filter((doc) => doc.id === 'quickstart') },
-  { name: '单点登录', items: docs.filter((doc) => doc.id !== 'quickstart') },
+  {
+    name: '单点登录',
+    items: docs.filter((doc) => doc.id === 'sso' || doc.id === 'wanxiang' || doc.id === 'sso-sdk'),
+  },
+  { name: 'Open API', items: docs.filter((doc) => doc.id === 'openapi-sdk') },
 ]
 
 interface DocCacheEntry {
@@ -140,6 +152,7 @@ const currentHtml = ref('')
 const currentToc = ref<PortalDocTocItem[]>([])
 const activeHeadingId = ref('')
 const articleRef = ref<HTMLElement | null>(null)
+const navRef = ref<HTMLElement | null>(null)
 const docLoading = ref(false)
 let loadSeq = 0
 let headingObserver: IntersectionObserver | null = null
@@ -273,6 +286,24 @@ function onArticleClick(event: MouseEvent) {
   }
 }
 
+watch(activeHeadingId, (id) => {
+  if (!id) return
+  const nav = navRef.value
+  if (!nav) return
+  const link = nav.querySelector<HTMLElement>(
+    `.portal-docs__toc-link[href="#${CSS.escape(id)}"]`,
+  )
+  if (!link) return
+  const navRect = nav.getBoundingClientRect()
+  const linkRect = link.getBoundingClientRect()
+  if (linkRect.top < navRect.top + 8 || linkRect.bottom > navRect.bottom - 8) {
+    nav.scrollTo({
+      top: link.offsetTop - nav.offsetTop - nav.clientHeight / 2 + link.clientHeight / 2,
+      behavior: 'smooth',
+    })
+  }
+})
+
 onUnmounted(() => {
   headingObserver?.disconnect()
 })
@@ -306,13 +337,15 @@ $canvas-dark-subtle: #161b22;
 .portal-docs {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   gap: 28px;
-  align-items: start;
+  min-height: calc(100vh - 120px);
 }
 
 .portal-docs__nav {
   position: sticky;
   top: 72px;
+  align-self: start;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -413,6 +446,7 @@ $canvas-dark-subtle: #161b22;
 }
 
 .portal-docs__toolbar {
+  grid-column: 1 / -1;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;

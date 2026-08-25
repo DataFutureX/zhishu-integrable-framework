@@ -1,5 +1,16 @@
 import { DEMO_TOKEN } from '@/config/demo'
 import { mockPermissions, mockSystemHealth, mockSystemStatus } from './data'
+import {
+  createDemoOpenApp,
+  deleteDemoOpenApp,
+  generateDemoAkSk,
+  getDemoOpenApp,
+  listDemoOpenApps,
+  regenerateDemoSk,
+  updateDemoOpenApp,
+  updateDemoOpenAppScopes,
+  updateDemoOpenAppStatus,
+} from './openApp'
 import { mockState } from './state'
 import type { MenuVO } from '@/types/menu'
 import type { UnitVO } from '@/types/unit'
@@ -199,7 +210,7 @@ ZX2DyIQ6ggb67B0cNwIDAQAB
     const redirect =
       typeof _body.redirect === 'string' && _body.redirect.startsWith('/') && !_body.redirect.startsWith('//')
         ? _body.redirect
-        : '/home/dashboard'
+        : '/ai/chat'
     return {
       token: DEMO_TOKEN,
       expiration: Date.now() + 86400000,
@@ -731,6 +742,64 @@ function handleOperationLog(
   return NOT_HANDLED
 }
 
+function handleOpenApp(
+  method: string,
+  path: string,
+  _params: Record<string, unknown>,
+  body: Record<string, unknown>,
+) {
+  if (method === 'GET' && path === '/open-apps') {
+    return listDemoOpenApps()
+  }
+  if (method === 'POST' && path === '/open-apps') {
+    return createDemoOpenApp(body)
+  }
+  const byId = path.match(/^\/open-apps\/(\d+)$/)
+  if (method === 'GET' && byId) {
+    const app = getDemoOpenApp(Number(byId[1]))
+    if (!app) throw new MockNotFoundError(method, path)
+    return app
+  }
+  if (method === 'PUT' && byId) {
+    const app = updateDemoOpenApp(Number(byId[1]), body)
+    if (!app) throw new MockNotFoundError(method, path)
+    return app
+  }
+  if (method === 'DELETE' && byId) {
+    if (!deleteDemoOpenApp(Number(byId[1]))) throw new MockNotFoundError(method, path)
+    return okVoid()
+  }
+  const generate = path.match(/^\/open-apps\/(\d+)\/generate-aksk$/)
+  if (method === 'POST' && generate) {
+    const result = generateDemoAkSk(Number(generate[1]))
+    if (!result) throw new MockNotFoundError(method, path)
+    return result
+  }
+  const regenerate = path.match(/^\/open-apps\/(\d+)\/regenerate-sk$/)
+  if (method === 'POST' && regenerate) {
+    const result = regenerateDemoSk(Number(regenerate[1]))
+    if (!result) throw new MockNotFoundError(method, path)
+    return result
+  }
+  const scopes = path.match(/^\/open-apps\/(\d+)\/scopes$/)
+  if (method === 'PUT' && scopes) {
+    const app = updateDemoOpenAppScopes(idFrom(scopes[1]), (body.scopes as string[]) || [])
+    if (!app) throw new MockNotFoundError(method, path)
+    return app
+  }
+  const status = path.match(/^\/open-apps\/(\d+)\/status$/)
+  if (method === 'PUT' && status) {
+    const app = updateDemoOpenAppStatus(Number(status[1]), String(body.status || 'ENABLED'))
+    if (!app) throw new MockNotFoundError(method, path)
+    return app
+  }
+  return NOT_HANDLED
+}
+
+function idFrom(value: string) {
+  return Number(value)
+}
+
 function dispatch(
   method: string,
   path: string,
@@ -746,6 +815,7 @@ function dispatch(
     handleUnit,
     handleRole,
     handleOperationLog,
+    handleOpenApp,
   ]
   for (const handler of handlers) {
     const result = handler(method, path, params, body)

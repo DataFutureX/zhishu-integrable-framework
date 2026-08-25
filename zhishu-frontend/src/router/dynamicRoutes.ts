@@ -1,4 +1,4 @@
-import { RouterView, type RouteRecordRaw, type Router } from 'vue-router'
+import type { RouteRecordRaw, Router } from 'vue-router'
 import type { MenuVO } from '@/types/menu'
 import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
 import { resolveViewComponent } from '@/router/dynamicRouteViews'
@@ -138,33 +138,25 @@ function convertMenu(menu: MenuVO, parentFullPath?: string): RouteRecordRaw[] {
 
   const meta = buildRouteMeta(menu)
   const nestedInParent = Boolean(parentFullPath && isNestedUnder(menu.path, parentFullPath))
+  /** Layout 子路由必须用相对 path（ai/chat），不能用 /ai/chat，否则挂在 path:'/' 下会匹配失败变成 404 */
   const relativePath = nestedInParent
     ? toRelativePath(menu.path, parentFullPath)
-    : menu.path.startsWith('/')
-      ? menu.path
-      : `/${menu.path}`
-  const childRoutes = nestedChildren.flatMap((child) => convertMenu(child, menu.path))
+    : menu.path.replace(/^\//, '')
 
   const component = resolveViewComponent(menu.component)
-  const isDirectory = menu.menuType === 'DIRECTORY' || (!component && childRoutes.length > 0)
+  const isDirectory = menu.menuType === 'DIRECTORY' || (!component && nestedChildren.length > 0)
   const current: RouteRecordRaw[] = []
 
   if (isDirectory) {
-    const route: RouteRecordRaw = {
+    const redirect = menu.redirect || findFirstMenuPath(menu.children || []) || undefined
+    current.push({
       path: relativePath,
       name: menu.routeName || undefined,
-      // 目录本身无页面，需要 RouterView 才能渲染嵌套子页
-      component: RouterView,
       meta,
-      children: childRoutes,
-    }
-    if (menu.redirect) {
-      route.redirect = menu.redirect
-    } else {
-      const firstPath = findFirstMenuPath(menu.children || [])
-      if (firstPath) route.redirect = firstPath
-    }
-    current.push(route)
+      ...(redirect ? { redirect } : {}),
+    } as RouteRecordRaw)
+    // 叶子页平铺为 Layout 直属子路由，避免目录再套一层 RouterView 导致 /ai/chat 404
+    current.push(...nestedChildren.flatMap((child) => convertMenu(child)))
   } else if (!component) {
     console.warn(`[dynamicRoutes] 无法解析组件: ${menu.component}`, menu)
   } else {
@@ -174,7 +166,6 @@ function convertMenu(menu: MenuVO, parentFullPath?: string): RouteRecordRaw[] {
       component,
       meta,
       ...(menu.redirect ? { redirect: menu.redirect } : {}),
-      ...(childRoutes.length > 0 ? { children: childRoutes } : {}),
     } as RouteRecordRaw)
   }
 
@@ -220,6 +211,14 @@ export function ensureStaticRoutes(router: Router) {
       name: 'Login',
       component: () => import('@/views/login/Login.vue'),
       meta: { title: '登录', requiresAuth: false },
+    })
+  }
+  if (!router.hasRoute('AIChat')) {
+    router.addRoute(LAYOUT_ROUTE_NAME, {
+      path: 'ai/chat',
+      name: 'AIChat',
+      component: () => import('@/views/ai/AIChat.vue'),
+      meta: { title: 'Agent 会话', requiresAuth: true },
     })
   }
   if (!router.hasRoute('OpsMonitor')) {

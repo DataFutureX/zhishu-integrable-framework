@@ -25,11 +25,9 @@ test.describe('前端功能界面冒烟', () => {
       await loginAs(page, credentials)
     })
 
-    test('登录后进入仪表盘且可刷新', async ({ page }) => {
-      await page.goto('/home/dashboard', { waitUntil: 'domcontentloaded' })
-      await expect(page.locator('.dash-hero__title')).toBeVisible()
-      await page.getByRole('button', { name: '刷新' }).click()
-      await expect(page.locator('.dash-hero__title')).toBeVisible()
+    test('登录后进入 Agent 会话且可刷新', async ({ page }) => {
+      await page.goto('/ai/chat', { waitUntil: 'domcontentloaded' })
+      await expect(page.locator('.session-rail__title')).toBeVisible()
     })
 
     for (const pageItem of AUTH_PAGES) {

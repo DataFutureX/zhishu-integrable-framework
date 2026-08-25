@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /** 与 API 报告一致：写入仓库 docs/（覆盖最新一份） */
 const e2eReportDir = path.resolve(__dirname, '../docs/e2e-test-report')
 
-const baseURL = process.env.E2E_BASE_URL || 'http://127.0.0.1:3000'
+const baseURL = process.env.E2E_BASE_URL || 'http://127.0.0.1:3100'
 
 function selectedProjects(): string[] {
   const projects: string[] = []
@@ -67,7 +67,7 @@ export default defineConfig({
   ...(enableWebServer
     ? {
         webServer: {
-          command: 'npx vite --mode demo --host 127.0.0.1 --port 3000 --strictPort',
+          command: 'npx vite --mode demo --host 127.0.0.1 --port 3100 --strictPort',
           url: baseURL,
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,

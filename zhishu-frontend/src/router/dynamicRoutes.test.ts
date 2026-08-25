@@ -94,7 +94,7 @@ describe('menusToRoutes', () => {
     ])
 
     expect(routes).toHaveLength(1)
-    expect(routes[0].path).toBe('/permission/user')
+    expect(routes[0].path).toBe('permission/user')
     expect(routes[0].meta?.permissions).toEqual(['system:user:query', 'system:user:add'])
   })
 
@@ -136,12 +136,42 @@ describe('menusToRoutes', () => {
     ])
 
     const paths = routes.map((route) => route.path)
-    expect(paths).toContain('/system')
-    expect(paths).toContain('/monitor/ops')
-    expect(paths).toContain('/devtools/api')
+    expect(paths).toContain('system')
+    expect(paths).toContain('system/config')
+    expect(paths).toContain('monitor/ops')
+    expect(paths).toContain('devtools/api')
 
-    const system = routes.find((route) => route.path === '/system')
-    expect(system?.children?.map((child) => child.path)).toEqual(['config'])
+    const system = routes.find((route) => route.path === 'system')
+    expect(system?.redirect).toBe('/system/config')
+    expect(system?.children).toBeUndefined()
+  })
+
+  it('flattens 智能中心 so Agent 会话 is Layout child ai/chat', () => {
+    const routes = menusToRoutes([
+      menu({
+        id: 10,
+        title: '智能中心',
+        menuType: 'DIRECTORY',
+        path: '/ai',
+        routeName: 'AI',
+        redirect: '/ai/chat',
+        children: [
+          menu({
+            id: 103,
+            title: 'Agent 会话',
+            menuType: 'MENU',
+            path: '/ai/chat',
+            routeName: 'AIChat',
+            component: 'views/ai/AIChat.vue',
+          }),
+        ],
+      }),
+    ])
+    const paths = routes.map((route) => route.path)
+    expect(paths).toContain('ai')
+    expect(paths).toContain('ai/chat')
+    expect(routes.find((route) => route.path === 'ai')?.redirect).toBe('/ai/chat')
+    expect(routes.find((route) => route.path === 'ai/chat')?.name).toBe('AIChat')
   })
 
   it('findFirstMenuPath skips reserved and prefers redirect', () => {

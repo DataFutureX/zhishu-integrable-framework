@@ -66,8 +66,12 @@ const routes: RouteRecordRaw[] = [
     redirect: '/permission/unit',
   },
   {
-    path: '/ai/chat',
-    redirect: '/home/chat',
+    path: '/home/chat',
+    redirect: '/ai/chat',
+  },
+  {
+    path: '/home/dashboard',
+    redirect: '/ai/chat',
   },
   {
     path: '/ai/document-qa',
@@ -79,6 +83,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
     children: [
+      {
+        path: 'ai/chat',
+        name: 'AIChat',
+        component: () => import('@/views/ai/AIChat.vue'),
+        meta: { title: 'Agent 会话', requiresAuth: true },
+      },
       {
         path: 'monitor/ops',
         name: 'OpsMonitor',
@@ -117,8 +127,8 @@ function preloadPortalPreview() {
   link.id = PORTAL_PREVIEW_PRELOAD_ID
   link.rel = 'preload'
   link.as = 'image'
-  link.href = '/portal/dashboard.webp'
-  link.type = 'image/webp'
+  link.href = '/portal/dashboard.png'
+  link.type = 'image/png'
   link.setAttribute('fetchpriority', 'high')
   document.head.appendChild(link)
 }

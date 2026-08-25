@@ -2,42 +2,7 @@
   <ElementPlusRoot>
   <div class="login-container">
     <div class="background" aria-hidden="true">
-      <div class="bg-gradient" />
-      <div class="bg-mesh" />
-      <div class="orb orb-1" />
-      <div class="orb orb-2" />
-      <div class="orb orb-3" />
-      <SkyCloud
-        variant="near"
-        top="12%"
-        left="-8%"
-        width="360px"
-        duration="38s"
-      />
-      <SkyCloud
-        variant="mid"
-        flip
-        top="28%"
-        right="-6%"
-        left="auto"
-        width="400px"
-        duration="46s"
-        delay="-16s"
-      />
-      <SkyCloud
-        variant="far"
-        top="50%"
-        left="16%"
-        width="260px"
-        duration="52s"
-        delay="-28s"
-      />
-      <div
-        v-for="particle in particles"
-        :key="particle.id"
-        class="particle"
-        :style="particle.style"
-      />
+      <AgentNetworkBackdrop />
     </div>
 
     <div class="login-layout">
@@ -49,9 +14,12 @@
           </div>
           <p class="brand-eyebrow">{{ englishTitle }}</p>
           <h1 class="brand-title">{{ systemName }}</h1>
-          <p v-if="systemIntroduction" class="brand-desc">{{ systemIntroduction }}</p>
-          <p v-else class="brand-desc">
-            一套面向企业数字化与智能化应用集成的模块化开发底座，沉淀业务组件、伙伴 SSO、运维观测与智能中心能力，帮助企业快速构建可集成、可扩展的应用系统。
+          <p class="brand-caps">
+            <span v-for="tag in capabilityTags" :key="tag">{{ tag }}</span>
+          </p>
+          <p class="brand-desc">
+            面向智能体集成的开发底座：用 Agent 编排业务，RAG 混合检索增强问答，知识图谱补全关联，MCP
+            打通上下游工具。登录后即可在智能中心完成会话、知识与协议接入。
           </p>
           <ul class="feature-list">
             <li v-for="feature in features" :key="feature.label" class="feature-item">
@@ -66,7 +34,7 @@
           </ul>
           <a class="portal-entry" href="/portal" @click.prevent="goPortal">
             <el-icon :size="16"><ArrowRight /></el-icon>
-            了解知枢可集成框架
+            了解 Agent / RAG / MCP
           </a>
         </div>
       </div>
@@ -76,7 +44,7 @@
           <div class="login-header">
             <p class="login-eyebrow">{{ englishTitle }}</p>
             <h2 class="title">欢迎登录</h2>
-            <p class="subtitle">登录后进入工作台，管理业务组件与智能中心能力</p>
+            <p class="subtitle">进入智能中心：Agent 会话、RAG 问答、图谱探索与 MCP 接入</p>
           </div>
 
           <el-form
@@ -121,7 +89,7 @@
 
           <p class="portal-hint">
             首次访问？
-            <a class="portal-hint__link" href="/portal" @click.prevent="goPortal">了解平台能力</a>
+            <a class="portal-hint__link" href="/portal" @click.prevent="goPortal">了解 Agent 与 RAG 能力</a>
           </p>
 
           <el-alert
@@ -160,8 +128,8 @@
 <script setup lang="ts">
 import ElementPlusRoot from '@/components/app/ElementPlusRoot.vue'
 import { ArrowRight } from '@element-plus/icons-vue'
-import SkyCloud from '@/components/common/SkyCloud.vue'
 import SlideCaptcha from '@/components/auth/SlideCaptcha.vue'
+import AgentNetworkBackdrop from '@/components/login/AgentNetworkBackdrop.vue'
 import { useLogin } from '@/composables/useLogin'
 
 const {
@@ -170,14 +138,13 @@ const {
   englishTitle,
   systemIconUrl,
   copyright,
-  systemIntroduction,
+  capabilityTags,
   features,
   loginFormRef,
   loading,
   captchaVisible,
   loginForm,
   loginRules,
-  particles,
   goPortal,
   handleLogin,
   handleCaptchaClosed,
@@ -209,64 +176,6 @@ $foam: #ffffff;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-
-  .bg-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, #f6f8fa 0%, #ffffff 48%, $foam 100%);
-  }
-
-  .bg-mesh {
-    position: absolute;
-    inset: 0;
-    opacity: 0.2;
-    background-image:
-      linear-gradient(rgba(9, 105, 218, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(9, 105, 218, 0.08) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 80%);
-  }
-
-  .orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(48px);
-    animation: orb-float 14s ease-in-out infinite;
-
-    &.orb-1 {
-      top: -6%;
-      right: 10%;
-      width: 380px;
-      height: 380px;
-      background: rgba(9, 105, 218, 0.1);
-    }
-
-    &.orb-2 {
-      bottom: 8%;
-      left: -4%;
-      width: 320px;
-      height: 320px;
-      background: rgba(31, 136, 61, 0.08);
-      animation-delay: -5s;
-    }
-
-    &.orb-3 {
-      top: 42%;
-      left: 42%;
-      width: 220px;
-      height: 220px;
-      background: rgba(9, 105, 218, 0.06);
-      animation-delay: -9s;
-    }
-  }
-
-  .particle {
-    position: absolute;
-    bottom: -10px;
-    background: rgba(9, 105, 218, 0.28);
-    border-radius: 50%;
-    animation: float-up linear infinite;
-  }
 }
 
 .login-layout {
@@ -345,6 +254,24 @@ $foam: #ffffff;
     line-height: 1.15;
     letter-spacing: -0.02em;
     color: $ink;
+  }
+
+  .brand-caps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+
+    span {
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: $accent;
+      background: rgba(9, 105, 218, 0.08);
+      border: 1px solid rgba(9, 105, 218, 0.16);
+      border-radius: 999px;
+    }
   }
 
   .brand-desc {
@@ -599,36 +526,6 @@ $foam: #ffffff;
     margin: 0;
     font-size: 12px;
     color: $ink-mute;
-  }
-}
-
-@keyframes float-up {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) scale(0.5);
-    opacity: 0;
-  }
-}
-
-@keyframes orb-float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(24px, -16px) scale(1.04);
-  }
-  66% {
-    transform: translate(-16px, 12px) scale(0.96);
   }
 }
 

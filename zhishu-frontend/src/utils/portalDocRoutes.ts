@@ -1,5 +1,11 @@
 /** 门户文档 id，对应路径 `/docs/<id>` */
-export const PORTAL_DOC_IDS = ['quickstart', 'sso', 'wanxiang', 'sso-sdk'] as const
+export const PORTAL_DOC_IDS = [
+  'quickstart',
+  'sso',
+  'wanxiang',
+  'sso-sdk',
+  'openapi-sdk',
+] as const
 export type PortalDocId = (typeof PORTAL_DOC_IDS)[number]
 export const PORTAL_DOCS_BASE = '/docs'
 
@@ -13,6 +19,7 @@ export const PORTAL_DOC_FILE_TO_ID: Record<string, PortalDocId> = {
   '单点登录对接说明.md': 'sso',
   '万象接入联调实现步骤.md': 'wanxiang',
   '他方sso接入sdk使用说明.md': 'sso-sdk',
+  '知枢openapi接入sdk使用说明.md': 'openapi-sdk',
 }
 
 function fileBasename(href: string): string {

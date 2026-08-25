@@ -4,7 +4,7 @@
       <!-- 左侧：会话列表 -->
       <aside class="session-rail">
         <div class="session-rail__brand">
-          <span class="session-rail__eyebrow">工作台</span>
+          <span class="session-rail__eyebrow">智能中心</span>
           <h2 class="session-rail__title">Agent 会话</h2>
         </div>
         <el-button

@@ -1,7 +1,7 @@
 {
   "name": "zhishu-integrable-framework",
   "version": "1.0.0",
-  "description": "知枢可集成框架 (ZhiShu Integrable Framework)",
+  "description": "知枢可集成智能体框架 (ZhiShu Integrable Framework)",
   "private": true,
   "license": "MIT",
   "type": "module",

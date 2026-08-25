@@ -245,9 +245,8 @@ ON CONFLICT (id) DO UPDATE SET
     system_introduction = EXCLUDED.system_introduction;
 
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(1, 0, '工作台', '/home', 'Home', '/home/dashboard', 'HomeFilled', 'DIRECTORY', 1, 1, 1, NULL, NULL, 1),
-(11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 0, 1, 9, 'views/dashboard/Dashboard.vue', NULL, 1),
-(103, 1, 'Agent 会话', '/home/chat', 'AIChat', NULL, 'ChatLineRound', 'MENU', 1, 1, 2, 'views/ai/AIChat.vue', '{"title":"Agent 会话"}', 1),
+(1, 0, '工作台', '/home', 'Home', NULL, 'HomeFilled', 'DIRECTORY', 0, 1, 1, NULL, NULL, 0),
+(11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 0, 1, 9, 'views/dashboard/Dashboard.vue', NULL, 0),
 (5, 0, '账号管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
 (61, 5, '用户管理', '/permission/user', 'User', NULL, 'User', 'MENU', 1, 1, 1, 'views/user/UserList.vue', NULL, 1),
 (63, 5, '菜单管理', '/permission/menu', 'MenuManage', NULL, 'Menu', 'MENU', 1, 1, 2, 'views/system/MenuList.vue', NULL, 1),
@@ -279,16 +278,17 @@ ON CONFLICT (id) DO UPDATE SET
     meta = EXCLUDED.meta,
     status = EXCLUDED.status;
 
--- 智能中心菜单（知枢控制台，与 patch_ai_menus.sql 一致）
+-- 智能中心菜单（工作台 / 仪表盘已禁用；Agent 会话挂在本目录下）
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(10, 0, '智能中心', '/ai', 'AI', '/ai/qa', 'MagicStick', 'DIRECTORY', 1, 1, 2, NULL, NULL, 1),
-(109, 10, '知识检索', '/ai/qa', 'AIDocumentQA', NULL, 'Search', 'MENU', 1, 1, 1, 'views/ai/DocumentQA.vue', '{"title":"知识检索"}', 1),
-(106, 10, '知识图谱', '/ai/knowledge-graph', 'AIKnowledgeGraph', NULL, 'Connection', 'MENU', 1, 1, 2, 'views/ai/KnowledgeGraph.vue', '{"title":"知识图谱"}', 1),
-(101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 3, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
-(102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 4, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
-(104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 5, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
-(105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 6, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
-(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 7, 'views/ai/AgentGraphEditor.vue', NULL, 1)
+(10, 0, '智能中心', '/ai', 'AI', '/ai/chat', 'MagicStick', 'DIRECTORY', 1, 1, 2, NULL, NULL, 1),
+(103, 10, 'Agent 会话', '/ai/chat', 'AIChat', NULL, 'ChatLineRound', 'MENU', 1, 1, 1, 'views/ai/AIChat.vue', '{"title":"Agent 会话"}', 1),
+(109, 10, '知识检索', '/ai/qa', 'AIDocumentQA', NULL, 'Search', 'MENU', 1, 1, 2, 'views/ai/DocumentQA.vue', '{"title":"知识检索"}', 1),
+(106, 10, '知识图谱', '/ai/knowledge-graph', 'AIKnowledgeGraph', NULL, 'Connection', 'MENU', 1, 1, 3, 'views/ai/KnowledgeGraph.vue', '{"title":"知识图谱"}', 1),
+(101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 4, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
+(102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 5, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
+(104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 6, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
+(105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 7, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
+(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 8, 'views/ai/AgentGraphEditor.vue', NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
     title = EXCLUDED.title,
@@ -311,7 +311,7 @@ DELETE FROM sys_role_menu WHERE menu_id IN (8, 9);
 DELETE FROM sys_menu WHERE id IN (8, 9);
 
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(1101, 11, '仪表盘查询', NULL, 'home:dashboard:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(1101, 11, '仪表盘查询', NULL, 'home:dashboard:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 0),
 (6101, 61, '用户查询', NULL, 'system:user:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (6102, 61, '用户新增', NULL, 'system:user:add', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
 (6103, 61, '用户修改', NULL, 'system:user:edit', NULL, NULL, 'BUTTON', 0, 1, 3, NULL, NULL, 1),
@@ -355,7 +355,8 @@ ON CONFLICT (id) DO UPDATE SET
     route_name = EXCLUDED.route_name,
     menu_type = EXCLUDED.menu_type,
     visible = EXCLUDED.visible,
-    parent_id = EXCLUDED.parent_id;
+    parent_id = EXCLUDED.parent_id,
+    status = EXCLUDED.status;
 
 INSERT INTO sys_role_menu (id, role_id, menu_id)
 SELECT 10000 + m.id, 1, m.id FROM sys_menu m WHERE m.menu_type IN ('DIRECTORY', 'MENU', 'PAGE')
@@ -366,17 +367,13 @@ SELECT 100000 + m.id, 1, m.id FROM sys_menu m WHERE m.menu_type = 'BUTTON'
 ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
 
 INSERT INTO sys_role_menu (id, role_id, menu_id) VALUES
-(2001, 2, 1),
-(2011, 2, 11),
 (2103, 2, 103),
 (2010, 2, 10),
 (2109, 2, 109),
-(2107, 2, 107),
 (2106, 2, 106),
 (2005, 2, 7),
 (2071, 2, 71),
 (2072, 2, 72),
-(21101, 2, 1101),
 (27101, 2, 7101),
 (27201, 2, 7201),
 (210901, 2, 10901)

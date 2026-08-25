@@ -13,13 +13,14 @@ describe('portalMarkdown', () => {
 | RS256 | RSA |
 | SM2 | 国密 |
 
-详见 [单点登录对接说明.md](./单点登录对接说明.md)、[万象联调](./万象接入联调实现步骤.md) 与 [SDK](../sdk/yunqi-sso-partner-sdk)。
+详见 [单点登录对接说明.md](./单点登录对接说明.md)、[万象联调](./万象接入联调实现步骤.md)、[SDK](../sdk/yunqi-sso-partner-sdk) 与 [OpenAPI](./知枢OpenAPI接入SDK使用说明.md)。
 `)
     expect(html).toContain('<table>')
     expect(html).toContain('RS256')
     expect(html).toContain('href="/docs/sso"')
     expect(html).toContain('href="/docs/wanxiang"')
     expect(html).toContain('sdk/yunqi-sso-partner-sdk')
+    expect(html).toContain('href="/docs/openapi-sdk"')
   })
 
   it('strips screenshot chapter from quick start markdown', () => {
@@ -42,6 +43,14 @@ describe('portalMarkdown', () => {
     expect(prepared).not.toContain('## 目录')
     expect(prepared).not.toContain('界面一览')
     expect(prepared).toContain('两种体验路径')
+  })
+
+  it('strips leading H1 from CRLF quick start markdown', () => {
+    const source = '![logo](./logo.svg)\r\n\r\n# 知枢可集成框架 · 快速开始\r\n\r\n正文\r\n'
+    const prepared = prepareQuickStartMarkdown(source)
+    expect(prepared).not.toContain('![logo]')
+    expect(prepared).not.toContain('# 知枢可集成框架')
+    expect(prepared).toContain('正文')
   })
 
   it('extracts heading toc with stable ids', () => {

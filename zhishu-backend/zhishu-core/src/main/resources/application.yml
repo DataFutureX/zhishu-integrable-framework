@@ -120,7 +120,7 @@ yunqi:
     audience: zhishu-integrable-framework
     clock-skew-seconds: 30
     jti-ttl-seconds: 180
-    default-redirect: /home/dashboard
+    default-redirect: /ai/chat
     rate-limit-window-seconds: 60
     rate-limit-max-requests: 30
     partners:

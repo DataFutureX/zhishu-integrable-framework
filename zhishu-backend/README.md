@@ -3,40 +3,45 @@
 [Java](https://openjdk.org/projects/jdk/21/)
 [Spring Boot](https://spring.io/projects/spring-boot)
 [License: MIT](../LICENSE)
-[Demo](https://yunqi.datafuturex.cn)
+[Demo](https://zhishu.datafuturex.cn/)
 
 **版本**: v1.0.0　·　简称 **ZSIF**（ZhiShu Integrable Framework）
 
-基于 **Java 21**、**Spring Boot 4**、**Spring Security 7**、**MyBatis-Plus** 与 **Spring Modulith** 的企业数字化应用建设后端，提供统一技术架构、业务组件与完整的 RBAC 权限体系。
+基于 **Java 21**、**Spring Boot 4**、**Spring Security 7**、**MyBatis-Plus** 与 **Spring Modulith** 的企业数字化应用建设后端，提供统一技术架构、业务组件、完整的 RBAC 权限体系，以及 Agent / RAG / 知识图谱 / MCP Hub / 开放 API。
 
-**在线演示**：[https://yunqi.datafuturex.cn](https://yunqi.datafuturex.cn)
+**在线演示**：[https://zhishu.datafuturex.cn/](https://zhishu.datafuturex.cn/)
+
+- 产品门户：[https://zhishu.datafuturex.cn/portal](https://zhishu.datafuturex.cn/portal)
+- 登录入口：[https://zhishu.datafuturex.cn/login](https://zhishu.datafuturex.cn/login)
+- 门户文档：[https://zhishu.datafuturex.cn/docs](https://zhishu.datafuturex.cn/docs)
 
 ## 开源源码路径
 
-本项目与前端同属 **zhishu-integrable-framework** 单体仓库（monorepo），托管于 GitHub 与 Gitee，内容同步，任选其一克隆即可。本文档对应仓库内 `**backend/`** 目录（后端源码）。
+本项目与前端、SDK 同属 **zhishu-integrable-framework** 单体仓库（monorepo），托管于 GitHub。本文档对应仓库内 **`zhishu-backend/`** 目录（后端源码，Maven 父工程）。
 
 
 | 类型     | 地址                                                                                               | 说明               |
 | ------ | ------------------------------------------------------------------------------------------------ | ---------------- |
-| 在线演示   | [https://yunqi.datafuturex.cn](https://yunqi.datafuturex.cn)                                     | 可直接体验系统功能        |
-| GitHub | `git@github.com:DataFutureX/zhishu-integrable-framework.git` | 主仓库，默认 `origin` |
+| 在线演示   | [https://zhishu.datafuturex.cn/](https://zhishu.datafuturex.cn/)                                     | 产品门户 / 登录 / 文档        |
+| GitHub | [DataFutureX/zhishu-integrable-framework](https://github.com/DataFutureX/zhishu-integrable-framework) | 主仓库，默认 `origin` / `main` |
 
 
 
 | 路径                                                        | 内容说明                          |
 | --------------------------------------------------------- | ----------------------------- |
-| `frontend/`                                               | 前端源码（Vue 3）                   |
-| `backend/`                                                | 后端源码（本 README 所在目录，Maven 父工程） |
+| `zhishu-frontend/`                                               | 前端源码（Vue 3）                   |
+| `zhishu-backend/`                                                | 后端源码（本 README 所在目录，Maven 父工程） |
+| `zhishu-sdk/`                                                    | 伙伴 SSO SDK、开放 API Java SDK |
 | [`../README.md`](../README.md)（仓库根目录） | 前后端快速开始（演示 / 联调） |
-| `backend/zhishu-api/`                                | 跨模块 SPI / DTO，避免循环依赖          |
-| `backend/zhishu-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、伙伴 SSO |
-| `backend/zhishu-biz/`                                | 公告、操作日志、系统配置、系统监控（Spring Modulith） |
-| `backend/zhishu-ai/`                                 | Agent / RAG / 图谱 / MCP Hub / 开放 API / 简报（同进程） |
-| `backend/zhishu-core/`                               | 启动壳、配置文件、数据库初始化脚本            |
-| `backend/zhishu-core/src/main/resources/db/init.sql` | 系统库初始化（用户/角色/菜单） |
-| `backend/zhishu-core/src/main/resources/db/init_ai.sql` | AI 表初始化（pgvector / Agent / MCP / 简报） |
+| `zhishu-backend/zhishu-api/`                                | 跨模块 SPI / DTO，避免循环依赖          |
+| `zhishu-backend/zhishu-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、伙伴 SSO |
+| `zhishu-backend/zhishu-biz/`                                | 公告、操作日志、系统配置、系统监控（Spring Modulith） |
+| `zhishu-backend/zhishu-ai/`                                 | Agent / RAG / 图谱 / MCP Hub / 开放 API（同进程） |
+| `zhishu-backend/zhishu-core/`                               | 启动壳、配置文件、数据库初始化脚本            |
+| `zhishu-backend/zhishu-core/src/main/resources/db/init.sql` | 系统库初始化（用户/角色/菜单） |
+| `zhishu-backend/zhishu-core/src/main/resources/db/init_ai.sql` | AI 表初始化（pgvector / Agent / MCP / 开放应用） |
 | [`../LICENSE`](../LICENSE)（仓库根目录） | MIT 开源许可证 |
-| `backend/README.md`                                       | 本说明文档                         |
+| `zhishu-backend/README.md`                                       | 本说明文档                         |
 
 
 ## 目录
@@ -44,13 +49,15 @@
 1. [开源源码路径](#开源源码路径)
 2. [特性](#特性)
 3. [技术架构](#技术架构)
-   - [总览](#总览)
+   - [总组件图](#总组件图)
    - [技术栈](#技术栈)
-   - [模块依赖](#模块依赖分)
-   - [请求处理链路](#请求处理链路分)
-   - [AI 内核](#ai-内核分)
-   - [开放能力](#开放能力rest-与-mcp-双平面分)
-   - [数据与存储](#数据与存储分)
+   - [分组件图](#分组件图)
+     - [模块依赖](#模块依赖)
+     - [请求处理链路](#请求处理链路)
+     - [AI 内核](#ai-内核)
+     - [Agent 智能体](#agent-智能体)
+     - [开放双平面](#开放双平面)
+     - [数据与存储](#数据与存储)
    - [项目结构](#项目结构)
 4. [快速开始](#快速开始)
 5. [核心功能模块](#核心功能模块)
@@ -68,74 +75,62 @@
 - **多模块 Maven 工程**：`api` → `security` → `biz` / `ai` → `core`，依赖单向，职责清晰
 - **Spring Security 7 + JWT**：无状态鉴权、Token 黑名单、方法级 `@PreAuthorize`
 - **登录安全**：滑动验证码 + RSA 凭证加密 + 可配置失败锁定
+- **伙伴 SSO**：Ticket 换票（RS256 / 国密 SM2），伙伴门户跳转后签发知枢 JWT
 - **RBAC 权限模型**：用户 → 角色 → 菜单（含 BUTTON 权限码）
 - **公告 SSE 推送**：发布后实时推送给在线用户
 - **操作日志**：拦截器异步记录，支持按月分表
 - **系统监控**：JVM / OS / DB / Web / 业务 / 分表 / 存储综合指标
+- **智能中心**：Agent 编排（REACT / SEQUENTIAL / ROUTING / GRAPH）、RAG 知识库、Neo4j 图谱、MCP Hub
+- **开放双平面**：控制台 JWT、开放 REST（AK/SK + `X-On-Behalf-Of`）、MCP Streamable HTTP（`wxmcp_*`）
 - **OpenAPI**：SpringDoc Swagger UI（开发环境可用）
 
 ## 技术架构
 
-采用 **总分** 呈现：先给出运行时总览，再按 Maven 模块、请求链路、AI 内核、开放面、数据层展开。
+先给 **总组件图**（三层、层间整体相连，避免交叉），再按模块 / 请求 / AI / 开放面 / 存储给出 **分组件图**。
 
-### 总览
+### 总组件图
 
-知枢后端是 **单进程 Spring Boot 应用**（`zhishu-core` 启动，默认 `:8180`）。前端、伙伴系统、外部 MCP Client 分别走三条入口；进程内按 Maven 模块分层，AI 能力以 Spring Modulith 应用模块隔离。
+知枢后端是 **单进程 Spring Boot 应用**（`zhishu-core` 启动，dev 默认 `:8180`）。`zhishu-ai` **不单独占端口**，与 core 同进程装配。监测类 Tool 已迁出，经 MCP Hub 登记上游消费。
 
 ```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 80, "curve": "linear"}}}%%
 flowchart TB
-  subgraph Clients["接入方"]
-    Browser["浏览器 / Vue 控制台"]
-    Partner["伙伴系统（如万象 BFF）"]
-    ExtAgent["外部 Agent（Cursor 等）"]
+  subgraph L1["① 接入方"]
+    direction LR
+    Browser["Vue 控制台"]
+    Partner["伙伴 BFF / SSO"]
+    ExtAgent["外部 MCP Client"]
   end
 
-  subgraph Gateway["知枢后端 · 单进程 :8180"]
-    direction TB
-    Filters["SecurityFilterChain<br/>JWT · OpenAPI Filter · MCP Auth"]
-    subgraph Apps["应用层"]
-      Sec["zhishu-security<br/>认证 / RBAC / SSO"]
-      Biz["zhishu-biz<br/>公告 / 日志 / 配置 / 监控"]
-      AI["zhishu-ai<br/>Agent · RAG · KG · MCP · OpenAPI"]
-    end
-    SPI["zhishu-api · SPI / DTO"]
-    Filters --> Sec
-    Filters --> Biz
-    Filters --> AI
-    Sec --> SPI
-    Biz --> SPI
-    AI --> SPI
+  subgraph L2["② 知枢后端 · 单进程 :8180"]
+    direction LR
+    Filter["FilterChain"]
+    Sec["zhishu-security"]
+    Biz["zhishu-biz"]
+    AI["zhishu-ai"]
+    SPI["zhishu-api"]
   end
 
-  subgraph Data["数据与外部依赖"]
-    PG["PostgreSQL 14+<br/>业务表 + pgvector"]
-    Neo["Neo4j<br/>知识图谱"]
-    LLM["LLM / Embedding<br/>OpenAI 兼容（DashScope 等）"]
-    UpMCP["上游 MCP Server<br/>如 wanxiang-mcp"]
-    Mail["SMTP 邮件"]
+  subgraph L3["③ 数据与外部依赖"]
+    direction LR
+    PG["PostgreSQL + pgvector"]
+    Neo["Neo4j"]
+    LLM["LLM / Embedding"]
+    UpMCP["上游 MCP"]
   end
 
-  Browser -->|"/api/v1/** JWT"| Filters
-  Partner -->|"/open/v1/** Bearer + X-On-Behalf-Of<br/>POST /api/v1/auth/sso/exchange"| Filters
-  ExtAgent -->|"/mcp  Streamable HTTP · wxmcp_*"| Filters
-
-  Sec --> PG
-  Biz --> PG
-  AI --> PG
-  AI --> Neo
-  AI --> LLM
-  AI --> UpMCP
-  AI --> Mail
+  L1 --> L2
+  L2 --> L3
 ```
+
+进程内自左向右：FilterChain 鉴权 → security / biz / ai 处理 → 契约落在 `zhishu-api`。存储、LLM、上游 MCP 只出现在第 ③ 层，细节见分组件图。
 
 | 入口 | 鉴权 | 典型调用方 | 能力范围 |
 | ---- | ---- | ---------- | -------- |
 | `/api/v1/**` | 知枢 JWT（控制台登录或 SSO 换票） | 本仓 Vue 前端 | 全量管理与 AI 工作台 |
-| `/open/v1/**` | 开放应用凭证 + `X-On-Behalf-Of` | 伙伴后端 BFF | 对话流、知识问答、Agent 目录、图谱写入 |
+| `/open/v1/**` | AK/SK 签名 Token + `X-On-Behalf-Of` | 伙伴后端 BFF | 对话流、知识问答、Agent 目录、图谱写入 |
 | `/mcp` | `wxmcp_*` API Key | 外部 MCP Client | 标准 MCP Tool 调用（对外目录由 Hub 配置） |
 | `POST /api/v1/auth/sso/exchange` | 伙伴 Ticket（RSA / SM2） | 伙伴门户跳转 | 换发知枢 JWT |
-
-> `zhishu-ai` **不单独占端口**，与 `zhishu-core` 同进程装配。监测类业务 Tool 已迁出，经 MCP Hub 登记上游消费。
 
 ### 技术栈
 
@@ -147,7 +142,8 @@ flowchart TB
 | Spring Security | 7.x     | SecurityFilterChain + 方法级鉴权           |
 | MyBatis-Plus    | 3.5.17  | `mybatis-plus-spring-boot4-starter`   |
 | Spring Modulith | 2.1.0   | biz / AI 领域模块边界                        |
-| Spring AI       | 2.0     | ChatClient、Tool Calling、pgvector、MCP   |
+| Spring AI       | 2.0.0   | ChatClient、Tool Calling、pgvector、MCP   |
+| Spring AI Alibaba | 2.0.0-M1.1 | Agent Framework（Graph 编排） |
 | PostgreSQL      | 14+     | 关系库 + pgvector                           |
 | Neo4j           | 5.x     | 知识图谱（可选）                              |
 | JWT (jjwt)      | 0.12.6  | Token 签发与校验                           |
@@ -158,32 +154,32 @@ flowchart TB
 
 > 本工程**不包含 Netty / SL651 / IoT 采集**；监测 Tool 由伙伴 MCP 上游提供。AI 栈另含 Spring AI 2.0、pgvector、Neo4j Driver。
 
-### 模块依赖（分）
+### 分组件图
 
-依赖单向：`core` 组装运行时，业务模块只依赖更底层的契约与安全能力。
+以下各图只画本层关系：层内横向排列，层间整体相连，避免交叉连线。
+
+#### 模块依赖
+
+依赖单向：`core` 组装运行时，业务模块只依赖更底层的契约与安全能力。`zhishu-test-support` 仅测试依赖，不进入运行时类路径（图中省略）。
 
 ```mermaid
-flowchart LR
-  Core["zhishu-core<br/>启动壳 · 数据源 · OpenAPI · 调度"]
-  AIMod["zhishu-ai"]
-  Biz["zhishu-biz"]
-  Sec["zhishu-security"]
-  Api["zhishu-api"]
-  Test["zhishu-test-support"]
+%%{init: {"flowchart": {"nodeSpacing": 50, "rankSpacing": 70, "curve": "linear"}}}%%
+flowchart TB
+  Core["zhishu-core · 启动壳"]
 
-  Core --> AIMod
-  Core --> Biz
+  subgraph Apps["业务模块"]
+    direction LR
+    AIMod["zhishu-ai"]
+    Biz["zhishu-biz"]
+  end
+
+  Sec["zhishu-security"]
+  Api["zhishu-api · SPI / DTO"]
+
+  Core --> Apps
   Core --> Sec
-  Core --> Api
-  AIMod --> Sec
-  AIMod --> Api
-  Biz --> Sec
-  Biz --> Api
+  Apps --> Sec
   Sec --> Api
-  Core -.-> Test
-  AIMod -.-> Test
-  Biz -.-> Test
-  Sec -.-> Test
 ```
 
 | 模块 | 职责 |
@@ -191,85 +187,97 @@ flowchart LR
 | **zhishu-api** | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），切断 security ↔ biz 循环依赖 |
 | **zhishu-security** | 认证鉴权、用户/角色/菜单/单位、JWT、滑动验证码、登录 RSA 加密、伙伴 SSO、公共 `Result` |
 | **zhishu-biz** | 公告（含 SSE）、操作日志、系统配置、系统监控；Spring Modulith 应用模块 |
-| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API、内部控制台简报；与 core **同进程** |
+| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API、模型配置；与 core **同进程** |
 | **zhishu-core** | `YqapApplication` 启动壳：数据源、MyBatis-Plus、OpenAPI UI、异步/调度、静态资源、配置 |
 | **zhishu-test-support** | 集成测试夹具（不进入运行时类路径） |
 
-### 请求处理链路（分）
+#### 请求处理链路
+
+三条入口各自一条链路，互不交叉。匿名放行：`/api/v1/auth/**`、`GET /api/v1/system-config`、`/api/v1/system/health`、`/open/v1/**`、`/mcp/**`、`/uploads/**`；dev 另放行 Swagger。`/open/v1` 与 `/mcp` 在 Security 层 `permitAll`，由专用 Filter 完成真实鉴权。
+
+**控制台 `/api/v1`**
 
 ```mermaid
 sequenceDiagram
   autonumber
-  participant C as 调用方
-  participant F as SecurityFilterChain
-  participant J as JwtAuthenticationFilter
-  participant O as OpenAPI / MCP 鉴权 Filter
+  participant C as Vue 控制台
+  participant F as FilterChain
+  participant J as JwtFilter
   participant Ctrl as Controller
-  participant Svc as Service / Modulith
-  participant DB as PostgreSQL / Neo4j / LLM
-
-  alt 控制台 /api/v1
-    C->>F: Authorization Bearer JWT
-    F->>J: 校验签名、黑名单、装载权限
-    J->>Ctrl: 用户上下文
-  else 开放 /open/v1
-    C->>F: Bearer 应用凭证 + X-On-Behalf-Of
-    F->>O: 校验 scope、代操用户
-    O->>Ctrl: 被代操账号上下文
-  else MCP /mcp
-    C->>F: Bearer wxmcp_ key
-    F->>O: 校验 Client、RPM、Tool 白名单
-    O->>Ctrl: MCP JSON-RPC
-  end
+  participant Svc as Service
+  C->>F: Bearer JWT
+  F->>J: 签名 / 黑名单 / 权限
+  J->>Ctrl: 用户上下文
   Ctrl->>Svc: 业务调用
-  Svc->>DB: 持久化 / 检索 / 推理
-  DB-->>C: Result / SSE / MCP result
+  Svc-->>C: Result / SSE
 ```
 
-匿名放行（其余默认需登录）：`/api/v1/auth/**`、`GET /api/v1/system-config`、`/api/v1/system/health`、`/open/v1/**`、`/mcp/**`、`/uploads/**`；dev 另放行 Swagger。`/open/v1` 与 `/mcp` 在 Security 层 `permitAll`，由专用 Filter 完成真实鉴权。
+**开放 REST `/open/v1`**
 
-### AI 内核（分）
+```mermaid
+sequenceDiagram
+  autonumber
+  participant P as 伙伴 BFF
+  participant F as FilterChain
+  participant O as OpenApiAuthFilter
+  participant Ctrl as Open Controller
+  participant Svc as Agent / RAG / KG
+  P->>F: AK/SK Token + X-On-Behalf-Of
+  F->>O: 验签 / Scope / 代操用户
+  O->>Ctrl: 被代操账号上下文
+  Ctrl->>Svc: 业务调用
+  Svc-->>P: Result / SSE
+```
+
+**MCP `/mcp`**
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant E as MCP Client
+  participant F as FilterChain
+  participant M as MCP Auth Filter
+  participant Hub as MCP Hub
+  E->>F: Bearer wxmcp_ key
+  F->>M: Client / RPM / Tool 白名单
+  M->>Hub: JSON-RPC
+  Hub-->>E: Tool result
+```
+
+#### AI 内核
 
 `zhishu-ai` 以 Spring Modulith 划分应用模块：跨模块只走 `:: api` Named Interface。对话统一经 `AgentChatPort` 进入运行时。
 
 ```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 70, "curve": "linear"}}}%%
 flowchart TB
   subgraph Entry["入口"]
+    direction LR
     ChatAPI["/api/v1/chat"]
     AgentAPI["/api/v1/agents"]
-    OpenChat["/open/v1/chat/stream"]
-    BriefAPI["/api/v1/briefings"]
+    OpenChat["/open/v1/chat"]
   end
 
-  subgraph AgentBlk["Agent"]
-    Def["定义 / Graph 编排"]
+  subgraph Runtime["Agent 运行时"]
+    direction LR
+    Def["定义 / Graph"]
     Port["AgentChatPort"]
-    Eng["ChatClientAgentEngine<br/>REACT / SEQUENTIAL / ROUTING / GRAPH"]
-    Tools["ToolCapabilityRegistry"]
+    Eng["ChatClientAgentEngine"]
   end
 
-  subgraph Caps["能力模块"]
-    Know["Knowledge · RAG / Hybrid"]
-    KG["KG · Neo4j"]
-    MCP["MCP Hub<br/>Server + Upstream Client"]
+  subgraph Caps["能力"]
+    direction LR
+    Know["Knowledge RAG"]
+    KG["KG Neo4j"]
+    MCP["MCP Hub"]
     Model["ModelConfig"]
-    BizT["BizTools 占位<br/>真实 Tool 来自 MCP 上游"]
   end
 
-  ChatAPI --> Port
-  AgentAPI --> Def
-  OpenChat --> Port
-  BriefAPI --> Port
-  Def --> Eng
-  Port --> Eng
-  Eng --> Tools
-  Eng --> Know
-  Eng --> KG
-  Tools --> BizT
-  Eng --> MCP
-  Eng --> Model
-  MCP -->|"resolveForAgent"| Tools
+  Entry --> Runtime
+  Runtime --> Caps
 ```
+
+工作流：`REACT` | `SEQUENTIAL` | `ROUTING` | `GRAPH`。内核能力：`RAG`、`MEMORY`、`WORKFLOW_GRAPH`、`MCP_TOOLS`、`KNOWLEDGE_GRAPH`。BizTools 为监测 Tool 占位，真实 Tool 来自 MCP 上游。Agent 内部结构见下节。
 
 | 应用模块 | 包 | 说明 |
 | -------- | -- | ---- |
@@ -279,41 +287,219 @@ flowchart TB
 | KnowledgeGraph | `ai.kg` | Neo4j 同步 / 查询 / 可视化；开放写入 `/open/v1/kg` |
 | Mcp | `ai.mcp` | 对外 Streamable HTTP Server + 上游 Client + Hub 管理与审计 |
 | ModelConfig | `ai.modelconfig` | 运行时模型与密钥（入库加密） |
-| Briefing | `ai.briefing` | **仅内部控制台**：调度、站内铃、邮件；不提供开放 API |
+| OpenAPI | `ai.openapi` | `/open/v1` 控制器、AK/SK 鉴权、开放应用管理 |
 | BizTools | `ai.biztools` | 监测 Tool 端口，当前空实现 |
 | Platform / Shared | `ai.platform` / `ai.shared` | OPEN 模块：Web 装配与共享类型 |
 
-工作流类型：`REACT` | `SEQUENTIAL` | `ROUTING` | `GRAPH`。内核能力：`RAG`、`MEMORY`、`WORKFLOW_GRAPH`、`MCP_TOOLS`、`KNOWLEDGE_GRAPH`、`BRIEFING`。
+#### Agent 智能体
 
-### 开放能力：REST 与 MCP 双平面（分）
+包 `ai.agent`：定义、Graph 编排与运行时同模块；Chat / 开放 API 只经 `AgentChatPort` 调用，不直接碰 Entity。默认引擎 `chatclient`（`wanxiang.agent.engine`）；`alibaba` 与 Spring AI 2.0 GA 不兼容时自动回退。
+
+监测取数、**NL2SQL**、图谱查询 Tool **不是**知枢内置枚举能力，由智能体绑定的上游 MCP（如 `wanxiang-mcp`）动态注入。内核枚举只管 `RAG` / `MEMORY` / `WORKFLOW_GRAPH` / `MCP_TOOLS` / `KNOWLEDGE_GRAPH`。
+
+**总组件**
 
 ```mermaid
-flowchart LR
-  subgraph Outbound["对外"]
+%%{init: {"flowchart": {"nodeSpacing": 36, "rankSpacing": 72, "curve": "linear"}}}%%
+flowchart TB
+  subgraph L1["① 入口"]
+    direction LR
+    AgentsAPI["控制台 /api/v1/agents"]
+    ChatAPI["对话 /api/v1/chat"]
+    OpenAPI["开放 /open/v1/chat"]
+  end
+
+  subgraph L2["② Agent 模块"]
+    direction LR
+    Def["定义 CRUD"]
+    Graph["Graph 编排"]
+    Port["AgentChatPort"]
+    Run["运行记录"]
+  end
+
+  subgraph L3["③ 引擎与工作流"]
+    direction LR
+    Eng["ChatClientAgentEngine"]
+    WF["REACT / SEQUENTIAL / ROUTING / GRAPH"]
+  end
+
+  subgraph L4["④ 能力"]
+    direction LR
+    Know["知识库 RAG"]
+    KG["知识图谱"]
+    NL2["NL2SQL"]
+    MCP["MCP_TOOLS"]
+  end
+
+  L1 --> L2
+  L2 --> L3
+  L3 --> L4
+```
+
+控制台走定义 / Graph / 试运行；对话与开放 API 只走 `AgentChatPort`。运行记录写入 `ai_agent_run`。
+
+**执行分图**
+
+```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 36, "rankSpacing": 64, "curve": "linear"}}}%%
+flowchart TB
+  Call["试运行 / Chat / Open"]
+  Runtime["RuntimeService"]
+  Eng["ChatClientAgentEngine"]
+
+  subgraph Pre["执行前 · 消息增强"]
+    direction LR
+    Rag["知识库 Hybrid RAG"]
+    KgHint["图谱实体提示"]
+  end
+
+  subgraph Wf["按 workflow_type"]
+    direction LR
+    React["REACT"]
+    Seq["SEQUENTIAL"]
+    Route["ROUTING"]
+    Gexec["GRAPH"]
+  end
+
+  subgraph Tools["Tool Calling"]
+    direction LR
+    McpT["MCP_TOOLS"]
+    Nl2["NL2SQL"]
+    KgT["图谱查询 Tool"]
+  end
+
+  Call --> Runtime
+  Runtime --> Eng
+  Eng --> Pre
+  Pre --> Wf
+  Wf --> Tools
+```
+
+**能力落地**
+
+```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 36, "rankSpacing": 64, "curve": "linear"}}}%%
+flowchart TB
+  subgraph Caps["能力"]
+    direction LR
+    Know["知识库 RAG"]
+    KG["知识图谱"]
+    NL2["NL2SQL"]
+    MCP["MCP_TOOLS"]
+  end
+
+  subgraph Back["落地"]
+    direction LR
+    Vec["pgvector + knowledges"]
+    Neo["Neo4j"]
+    Up["上游 MCP wanxiang-mcp"]
+  end
+
+  Caps --> Back
+```
+
+| 工作流 | 执行方式 |
+| ------ | -------- |
+| `REACT` | 单轮推理-行动，按需调 Tool |
+| `SEQUENTIAL` | 意图澄清 → 工具执行 → 结果润色 |
+| `ROUTING` | 入口路由：`DATA`（MCP 取数）/ `KNOWLEDGE`（知识问答）；`NL2SQL` / `INSPECTION` 路由位保留，内核枚举已迁出后当前不自动点亮 |
+| `GRAPH` | 按 `workflow_config` 节点推进：`START` / `LLM` / `TOOL_AGENT` / `ROUTER` / `CONDITIONAL` / `END`（最多 32 步） |
+
+##### 知识库 RAG
+
+非 Tool：在进入工作流前把检索片段拼进用户消息（标记 `【知识库检索片段】`）。
+
+| 项 | 说明 |
+| -- | ---- |
+| 开关 | 能力含 `RAG`，且请求 `enableRag` 或模型默认 `enableRagDefault` |
+| 端口 | `HybridRetrievalPort`（与文档 QA 共用） |
+| 检索 | pgvector 相似度 + `knowledges` 文件名/正文关键词（Hybrid） |
+| 范围 | `ai_agent.document_ids` JSON；空 = 全库，非空 = 仅绑定文档 |
+| 条数 | 默认 top 5（上限 10） |
+| 无命中 | 追加提示「已开启知识库增强，但未检索到相关片段」 |
+| ROUTING | 路由到 `KNOWLEDGE` 时基于片段作答，不再挂 Tool |
+
+##### 知识图谱
+
+两条路径互补：消息增强（骨架）+ 上游图谱 Tool（查拓扑）。
+
+| 项 | 说明 |
+| -- | ---- |
+| 能力码 | `KNOWLEDGE_GRAPH` |
+| 消息增强 | `GraphContextEnrichPort.enrich`，标记 `【知识图谱实体提示】`；知枢侧当前为 NoOp 占位，失败则原文透传 |
+| 查询端口 | `KnowledgeGraphQueryPort`：检索 / 邻居 / 最短路径 / 工程拓扑 / 告警影响面 |
+| 存储 | Neo4j（`WANXIANG_KG_ENABLED`） |
+| 图谱 Tool | 上游 MCP：`searchGraphEntities`、`getGraphNeighbors`、`findGraphPath`、`getProjectTopology`、`getAlertImpact` |
+| 内置智能体 | `kg_agent`（`["KNOWLEDGE_GRAPH"]` + `REACT`），只回答关系与拓扑，不写 SQL、不取遥测 |
+
+##### NL2SQL
+
+内核**不再**把 `NL2SQL` 当作 `AgentCapability` 枚举；自然语言写 SQL 由上游 MCP 的只读 Tool 提供，智能体勾选 `MCP_TOOLS` 并绑定对应上游即可。
+
+| 项 | 说明 |
+| -- | ---- |
+| 内置智能体 | `nl2sql_agent`（`["MCP_TOOLS"]` + `REACT`） |
+| 典型 Tool | `describeBizSchema`（先探表）→ `executeReadonlySql`（只读 `SELECT`/`WITH`） |
+| 约束 | 白名单表、历史遥测走分区父表并带时间范围、按用户工程权限过滤、SQL 对用户可见（`executedSql`） |
+| 失败策略 | 按 error 修正最多再试 1 次；禁止编造数据 |
+| 路由 | `ROUTING` 仍保留 `NL2SQL` 词，但内核能力集合已空，需靠 MCP Tool + 提示词约束，而不是枚举点亮 |
+
+##### MCP_TOOLS
+
+能力开关打开后，运行时按智能体 ID 解析已绑定上游的 ToolCallback。
+
+| 项 | 说明 |
+| -- | ---- |
+| 装配 | `ChatClientSupport.resolveTools`：本进程 BizTools（当前空）+ `ExternalToolPort.resolveForAgent(agentId)` |
+| 绑定表 | `ai_agent_mcp_upstream`（每智能体可绑多个上游，有上限） |
+| 过滤 | 上游 `ENABLED`、Tool 缓存 `enabled`、绑定 `allowedTools` 白名单 |
+| 包装 | 名称加上游前缀 `PrefixedToolCallback`，调用写审计 `InboundAuditingToolCallback` |
+| 协议 | 上游仅 Streamable HTTP / SSE |
+| 典型 Tool | 遥测/在线/告警/巡检（监测）以及上一节 NL2SQL、图谱查询 |
+| 内置智能体 | `monitor_default`（`["RAG","MCP_TOOLS"]`）、`inspection_agent`（`["MCP_TOOLS"]`） |
+
+无 Tools 的 LLM 阶段可 SSE 真流式；含 Tools 时同步 `call`，轨迹经 `TracingToolCallback` 推 `progress`。另有 `MEMORY`（JDBC ChatMemory）与 `WORKFLOW_GRAPH`（可视化编排），不走 Tool。
+
+| 内置智能体 | 能力 | 工作流 | 定位 |
+| ---------- | ---- | ------ | ---- |
+| `monitor_default` | RAG + MCP_TOOLS | REACT | 默认监测问答，可叠加知识库 |
+| `inspection_agent` | MCP_TOOLS | SEQUENTIAL | 数字巡检 + 业务巡检只读 |
+| `nl2sql_agent` | MCP_TOOLS | REACT | 自然语言只读 SQL |
+| `kg_agent` | KNOWLEDGE_GRAPH | REACT | 图谱关系 / 拓扑 / 影响面 |
+
+#### 开放双平面
+
+REST 与 MCP 是两条对外平面；控制台只管 Hub 配置。层间整体相连。
+
+```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 70, "curve": "linear"}}}%%
+flowchart TB
+  subgraph Callers["调用方"]
+    direction LR
+    BFF["伙伴 BFF"]
+    Cursor["外部 Agent"]
+    Console["控制台"]
+  end
+
+  subgraph Planes["接入平面"]
+    direction LR
     OA["开放 REST /open/v1"]
     MS["MCP Server /mcp"]
+    Hub["Hub 控制面 /api/v1/mcp"]
   end
 
-  subgraph Hub["MCP Hub 控制面 /api/v1/mcp"]
-    Clients["对外 Client<br/>签发 / 轮换 wxmcp_*"]
-    Ups["上游登记 · 探活 · Tool 缓存"]
-    Audit["调用审计 OUT / IN"]
-  end
-
-  subgraph Runtime["运行时"]
+  subgraph Exec["执行"]
+    direction LR
     AgentRt["Agent 运行时"]
     Catalog["对外 Tool 目录"]
+    Ups["上游 MCP"]
   end
 
-  PartnerBFF["伙伴 BFF"] --> OA
-  Cursor["外部 Agent"] --> MS
-  Console["控制台"] --> Hub
-  OA --> AgentRt
-  MS --> Catalog
-  Catalog --> AgentRt
-  Ups -->|"ToolCallback"| AgentRt
-  Clients --> MS
+  Callers --> Planes
+  Planes --> Exec
 ```
+
+对应关系：伙伴 BFF → `/open/v1`（AK/SK）→ Agent 运行时；外部 Agent → `/mcp`（`wxmcp_*`）→ Tool 目录；控制台 → `/api/v1/mcp` 管理 Client 签发、上游登记与审计。
 
 | 开放 REST | Scope | 说明 |
 | --------- | ----- | ---- |
@@ -323,31 +509,32 @@ flowchart LR
 | `GET /open/v1/agents` | `chat` | Agent 目录（外部自建简报时选用） |
 | `POST /open/v1/kg/upsert` | `kg` | 图谱节点推送 |
 
-简报生成/投递 **不走开放 API**；外部系统自行调度后调用 `/open/v1/chat`。MCP 上游协议仅允许 Streamable HTTP / SSE，生产禁止 STDIO / COMMAND。
+简报生成/投递 **不走开放 API**；外部系统自行调度后调用 `/open/v1/chat`。开放 REST 使用 **AK/SK HMAC-SHA256** 签名 Token（`zsak_` 前缀），请求头另需 `X-On-Behalf-Of`。MCP 上游协议仅允许 Streamable HTTP / SSE，生产禁止 STDIO / COMMAND。
 
-### 数据与存储（分）
+#### 数据与存储
+
+进程只连两类存储：PostgreSQL（含向量）与可选 Neo4j。表细节不再从进程拉出多条交叉线。
 
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 70, "curve": "linear"}}}%%
+flowchart TB
+  App["zhishu-core 进程"]
+
   subgraph PG["PostgreSQL"]
+    direction LR
     Sys["sys_* RBAC / 配置 / 日志"]
-    AITab["ai_* Agent / 会话 / 知识 / MCP / 开放应用"]
-    Vec["pgvector 文档切片向量"]
-    Mem["Spring AI JDBC ChatMemory"]
+    AITab["ai_* / open_app"]
+    Vec["pgvector"]
+    Mem["JDBC ChatMemory"]
   end
 
-  subgraph Graph["Neo4j"]
-    Nodes["业务拓扑节点 / 关系"]
-  end
+  Neo["Neo4j · 业务拓扑"]
 
-  App["zhishu-core 进程"] --> Sys
-  App --> AITab
-  App --> Vec
-  App --> Mem
-  App --> Nodes
+  App --> PG
+  App --> Neo
 ```
 
-初始化脚本：`zhishu-core/src/main/resources/db/init.sql`（系统库）+ `init_ai.sql`（pgvector / Agent / MCP / 简报）。
+初始化脚本：`zhishu-core/src/main/resources/db/init.sql`（系统库）+ `init_ai.sql`（pgvector / Agent / MCP / 开放应用）。
 
 ### 项目结构
 
@@ -355,9 +542,11 @@ flowchart LR
 zhishu-integrable-framework/
 ├── LICENSE
 ├── README.md                            # 前后端快速开始
-├── frontend/                            # Vue 3 控制台
-├── sdk/yunqi-sso-partner-sdk/           # 伙伴 SSO Java SDK（部署在伙伴侧）
-└── backend/                             # Maven 父工程
+├── zhishu-frontend/                     # Vue 3 控制台
+├── zhishu-sdk/
+│   ├── yunqi-sso-partner-sdk/           # 伙伴 SSO Java SDK（部署在伙伴侧）
+│   └── zhishu-openapi-sdk/              # 开放 API Java SDK（AK/SK）
+└── zhishu-backend/                      # Maven 父工程（本文档所在目录）
     ├── zhishu-api/                      # SPI / DTO
     ├── zhishu-security/                 # 认证鉴权 / RBAC / SSO
     │   └── src/main/java/cn/datafuturex/zhishu/
@@ -375,8 +564,7 @@ zhishu-integrable-framework/
     ├── zhishu-ai/
     │   └── .../ai/
     │       ├── agent/ · chat/ · knowledge/ · kg/
-    │       ├── mcp/ · modelconfig/ · briefing/ · biztools/
-    │       │       ├── openapi/                # /open/v1 控制器与鉴权
+    │       ├── mcp/ · modelconfig/ · openapi/ · biztools/
     │       ├── platform/ · shared/
     ├── zhishu-core/
     │   └── src/main/
@@ -398,13 +586,14 @@ zhishu-integrable-framework/
 
 - JDK **21+**
 - Maven **3.9+**
-- PostgreSQL **14+**
+- PostgreSQL **14+**（需 `vector` 扩展，用于 RAG）
+- Neo4j **5.x**（可选，知识图谱；`WANXIANG_KG_ENABLED`）
 
 ### 1. 克隆仓库
 
 ```bash
 git clone git@github.com:DataFutureX/zhishu-integrable-framework.git
-cd zhishu-integrable-framework/backend
+cd zhishu-integrable-framework/zhishu-backend
 ```
 
 ### 2. 初始化数据库
@@ -470,7 +659,7 @@ java -jar zhishu-core/target/zhishu-core-1.0.0.jar
 
 ```
 ===========================================
-云起应用平台启动成功！
+知枢可集成智能体框架启动成功！
 DevTools状态: 已启用 - 支持热部署
 HTTP端口: 8180
 Swagger文档: http://localhost:8180/swagger-ui.html
@@ -490,9 +679,9 @@ Swagger文档: http://localhost:8180/swagger-ui.html
 
 | Profile   | 激活方式                          | 要点                                        |
 | --------- | ----------------------------- | ----------------------------------------- |
-| `dev`（默认） | —                             | 端口 8080，Swagger 放行，DEBUG 日志               |
-| `test`    | `SPRING_PROFILES_ACTIVE=test` | 环境变量可覆盖库连接                                |
-| `prod`    | `SPRING_PROFILES_ACTIVE=prod` | 必须设置 `YUNQI_DB_*`、`JWT_SECRET`；关闭 Swagger |
+| `dev`（默认） | —                             | 端口 **8180**，Swagger 放行，DEBUG 日志               |
+| `test`    | `SPRING_PROFILES_ACTIVE=test` | 端口默认 8080，环境变量可覆盖库连接                                |
+| `prod`    | `SPRING_PROFILES_ACTIVE=prod` | 端口默认 8080；必须设置 `YUNQI_DB_*`、`JWT_SECRET`；关闭 Swagger |
 
 
 生产示例：
@@ -541,7 +730,7 @@ mvn -pl zhishu-core -am spring-boot:run -Dspring-boot.run.profiles=prod
 **执行与报告**
 
 ```bash
-cd backend
+cd zhishu-backend
 # Windows：先切 UTF-8 代码页，或直接双击 verify-api.bat
 chcp 65001
 mvn -pl zhishu-core -am verify
@@ -549,7 +738,7 @@ mvn -pl zhishu-core -am verify
 
 报告路径（用浏览器打开，勿用系统默认记事本乱码预览）：
 
-- 构建产物：`backend/zhishu-core/target/api-test-report/index.html`
+- 构建产物：`zhishu-backend/zhishu-core/target/api-test-report/index.html`
 - 仓库文档目录（每次覆盖最新一份）：[`docs/api-test-report/index.html`](../docs/api-test-report/index.html)
 
 报告标题含**测试时间**；正文含**平台基本信息**（名称/版本/Java/Spring Boot/OS/编码等）、开始/结束时间、耗时、目标接口、输入、输出、测试过程、通过/失败。仅保留最新一份 `index.html`（不生成时间戳归档）。控制台成功提示为英文路径行：`[ApiTestReport] HTML report written to: ...` / `Docs copy written to: ...`。
@@ -568,6 +757,8 @@ IT 使用 profile `test` + `api-it`（关闭验证码/RSA/分表，便于稳定�
 4. `POST /api/v1/auth/login` — 提交加密后的用户名/密码 + `captchaToken` + `keyId`，返回 JWT
 5. 后续请求头：`Authorization: Bearer <token>`（SSE 可用 query `?token=`）
 6. `POST /api/v1/auth/logout` — Token 加入黑名单
+
+**伙伴 SSO**：伙伴系统签发短期 Ticket（RS256 / SM2），调用 `POST /api/v1/auth/sso/exchange` 换发知枢 JWT（无需验证码与密码）。开发默认开启；生产由 `YUNQI_SSO_ENABLED` 控制。当前登记伙伴：万象（`wanxiang`）、数智 IoT（`shuzhi-iot`）。公钥见 `zhishu-core/src/main/resources/sso/`。
 
 **登录请求体**（`LoginRequestDTO`）：
 
@@ -618,6 +809,10 @@ yunqi:
 | `system:monitor:query`                                         | 运维监控  |
 | `system:operlog:query`                                         | 操作日志  |
 | `system:announcement:*`                                        | 公告    |
+| `ai:agent:query` / `add` / `edit` / `remove` / `graph`         | 智能体   |
+| `ai:mcp:edit`                                                  | MCP Hub |
+| `ai:kg:sync`                                                   | 知识图谱同步 |
+| `ai:qa:query`                                                  | 知识检索  |
 
 
 ### 3. 系统配置
@@ -678,6 +873,7 @@ yunqi:
 | GET  | `/captcha`        | 公开  | 滑动验证码    |
 | POST | `/captcha/verify` | 公开  | 校验验证码    |
 | POST | `/login`          | 公开  | 登录       |
+| POST | `/sso/exchange`   | 公开  | 伙伴 Ticket 换发 JWT |
 | POST | `/logout`         | 登录  | 登出 / 黑名单 |
 
 
@@ -763,6 +959,42 @@ yunqi:
 | GET | `/health` | 公开                     |
 
 
+### 智能体 — `/api/v1/agents`
+
+| 方法 | 路径 | 权限 |
+| ---- | ---- | ---- |
+| GET | `/`、`/capabilities`、`/workflow-templates` | `ai:agent:query` |
+| POST/PUT/DELETE | `/`、`/{id}` | add / edit / remove |
+| GET/PUT | `/{id}/graph` | `ai:agent:graph` |
+| POST | `/{id}/trial` | 试运行 |
+
+### 对话 — `/api/v1/chat`、`/api/v1/chat-sessions`、`/api/v1/qa-history`
+
+登录后可用；流式接口返回 SSE。
+
+### 知识库 — `/api/v1/knowledges`、`/api/v1/knowledges/qa`、`/api/v1/knowledges-categories`
+
+文档上传/切片/向量化、Hybrid RAG 问答（`ai:qa:query`）。
+
+### 知识图谱 — `/api/v1/kg`
+
+连通性、检索、邻居/路径、同步（`ai:kg:sync`）。需 Neo4j（`WANXIANG_KG_ENABLED`）。
+
+### MCP Hub — `/api/v1/mcp`
+
+对外 Client、上游登记、Tool 目录、调用审计（`ai:mcp:edit`）。MCP 协议入口：`/mcp`（`wxmcp_*`）。
+
+### 模型配置 — `/api/v1/model-config`
+
+| 方法 | 路径 | 说明 |
+| ---- | ---- | ---- |
+| GET/PUT | `/` | 运行时对话/向量模型（密钥入库加密） |
+
+### 开放应用 — `/api/v1/open-apps`
+
+控制台管理 AK/SK 与 Scope；调用面见上文 `/open/v1/**`。
+
+
 ## 数据库设计
 
 ### 核心表（`init.sql`）
@@ -781,6 +1013,21 @@ yunqi:
 | `sys_operation_log`     | 操作日志模板表；运行时另有 `sys_operation_log_yyyyMM` |
 
 
+### AI 表（`init_ai.sql`）
+
+
+| 表名                      | 说明                                       |
+| ----------------------- | ---------------------------------------- |
+| `knowledges` / `knowledges_category` | 知识库文档与分类 |
+| `qa_history` / `chat_session` | 问答历史与多轮会话 |
+| `ai_model_config`       | 运行时模型与密钥 |
+| `ai_agent` / `ai_agent_run` | 智能体定义与运行记录 |
+| `ai_kg_sync_watermark`  | 图谱同步水位 |
+| `ai_mcp_client` / `ai_mcp_upstream` / `ai_mcp_upstream_tool` | MCP 对外 Client 与上游 |
+| `ai_mcp_call_log`       | MCP 调用审计 |
+| `open_app`              | 开放应用（含 AK/SK、Scope） |
+
+
 ### 主键与逻辑删除
 
 - 主键策略：雪花算法 `IdType.ASSIGN_ID`（配置 `id-type: assign_id`）
@@ -797,7 +1044,10 @@ yunqi:
 - `/api/v1/auth/**`
 - `/api/v1/system-config`（GET 公开；写操作仍需登录 + `@PreAuthorize`）
 - `/api/v1/system/health`
+- `/open/v1/**`（Security 层放行，由 `OpenApiAuthFilter` 做 AK/SK 鉴权）
+- `/mcp`、`/mcp/**`（Security 层放行，由 MCP Auth Filter 校验 `wxmcp_*`）
 - `/uploads/**`
+- `/error`
 - 当 `yunqi.security.api-docs-permit-all=true` 时：Swagger / OpenAPI 相关路径
 
 其余请求 `authenticated()`，业务接口再叠加方法级权限。
@@ -879,7 +1129,7 @@ jwt:
 
 ### 6. 多模块编译找不到类
 
-始终从 `backend/` 目录（Maven 父工程根）构建，并对启动模块加 `-am`：
+始终从 `zhishu-backend/` 目录（Maven 父工程根）构建，并对启动模块加 `-am`：
 
 ```bash
 mvn -pl zhishu-core -am clean compile -DskipTests
@@ -891,7 +1141,7 @@ mvn -pl zhishu-core -am clean compile -DskipTests
 | 配置项                                      | 默认 / 说明                                   |
 | ---------------------------------------- | ----------------------------------------- |
 | `spring.profiles.active`                 | `dev`（可用环境变量 `SPRING_PROFILES_ACTIVE` 覆盖） |
-| `server.port`                            | `8080`                                    |
+| `server.port`                            | `dev` 为 `8180`；`test`/`prod` 默认 `8080` |
 | `jwt.secret` / `jwt.expiration`          | 见 `application.yml`；prod 必须覆盖 secret      |
 | `yunqi.datasource.*`                     | 数据库连接（`application-*.yml`）                |
 | `yunqi.captcha.*`                        | 滑动验证码                                     |
@@ -899,6 +1149,9 @@ mvn -pl zhishu-core -am clean compile -DskipTests
 | `yunqi.upload.path`                      | `uploads`                                 |
 | `yunqi.security.api-docs-permit-all`     | `false`（dev 为 `true`）                     |
 | `yunqi.table-sharding.*`                 | 操作日志月分表                                   |
+| `yunqi.sso.*`                            | 伙伴 SSO；prod 默认关闭，由 `YUNQI_SSO_ENABLED` 开启 |
+| `zhishu.ai.crypto-key`                   | 模型 Key / AK/SK 入库加密密钥（`ZHISHU_AI_CRYPTO_KEY`） |
+| `WANXIANG_KG_ENABLED` / `NEO4J_*`        | 知识图谱开关与 Neo4j 连接                         |
 | `spring.servlet.multipart.max-file-size` | `10MB`                                    |
 | `springdoc.swagger-ui.path`              | `/swagger-ui.html`                        |
 | `logging.file.name`                      | `logs/zhishu-backend.log`            |

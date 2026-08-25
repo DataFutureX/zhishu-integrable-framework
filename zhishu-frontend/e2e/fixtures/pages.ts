@@ -34,13 +34,8 @@ export type AuthPageFixture = {
 /** 登录后业务页（与根目录截图脚本路径对齐） */
 export const AUTH_PAGES: AuthPageFixture[] = [
   {
-    name: 'dashboard',
-    path: '/home/dashboard',
-    titleSelector: '.dash-hero__title',
-  },
-  {
     name: 'agent-chat',
-    path: '/home/chat',
+    path: '/ai/chat',
     title: 'Agent 会话',
     titleSelector: '.session-rail__title',
   },
@@ -99,10 +94,46 @@ export const AUTH_PAGES: AuthPageFixture[] = [
     titleSelector: '.monitor-hero__title',
   },
   {
+    name: 'open-api',
+    path: '/system/open-api',
+    title: '开放能力',
+    titleSelector: '.page-header__title',
+  },
+  {
     name: 'api-docs',
     path: '/devtools/api',
     title: '后端接口',
     titleSelector: '.swagger-embed__title',
+  },
+  {
+    name: 'agents',
+    path: '/ai/agents',
+    title: 'Agents',
+    titleSelector: '.page-hero__title',
+  },
+  {
+    name: 'knowledges',
+    path: '/ai/knowledges',
+    title: '知识库',
+    titleSelector: '.page-hero__title',
+  },
+  {
+    name: 'mcp-hub',
+    path: '/ai/mcp',
+    title: 'MCPs',
+    titleSelector: '.page-hero__title',
+  },
+  {
+    name: 'model-config',
+    path: '/ai/model-config',
+    title: '模型设置',
+    titleSelector: '.page-header__title',
+  },
+  {
+    name: 'knowledge-graph',
+    path: '/ai/knowledge-graph',
+    title: '知识图谱',
+    titleSelector: '.page-hero__title',
   },
   {
     name: 'profile',

@@ -2,8 +2,7 @@
   <div class="portal" :class="{ 'portal--page': variant === 'page' }">
     <div v-if="showSky" class="portal__sky" aria-hidden="true">
       <div class="portal__sky-wash" />
-      <div class="portal__sky-glow portal__sky-glow--a" />
-      <div class="portal__sky-glow portal__sky-glow--b" />
+      <AgentNetworkBackdrop variant="wide" />
       <slot name="sky" />
     </div>
 
@@ -154,6 +153,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AgentNetworkBackdrop from '@/components/login/AgentNetworkBackdrop.vue'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEFAULT_COPYRIGHT, DEFAULT_SYSTEM_NAME } from '@/stores/useSystemConfigStore'
 import { PORTAL_SECTION_NAV, SOURCE_REPOS, STUDIO_PORTAL } from './portalMeta'

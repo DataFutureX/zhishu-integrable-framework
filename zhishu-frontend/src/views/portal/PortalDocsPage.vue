@@ -7,7 +7,8 @@
           <h1 class="docs-page__title">文档</h1>
           <p class="docs-page__desc">
             从本地演示与联调上手，到伙伴 Ticket 换票（RS256 / 国密
-            SM2）。快速开始与单点登录说明均在此查阅。
+            SM2）与 Open API（AK/SK
+            签名）接入。快速开始、单点登录与 OpenAPI SDK 说明均在此查阅。
           </p>
         </header>
         <PortalDocs />

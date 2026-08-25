@@ -227,35 +227,7 @@ export function chatEval(): Promise<Record<string, unknown>> {
 
 export function getKnowledgesCategoryList(includeDisabled = false): Promise<KnowledgesCategoryVO[]> {
   if (isDemoMode) {
-    return Promise.resolve([
-      {
-        id: '1',
-        code: 'general',
-        name: '通用知识库',
-        description: '默认知识库',
-        sortOrder: 0,
-        status: 'ENABLED',
-        documentCount: 0,
-      },
-      {
-        id: '2',
-        code: 'standard',
-        name: '技术规范',
-        description: '标准、规程',
-        sortOrder: 10,
-        status: 'ENABLED',
-        documentCount: 0,
-      },
-      {
-        id: '3',
-        code: 'ops',
-        name: '运维手册',
-        description: '运维操作',
-        sortOrder: 20,
-        status: 'ENABLED',
-        documentCount: 0,
-      },
-    ])
+    return import('@/mock/ai').then((m) => m.mockListKnowledgesCategories())
   }
   return aiService.get('/knowledges-categories', { params: { includeDisabled } })
 }
@@ -264,6 +236,9 @@ export function getKnowledgesCategoryList(includeDisabled = false): Promise<Know
 export const getDocumentCategoryList = getKnowledgesCategoryList
 
 export function createKnowledgesCategory(data: KnowledgesCategoryCreateDTO): Promise<KnowledgesCategoryVO> {
+  if (isDemoMode) {
+    return import('@/mock/ai').then((m) => m.mockCreateKnowledgesCategory(data))
+  }
   return aiService.post('/knowledges-categories', data)
 }
 
@@ -274,6 +249,9 @@ export function updateKnowledgesCategory(
   id: string,
   data: KnowledgesCategoryUpdateDTO,
 ): Promise<KnowledgesCategoryVO> {
+  if (isDemoMode) {
+    return import('@/mock/ai').then((m) => m.mockUpdateKnowledgesCategory(id, data))
+  }
   return aiService.put(`/knowledges-categories/${encodeURIComponent(id)}`, data)
 }
 
@@ -281,6 +259,9 @@ export function updateKnowledgesCategory(
 export const updateDocumentCategory = updateKnowledgesCategory
 
 export function deleteKnowledgesCategory(id: string): Promise<void> {
+  if (isDemoMode) {
+    return import('@/mock/ai').then((m) => m.mockDeleteKnowledgesCategory(id))
+  }
   return aiService.delete(`/knowledges-categories/${encodeURIComponent(id)}`)
 }
 
@@ -288,7 +269,7 @@ export function deleteKnowledgesCategory(id: string): Promise<void> {
 export const deleteDocumentCategory = deleteKnowledgesCategory
 
 export function getDocumentList(categoryId?: string): Promise<DocumentVO[]> {
-  if (isDemoMode) return mockDocumentList()
+  if (isDemoMode) return mockDocumentList(categoryId)
   return aiService.get('/knowledges', {
     params: categoryId ? { categoryId } : undefined,
   })
@@ -317,6 +298,9 @@ export function updateDocumentCategoryBinding(
   id: string,
   categoryId: string,
 ): Promise<DocumentVO> {
+  if (isDemoMode) {
+    return import('@/mock/ai').then((m) => m.mockBindDocumentCategory(id, categoryId))
+  }
   return aiService.put(`/knowledges/${encodeURIComponent(id)}/category`, { categoryId: Number(categoryId) })
 }
 
@@ -892,62 +876,85 @@ export function getKgSyncStatus(): Promise<KgSyncStatusVO> {
 
 export function getMcpOverview(): Promise<McpOverviewVO> {
   if (isDemoMode) {
-    return Promise.resolve({
-      serverEnabled: false,
-      endpoint: '/mcp',
-      clientCount: 0,
-      upstreamCount: 0,
-      enabledUpstreamCount: 0,
-      cryptoConfigured: false,
-    })
+    return import('@/mock/mcp').then((m) => m.mockGetMcpOverview())
   }
   return aiService.get('/mcp/overview')
 }
 
 export function listMcpClients(): Promise<McpClientVO[]> {
-  if (isDemoMode) return Promise.resolve([])
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockListMcpClients())
+  }
   return aiService.get('/mcp/clients')
 }
 
 export function createMcpClient(data: McpClientCreateDTO): Promise<McpClientVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockCreateMcpClient(data))
+  }
   return aiService.post('/mcp/clients', data)
 }
 
 export function updateMcpClient(id: number, data: McpClientUpdateDTO): Promise<McpClientVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockUpdateMcpClient(id, data))
+  }
   return aiService.put(`/mcp/clients/${id}`, data)
 }
 
 export function rotateMcpClientKey(id: number): Promise<McpClientVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockRotateMcpClientKey(id))
+  }
   return aiService.post(`/mcp/clients/${id}/rotate-key`)
 }
 
 export function deleteMcpClient(id: number): Promise<void> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockDeleteMcpClient(id))
+  }
   return aiService.delete(`/mcp/clients/${id}`)
 }
 
 export function listMcpUpstreams(): Promise<McpUpstreamVO[]> {
-  if (isDemoMode) return Promise.resolve([])
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockListMcpUpstreams())
+  }
   return aiService.get('/mcp/upstreams')
 }
 
 export function createMcpUpstream(data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockCreateMcpUpstream(data))
+  }
   return aiService.post('/mcp/upstreams', data)
 }
 
 export function updateMcpUpstream(id: number, data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockUpdateMcpUpstream(id, data))
+  }
   return aiService.put(`/mcp/upstreams/${id}`, data)
 }
 
 export function deleteMcpUpstream(id: number): Promise<void> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockDeleteMcpUpstream(id))
+  }
   return aiService.delete(`/mcp/upstreams/${id}`)
 }
 
 export function probeMcpUpstream(id: number): Promise<McpUpstreamVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockProbeMcpUpstream(id))
+  }
   return aiService.post(`/mcp/upstreams/${id}/probe`)
 }
 
 export function listMcpUpstreamTools(id: number): Promise<McpUpstreamToolVO[]> {
-  if (isDemoMode) return Promise.resolve([])
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockListMcpUpstreamTools(id))
+  }
   return aiService.get(`/mcp/upstreams/${id}/tools`)
 }
 
@@ -955,10 +962,15 @@ export function patchMcpUpstreamTool(
   id: number,
   data: { originalName: string; enabled: boolean },
 ): Promise<McpUpstreamToolVO> {
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockPatchMcpUpstreamTool(id, data))
+  }
   return aiService.put(`/mcp/upstreams/${id}/tools`, data)
 }
 
 export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLogVO[]> {
-  if (isDemoMode) return Promise.resolve([])
+  if (isDemoMode) {
+    return import('@/mock/mcp').then((m) => m.mockListMcpCalls(direction, limit))
+  }
   return aiService.get('/mcp/calls', { params: { direction, limit } })
 }

@@ -6,6 +6,44 @@ import type { SystemHealthDTO, SystemStatusDTO } from '@/types/systemMonitor'
 import type { UnitVO } from '@/types/unit'
 import { daysAgoStr, nowStr } from './utils'
 
+/** 与仓库根 MENU_ROUTES.json / 后端 sys_menu 对齐的类型映射 */
+const MENU_TYPE_MAP: Record<string, string> = {
+  DIRECTORY: 'DIRECTORY',
+  MENU: 'MENU',
+  PAGE: 'PAGE',
+  BUTTON: 'BUTTON',
+}
+
+/** 后端组件路径 → 本仓库实际视图文件 */
+const COMPONENT_MAP: Record<string, string> = {
+  'views/user/UserList.vue': 'views/user/UserList.vue',
+  'views/system/MenuList.vue': 'views/system/MenuList.vue',
+  'views/system/RoleList.vue': 'views/system/RoleList.vue',
+  'views/system/UnitList.vue': 'views/system/UnitList.vue',
+  'views/system/SystemConfig.vue': 'views/system/SystemConfig.vue',
+  'views/system/OperationLogList.vue': 'views/system/OperationLogList.vue',
+  'views/system/AnnouncementList.vue': 'views/system/AnnouncementList.vue',
+  'views/system/SystemMonitor.vue': 'views/system/SystemMonitor.vue',
+  'views/devtools/SwaggerEmbed.vue': 'views/devtools/SwaggerEmbed.vue',
+  'views/system/OpenApiCapabilities.vue': 'views/system/OpenApiCapabilities.vue',
+  'views/user/UserProfile.vue': 'views/user/UserProfile.vue',
+  'views/user/ChangePassword.vue': 'views/user/ChangePassword.vue',
+  'views/ai/AgentGraphEditor.vue': 'views/ai/AgentGraphEditor.vue',
+  'views/ai/DocumentQA.vue': 'views/ai/DocumentQA.vue',
+  'views/login/Login.vue': 'views/login/Login.vue',
+}
+
+function mapMenuType(raw: unknown): string {
+  const key = String(raw || 'MENU')
+  return MENU_TYPE_MAP[key] || key
+}
+
+function mapComponent(raw: unknown): string | undefined {
+  if (raw == null || raw === '') return undefined
+  const component = String(raw)
+  return COMPONENT_MAP[component] || component
+}
+
 function convertMenuItem(item: Record<string, unknown>): MenuVO {
   const meta = item.meta ? JSON.stringify(item.meta) : undefined
   const children = item.children as Record<string, unknown>[] | undefined
@@ -17,11 +55,11 @@ function convertMenuItem(item: Record<string, unknown>): MenuVO {
     routeName: (item.routeName as string | null | undefined) ?? undefined,
     redirect: (item.redirect as string | null) ?? undefined,
     icon: (item.icon as string | null | undefined) ?? undefined,
-    menuType: String(item.menuType),
+    menuType: mapMenuType(item.menuType),
     visible: item.visible === false ? 0 : 1,
     requiresAuth: item.requiresAuth === false ? 0 : 1,
     sort: item.sort as number | undefined,
-    component: (item.component as string | null) ?? undefined,
+    component: mapComponent(item.component),
     meta,
     status: 1,
     createTime: nowStr(),
@@ -30,23 +68,38 @@ function convertMenuItem(item: Record<string, unknown>): MenuVO {
   }
 }
 
-/** 基于 docs/MENU_ROUTES.json 构建演示菜单树（对齐 permission / monitor / devtools 域） */
+function collectButtonPermissions(menus: MenuVO[]): string[] {
+  const codes: string[] = []
+  const walk = (items: MenuVO[]) => {
+    for (const item of items) {
+      if (item.menuType === 'BUTTON' && item.routeName) {
+        codes.push(item.routeName)
+      }
+      if (item.children?.length) walk(item.children)
+    }
+  }
+  walk(menus)
+  return codes
+}
+
+/** 基于仓库根 MENU_ROUTES.json（已同步至 docs/）构建演示菜单树 */
 function buildDemoMenuTree(): MenuVO[] {
-  return (menuRoutesDoc.menuTree as Record<string, unknown>[])
-    .map(convertMenuItem)
-    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  const tree = ((menuRoutesDoc as { menuTree?: unknown[] }).menuTree ?? []) as Record<string, unknown>[]
+  return tree.map(convertMenuItem).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
 }
 
 export const mockMenuTree: MenuVO[] = buildDemoMenuTree()
 
-export const mockPermissions: string[] = Object.values(PERMISSIONS)
+export const mockPermissions: string[] = Array.from(
+  new Set([...Object.values(PERMISSIONS), ...collectButtonPermissions(mockMenuTree)]),
+)
 
 export const mockSystemConfig: SystemConfigVO = {
   id: 1,
   systemName: '知枢可集成框架',
   englishTitle: 'ZhiShu Integrable Framework',
   systemIntroduction:
-    '一套面向企业数字化与智能化应用集成的模块化开发底座，沉淀业务组件、伙伴 SSO、运维观测与智能中心（Agents / 知识库 / MCP Hub）能力，帮助企业快速构建可集成、可扩展的应用系统。',
+    '面向智能体集成的开发底座：Agent 编排、RAG 混合加强检索、知识图谱与 MCP 上下游接入，帮助企业快速构建可集成的智能化应用。',
   copyright: '© 2026 知枢可集成框架 · MIT 开源',
   projectSite: '演示项目地 · 云起科技园',
   loginRetryLimitEnabled: true,
@@ -327,18 +380,19 @@ export const mockUsers = [
   },
 ]
 
-/** 角色已授权菜单 ID（含目录 / 菜单 / 按钮，演示差异化授权） */
+/** 角色已授权菜单 ID（含目录 / 菜单 / 按钮，ID 对齐 MENU_ROUTES.json） */
 export const mockRoleMenuIds: Record<number, (number | string)[]> = {
-  // 系统管理员：全量
+  // 系统管理员：全量（handler 对 id=1 直接返回全部）
   1: [],
-  // 运维：仪表盘 + 权限只读查询 + 系统设置/公告/日志 + 监控（无用户删除、无菜单删除）
+  // 运维：智能中心 + 权限只读 + 系统设置（无用户/菜单删除）
   2: [
-    1, 11, 2, 21, 2101, 22, 2201, 23, 2301, 3, 31, 3101, 3102, 32, 3201, 3202, 3203, 3205, 33, 3301, 4, 41, 4101, 6, 61, 62,
+    10, 103, 109, 10901, 106, 10601, 101, 10101, 102, 104, 10401, 105, 108, 5, 61, 6101, 63, 6301, 64, 6401, 66, 6601, 6,
+    65, 6501, 6502, 68, 6801, 69, 6901, 6902, 6903, 6905, 67, 6701, 91, 9101, 610, 7, 71, 7101, 72, 7201,
   ],
-  // 审计：仪表盘 + 操作日志 + 监控查询 + 个人中心
-  3: [1, 11, 3, 33, 3301, 4, 41, 4101, 6, 61, 62],
-  // 业务员：仪表盘 + 公告查询 + 个人中心
-  4: [1, 11, 3, 32, 3201, 6, 61, 62],
+  // 审计：Agent 会话 + 操作日志 + 监控 + 个人中心
+  3: [10, 103, 6, 68, 6801, 67, 6701, 7, 71, 7101, 72, 7201],
+  // 业务员：Agent 会话 + 知识检索 + 公告查询 + 个人中心
+  4: [10, 103, 109, 10901, 6, 69, 6901, 7, 71, 7101, 72, 7201],
 }
 
 export const mockRoles = [
@@ -438,7 +492,7 @@ export const mockOperationLogs = [
     module: '角色管理',
     operation: '分配菜单',
     method: 'PUT',
-    requestParams: '{"roleId":2,"menuIds":[1,11,2]}',
+    requestParams: '{"roleId":2,"menuIds":[7,73,2]}',
     responseCode: 200,
     ipAddress: '127.0.0.1',
     userAgent: UA_CHROME,

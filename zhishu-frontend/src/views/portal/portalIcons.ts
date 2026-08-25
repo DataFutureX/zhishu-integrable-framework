@@ -53,3 +53,26 @@ export const PortalSettingIcon = strokeIcon([
 export const PortalOdometerIcon = strokeIcon([
   'M12 6v6l3.5 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
 ])
+
+export const PortalSearchIcon = strokeIcon([
+  'M11 5a6 6 0 1 0 0 12 6 6 0 0 0 0-12z',
+  'M21 21l-4.35-4.35',
+])
+
+export const PortalShareIcon = strokeIcon([
+  'M18 8a3 3 0 1 0-2.8-4H8.8A3 3 0 1 0 6 8',
+  'M6 16a3 3 0 1 0 2.8 4h6.4A3 3 0 1 0 18 16',
+  'M8.6 9.5l6.8 4M8.6 14.5l6.8-4',
+])
+
+/** 工作流：节点 + 连线 */
+export const PortalWorkflowIcon = strokeIcon([
+  'M5 5h4v4H5zM15 5h4v4h-4zM10 15h4v4h-4z',
+  'M9 7h6M7 9v4l5 4M17 9v4l-5 4',
+])
+
+/** Open API：盾牌 + 钥匙孔 */
+export const PortalOpenApiIcon = strokeIcon([
+  'M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z',
+  'M12 10a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 13v2.5',
+])

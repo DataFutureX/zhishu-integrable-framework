@@ -247,7 +247,9 @@ export function preparePortalMarkdown(
   source: string,
   options?: { stripLeadingH1?: boolean },
 ): string {
+  /** CRLF 归一化为 LF，避免 `.` 吞掉 \r 导致行首/行尾锚定正则失效 */
   let text = source
+    .replace(/\r\n/g, '\n')
     .replace(/!\[[^\]]*\]\([^)]*\)\s*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
@@ -259,6 +261,10 @@ export function preparePortalMarkdown(
 
 export function prepareQuickStartMarkdown(source: string): string {
   let text = source
+    .replace(/\r\n/g, '\n')
+    // 移除开头居中的 HTML 图片块与 HTML H1
+    .replace(/^<p[^>]*>\s*<img[^>]*>\s*<\/p>\s*/i, '')
+    .replace(/^<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '')
     .replace(/^## 目录[\s\S]*?(?=^## )/m, '')
     .replace(/^## 界面一览[\s\S]*?(?=^## )/m, '')
     .replace(/!\[[^\]]*\]\([^)]*\)\s*/g, '')
@@ -304,6 +310,7 @@ const DOC_SOURCE_LOADERS: Record<
   sso: () => import('../../../../docs/单点登录对接说明.md?raw'),
   wanxiang: () => import('../../../../docs/万象接入联调实现步骤.md?raw'),
   'sso-sdk': () => import('../../../../docs/他方SSO接入SDK使用说明.md?raw'),
+  'openapi-sdk': () => import('../../../../docs/知枢OpenAPI接入SDK使用说明.md?raw'),
 }
 
 export async function loadPortalDocContent(

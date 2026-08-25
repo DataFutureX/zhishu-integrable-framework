@@ -38,7 +38,7 @@ public class SsoProperties {
     /**
      * 换票成功后的默认站内跳转路径
      */
-    private String defaultRedirect = "/home/dashboard";
+    private String defaultRedirect = "/ai/chat";
 
     /**
      * 换票接口按 IP 限流：窗口秒数

@@ -1,10 +1,10 @@
 # YunQi SSO Partner SDK
 
-他方（万象、数智 IoT 等）接入**云起应用平台**单点登录的 Java SDK。
+他方（万象、数智 IoT 等）接入**知枢可集成智能体框架**单点登录的 Java SDK。
 
-- 生成 RSA / SM2 密钥对（公钥交云起，私钥自持）
+- 生成 RSA / SM2 密钥对（公钥交知枢，私钥自持）
 - 签发短期 SSO Ticket（`RS256` 或国密 `SM2`）
-- 拼装云起前端回调 URL：`/sso/callback?ticket=...`
+- 拼装知枢前端回调 URL：`/sso/callback?ticket=...`
 
 **完整使用说明（中文）：**  
 [docs/他方SSO接入SDK使用说明.md](../../docs/他方SSO接入SDK使用说明.md)

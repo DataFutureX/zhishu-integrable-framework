@@ -2,7 +2,7 @@
 
 本目录存放**仅用于本地/联调**的伙伴 RSA 私钥。
 
-| 文件 | 对应 iss | 云起公钥 |
+| 文件 | 对应 iss | 知枢公钥 |
 |------|----------|----------|
 | `wanxiang-private.pem` | `wanxiang` | `classpath:sso/wanxiang.pem` |
 | `shuzhi-iot-private.pem` | `shuzhi-iot` | `classpath:sso/shuzhi-iot.pem` |
@@ -10,7 +10,7 @@
 约定：
 
 - 私钥**不得**进入 git（根目录 `.gitignore` 已忽略 `*.pem`）。
-- 生产环境由各伙伴自行保管私钥；云起只登记公钥文件路径（见 `application-prod.yml` 环境变量）。
+- 生产环境由各伙伴自行保管私钥；知枢只登记公钥文件路径（见 `application-prod.yml` 环境变量）。
 - 重新生成密钥对后，需同步替换 `backend/zhishu-core/src/main/resources/sso/*.pem` 中的公钥。
 
 签发 Ticket 时 Header 建议携带：
@@ -28,4 +28,4 @@
 ```
 
 脚本会打印完整 `ticket` 与浏览器回调 URL（`/sso/callback?...`）。  
-请确保云起已预开通同名 `sys_user`，且后端 `yunqi.sso.enabled=true`。
+请确保知枢已预开通同名 `sys_user`，且后端 `yunqi.sso.enabled=true`。

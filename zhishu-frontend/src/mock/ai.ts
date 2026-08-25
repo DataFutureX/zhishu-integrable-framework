@@ -11,7 +11,14 @@ import type {
   StationCompareResult,
   TrendAnalysisResult,
 } from '@/types/aiChat'
-import type { DocumentQueryDTO, DocumentUploadParams, DocumentVO } from '@/types/aiDocument'
+import type {
+  KnowledgesCategoryCreateDTO,
+  KnowledgesCategoryUpdateDTO,
+  KnowledgesCategoryVO,
+  DocumentQueryDTO,
+  DocumentUploadParams,
+  DocumentVO,
+} from '@/types/aiDocument'
 import type { QaHistoryScene, QaHistoryVO } from '@/types/qaHistory'
 import { daysAgoStr, delay, nowStr } from './utils'
 
@@ -264,6 +271,8 @@ const demoDocuments: DocumentVO[] = [
     fileSize: 3812099,
     uploadTime: daysAgoStr(12),
     processed: true,
+    categoryId: '1',
+    categoryName: '通用知识库',
     content:
       '水文监测数据通信规约（演示）\n\n' +
       '1 范围\n本标准规定了水文监测系统数据传输的协议格式、帧结构与校验方式。\n\n' +
@@ -278,6 +287,8 @@ const demoDocuments: DocumentVO[] = [
     fileSize: 16384,
     uploadTime: daysAgoStr(8),
     processed: true,
+    categoryId: '1',
+    categoryName: '通用知识库',
     content:
       '水位监测操作手册（演示）\n\n' +
       '## 要素说明\n- 水位要素编码 Z，单位 m\n- 宜与流量 Q、雨量 P 联合分析\n\n' +
@@ -291,6 +302,8 @@ const demoDocuments: DocumentVO[] = [
     fileSize: 24576,
     uploadTime: daysAgoStr(5),
     processed: true,
+    categoryId: '2',
+    categoryName: '技术规范',
     content:
       'SL 651-2014 / SL/T 427-2021 接入说明（演示）\n\n' +
       '- 651 默认端口 9000，427 默认端口 9001\n' +
@@ -304,6 +317,8 @@ const demoDocuments: DocumentVO[] = [
     fileSize: 102400,
     uploadTime: daysAgoStr(1),
     processed: false,
+    categoryId: '3',
+    categoryName: '运维手册',
     content: '',
   },
 ]
@@ -821,9 +836,11 @@ export async function mockAiDiagnose(): Promise<string> {
   )
 }
 
-export async function mockDocumentList(): Promise<DocumentVO[]> {
+export async function mockDocumentList(categoryId?: string): Promise<DocumentVO[]> {
   await delay()
-  return demoDocuments.map((d) => ({ ...d, content: undefined }))
+  return demoDocuments
+    .filter((d) => !categoryId || d.categoryId === categoryId)
+    .map((d) => ({ ...d, content: undefined }))
 }
 
 export async function mockDocumentDetail(id: string): Promise<DocumentVO> {
@@ -846,7 +863,7 @@ export async function mockDocumentUpload(params: DocumentUploadParams): Promise<
     uploadTime: nowStr(),
     processed: false,
     categoryId: params.categoryId,
-    categoryName: params.categoryId ? '演示知识库' : '通用知识库',
+    categoryName: resolveCategoryName(params.categoryId),
   }
   demoDocuments.unshift(doc)
   return { ...doc }
@@ -932,4 +949,108 @@ export async function mockTruncateChatSession(
   for (let i = removeIndexes.length - 1; i >= 0; i--) {
     demoHistory.splice(removeIndexes[i], 1)
   }
+}
+
+let nextCategoryId = 10
+const demoCategories: KnowledgesCategoryVO[] = [
+  {
+    id: '1',
+    code: 'general',
+    name: '通用知识库',
+    description: '规约、手册与综合资料',
+    sortOrder: 0,
+    status: 'ENABLED',
+    documentCount: 0,
+  },
+  {
+    id: '2',
+    code: 'standard',
+    name: '技术规范',
+    description: '标准、规程与接入说明',
+    sortOrder: 10,
+    status: 'ENABLED',
+    documentCount: 0,
+  },
+  {
+    id: '3',
+    code: 'ops',
+    name: '运维手册',
+    description: '值班、应急与运维操作',
+    sortOrder: 20,
+    status: 'ENABLED',
+    documentCount: 0,
+  },
+]
+
+function refreshCategoryCounts() {
+  demoCategories.forEach((item) => {
+    item.documentCount = demoDocuments.filter((doc) => doc.categoryId === item.id).length
+  })
+}
+
+function resolveCategoryName(categoryId?: string) {
+  if (!categoryId) return '通用知识库'
+  return demoCategories.find((item) => item.id === categoryId)?.name || '演示知识库'
+}
+
+export async function mockListKnowledgesCategories(): Promise<KnowledgesCategoryVO[]> {
+  await delay()
+  refreshCategoryCounts()
+  return demoCategories.map((item) => ({ ...item }))
+}
+
+export async function mockCreateKnowledgesCategory(
+  data: KnowledgesCategoryCreateDTO,
+): Promise<KnowledgesCategoryVO> {
+  await delay()
+  const created: KnowledgesCategoryVO = {
+    id: String(nextCategoryId++),
+    code: data.code,
+    name: data.name,
+    description: data.description,
+    sortOrder: data.sortOrder ?? 0,
+    status: 'ENABLED',
+    documentCount: 0,
+  }
+  demoCategories.push(created)
+  return { ...created }
+}
+
+export async function mockUpdateKnowledgesCategory(
+  id: string,
+  data: KnowledgesCategoryUpdateDTO,
+): Promise<KnowledgesCategoryVO> {
+  await delay()
+  const found = demoCategories.find((item) => item.id === id)
+  if (!found) throw new Error('知识库分类不存在')
+  Object.assign(found, data)
+  demoDocuments.forEach((doc) => {
+    if (doc.categoryId === id) doc.categoryName = found.name
+  })
+  return { ...found }
+}
+
+export async function mockDeleteKnowledgesCategory(id: string): Promise<void> {
+  await delay()
+  const idx = demoCategories.findIndex((item) => item.id === id)
+  if (idx >= 0) demoCategories.splice(idx, 1)
+  demoDocuments.forEach((doc) => {
+    if (doc.categoryId === id) {
+      doc.categoryId = '1'
+      doc.categoryName = resolveCategoryName('1')
+    }
+  })
+}
+
+export async function mockBindDocumentCategory(id: string, categoryId: string): Promise<DocumentVO> {
+  await delay()
+  const doc = demoDocuments.find((item) => item.id === id)
+  if (!doc) throw new Error('文档不存在')
+  doc.categoryId = categoryId
+  doc.categoryName = resolveCategoryName(categoryId)
+  return { ...doc }
+}
+
+export function resetAiDemoState() {
+  nextCategoryId = 10
 }

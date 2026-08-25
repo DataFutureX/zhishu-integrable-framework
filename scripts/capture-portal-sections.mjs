@@ -1,7 +1,7 @@
 /**
  * Portal 按顶部导航分屏截图（真实点击菜单 + 视口截图，含顶栏）
  *
- * 前置：前端已启动（默认 http://localhost:3000）
+ * 前置：前端已启动（默认 http://localhost:3100）
  * 用法：node scripts/capture-portal-sections.mjs
  */
 import { chromium } from 'playwright'
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUT_DIR = path.join(ROOT, 'screenshot')
-const BASE = process.env.DEMO_BASE_URL || 'http://localhost:3000'
+const BASE = process.env.DEMO_BASE_URL || 'http://localhost:3100'
 
 /** 与门户导航一致：落地页分屏 + 独立文档页 */
 const NAV_SHOTS = [

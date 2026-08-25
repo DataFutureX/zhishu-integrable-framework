@@ -85,7 +85,7 @@ class SsoExchangeServiceTest {
         ssoProperties.setAudience("zhishu-integrable-framework");
         ssoProperties.setClockSkewSeconds(30);
         ssoProperties.setJtiTtlSeconds(180);
-        ssoProperties.setDefaultRedirect("/home/dashboard");
+        ssoProperties.setDefaultRedirect("/ai/chat");
 
         SsoProperties.Partner partner = new SsoProperties.Partner();
         partner.setEnabled(true);
@@ -178,9 +178,9 @@ class SsoExchangeServiceTest {
         String ticket = signTicket("admin", now, now.plusSeconds(60), UUID.randomUUID().toString());
         stubAdminLogin();
 
-        SsoExchangeResult result = exchangeService.exchange(ticket, "/home/dashboard");
+        SsoExchangeResult result = exchangeService.exchange(ticket, "/ai/chat");
         assertEquals("business.jwt.token", result.response().token());
-        assertEquals("/home/dashboard", result.response().redirect());
+        assertEquals("/ai/chat", result.response().redirect());
         assertEquals(LoginChannel.WANXIANG, result.channel());
         assertEquals("admin", result.username());
     }
@@ -192,7 +192,7 @@ class SsoExchangeServiceTest {
         String ticket = signSm2Ticket("admin", now, now.plusSeconds(60), UUID.randomUUID().toString());
         stubAdminLogin();
 
-        SsoExchangeResult result = exchangeService.exchange(ticket, "/home/dashboard");
+        SsoExchangeResult result = exchangeService.exchange(ticket, "/ai/chat");
         assertEquals("business.jwt.token", result.response().token());
         assertEquals(LoginChannel.WANXIANG, result.channel());
     }
@@ -234,8 +234,8 @@ class SsoExchangeServiceTest {
     @Test
     @DisplayName("非法 redirect 回落默认首页")
     void sanitizeRedirect() {
-        assertEquals("/home/dashboard", exchangeService.sanitizeRedirect("https://evil.example"));
-        assertEquals("/home/dashboard", exchangeService.sanitizeRedirect("//evil.example"));
+        assertEquals("/ai/chat", exchangeService.sanitizeRedirect("https://evil.example"));
+        assertEquals("/ai/chat", exchangeService.sanitizeRedirect("//evil.example"));
         assertEquals("/ok", exchangeService.sanitizeRedirect("/ok"));
     }
 

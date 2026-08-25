@@ -303,7 +303,7 @@ public class SsoExchangeService {
     public String sanitizeRedirect(String redirect) {
         String fallback = StringUtils.hasText(ssoProperties.getDefaultRedirect())
                 ? ssoProperties.getDefaultRedirect()
-                : "/home/dashboard";
+                : "/ai/chat";
         if (!StringUtils.hasText(redirect)) {
             return fallback;
         }

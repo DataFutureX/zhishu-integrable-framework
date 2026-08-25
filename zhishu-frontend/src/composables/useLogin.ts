@@ -1,7 +1,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Connection, Cpu, Grid, MagicStick } from '@element-plus/icons-vue'
+import { Connection, Cpu, Link, Search } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/useUserStore'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEMO_CREDENTIALS, isDemoMode } from '@/config/demo'
@@ -18,26 +18,28 @@ export function useLogin() {
   const copyright = computed(() => systemConfigStore.copyright)
   const systemIntroduction = computed(() => systemConfigStore.systemIntroduction)
 
+  const capabilityTags = ['Agent 智能体', 'RAG', '知识图谱', 'MCP', '混合检索']
+
   const features = [
     {
       icon: Cpu,
-      label: '统一技术架构',
-      desc: 'Vue 3 + Spring Boot 模块化交付，约定统一、工程边界清晰',
+      label: 'Agent 智能体',
+      desc: '多 Agent 编排与会话，工具调用、工作流与运行轨迹可观测',
     },
     {
-      icon: Grid,
-      label: '业务组件开箱',
-      desc: '用户角色菜单单位、系统配置、公告审计与运维监控即用',
+      icon: Search,
+      label: 'RAG 混合检索',
+      desc: '向量 + 关键词混合加强检索，知识库问答可追溯片段来源',
     },
     {
       icon: Connection,
-      label: '权限与伙伴 SSO',
-      desc: 'RBAC + JWT；本地登录与伙伴 Ticket 换票（RS256 / 国密 SM2）',
+      label: '知识图谱',
+      desc: '实体关系可视化，GraphRAG 补全关联路径与影响面',
     },
     {
-      icon: MagicStick,
-      label: '智能中心能力',
-      desc: 'Agents、知识库、MCP Hub、模型配置与知识图谱已落地',
+      icon: Link,
+      label: 'MCP Hub',
+      desc: '接入上游 MCP、对外签发 Client，工具目录统一编排',
     },
   ]
 
@@ -60,25 +62,6 @@ export function useLogin() {
       { min: 6, max: 20, message: '密码长度在 6 到 20 个字符', trigger: 'blur' },
     ],
   }
-
-  /** 预生成粒子样式，避免重渲染时位置抖动 */
-  const particles = Array.from({ length: 24 }, (_, i) => {
-    const seed = (i * 7919 + 104729) % 1000
-    const left = (seed / 10) % 100
-    const delay = (seed % 50) / 10
-    const duration = 4 + (seed % 40) / 10
-    const size = 2 + (seed % 40) / 10
-    return {
-      id: i,
-      style: {
-        left: `${left}%`,
-        animationDelay: `${delay}s`,
-        animationDuration: `${duration}s`,
-        width: `${size}px`,
-        height: `${size}px`,
-      },
-    }
-  })
 
   onMounted(() => {
     systemConfigStore.fetchConfig({ publicOnly: true })
@@ -130,13 +113,13 @@ export function useLogin() {
     systemIconUrl,
     copyright,
     systemIntroduction,
+    capabilityTags,
     features,
     loginFormRef,
     loading,
     captchaVisible,
     loginForm,
     loginRules,
-    particles,
     goPortal,
     handleLogin,
     handleCaptchaClosed,

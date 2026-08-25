@@ -8,6 +8,8 @@ import {
   mockUnits,
   mockUsers,
 } from './data'
+import { resetMcpDemoState } from './mcp'
+import { resetOpenAppDemoState } from './openApp'
 import { deepClone } from './utils'
 
 const idCounter = { value: 100000 }
@@ -25,6 +27,8 @@ export const mockState = {
 }
 
 export function resetMockState() {
+  resetMcpDemoState()
+  resetOpenAppDemoState()
   Object.assign(mockState, {
     idCounter: { value: 100000 },
     systemConfig: deepClone(mockSystemConfig),

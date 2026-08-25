@@ -1,27 +1,12 @@
 <template>
   <PortalPublicLayout :active-section="activeSection">
-    <template #sky>
-      <SkyCloud variant="near" top="14%" left="-8%" width="380px" duration="36s" />
-      <SkyCloud variant="mid" flip top="28%" left="38%" width="460px" duration="48s" delay="-14s" />
-      <SkyCloud
-        variant="far"
-        flip
-        top="48%"
-        right="-4%"
-        left="auto"
-        width="300px"
-        duration="54s"
-        delay="-22s"
-      />
-    </template>
-
     <main id="top">
-      <!-- Hero：品牌 + 定位 + 一句说明 + CTA；天空为全幅视觉平面 -->
       <section class="portal-hero">
         <div class="portal-hero__content">
-          <h1 class="portal-hero__brand">{{ systemName }}</h1>
-          <p class="portal-hero__english">{{ englishTitle }}</p>
           <p class="portal-hero__tagline">{{ heroTagline }}</p>
+          <p class="portal-hero__caps">
+            <span v-for="tag in capabilityTags" :key="tag">{{ tag }}</span>
+          </p>
           <p class="portal-hero__desc">{{ heroSupport }}</p>
           <div class="portal-hero__actions">
             <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
@@ -34,21 +19,18 @@
         </div>
       </section>
 
-      <!-- 产品界面：真实工作台作为视觉锚点（public 静态资源 + WebP，优先加载） -->
+      <!-- 产品界面：真实工作台作为视觉锚点（public 静态资源） -->
       <section class="portal-preview" aria-label="产品界面预览">
-        <picture>
-          <source type="image/webp" :srcset="previewWebp" />
-          <img
-            class="portal-preview__shot"
-            :src="previewPng"
-            alt="知枢可集成框架工作台界面"
-            width="1280"
-            height="800"
-            loading="eager"
-            fetchpriority="high"
-            decoding="async"
-          />
-        </picture>
+        <img
+          class="portal-preview__shot"
+          :src="previewPng"
+          alt="知枢可集成框架工作台界面"
+          width="1440"
+          height="900"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        />
       </section>
 
       <!-- 开源亮点 -->
@@ -56,7 +38,7 @@
         <div class="portal-section-inner">
           <div class="portal-section-head">
             <p class="portal-section-eyebrow">Open Source</p>
-            <h2 class="portal-section-title">开源、可扩展的应用开发底座</h2>
+            <h2 class="portal-section-title">开源、可扩展的智能体集成底座</h2>
             <p class="portal-section-desc">{{ introduction }}</p>
           </div>
           <div class="portal-open-grid">
@@ -92,10 +74,9 @@
         <div class="portal-section-inner">
           <div class="portal-section-head">
             <p class="portal-section-eyebrow">Capabilities</p>
-            <h2 class="portal-section-title">模块化能力，支撑智能化应用落地</h2>
+            <h2 class="portal-section-title">Agent、检索、图谱、MCP 与 Open API 一体</h2>
             <p class="portal-section-desc">
-              以统一技术架构为骨架，沉淀业务组件、权限安全、伙伴 SSO
-              与运维观测，并为行业系统接入预留清晰路径。
+              以智能体为编排核心，RAG 混合检索增强问答，知识图谱补全关联，MCP 打通上下游工具，Open API 对外开放 AI 能力，并叠加权限、SSO 与运维观测。
             </p>
           </div>
           <div class="portal-feature-list">
@@ -125,7 +106,7 @@
             <h2 class="portal-section-title">统一技术架构，前后端协同交付</h2>
             <p class="portal-section-desc">
               前端包 <code>zhishu-integrable-framework</code>，后端 Maven 模块
-              <code>zhishu-*</code>（继承云起工程结构），包名
+              <code>zhishu-*</code>（继承知枢工程结构），包名
               <code>cn.datafuturex.zhishu</code>，工程边界清晰、便于二次开发。
             </p>
           </div>
@@ -140,9 +121,9 @@
 
       <section class="portal-cta">
         <div class="portal-section-inner portal-cta__panel">
-          <h2 class="portal-cta__title">从知枢开始，构建可集成应用</h2>
+          <h2 class="portal-cta__title">从知枢开始，编排智能体与开放 AI 能力</h2>
           <p class="portal-cta__desc">
-            知枢可集成框架提供模块化开发底座，帮助企业更快交付数字化与智能化应用集成。
+            用 Agent 跑通业务，用 RAG 与图谱加强检索，用 MCP 接入工具链，用 Open API 对外开放 AI 能力，更快交付可集成的智能化应用。
           </p>
           <div class="portal-cta__actions">
             <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
@@ -172,12 +153,13 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   PortalConnectionIcon,
   PortalCpuIcon,
-  PortalGridIcon,
   PortalKeyIcon,
   PortalOdometerIcon,
-  PortalSettingIcon,
+  PortalOpenApiIcon,
+  PortalSearchIcon,
+  PortalShareIcon,
+  PortalWorkflowIcon,
 } from './portalIcons'
-import SkyCloud from '@/components/common/SkyCloud.vue'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { DEFAULT_SYSTEM_INTRODUCTION, DEFAULT_SYSTEM_NAME } from '@/stores/useSystemConfigStore'
 import PortalPublicLayout from './PortalPublicLayout.vue'
@@ -185,7 +167,6 @@ import { PORTAL_SECTION_NAV, SOURCE_REPOS } from './portalMeta'
 import { parsePortalDocRef, portalDocPath, type PortalDocId } from '@/utils/portalDocRoutes'
 
 /** 门户预览图：放 public，不进 JS 包；路由守卫会更早 preload */
-const previewWebp = '/portal/dashboard.webp'
 const previewPng = '/portal/dashboard.png'
 
 const router = useRouter()
@@ -195,14 +176,14 @@ const systemConfigStore = useSystemConfigStore()
 const activeSection = ref('')
 
 const systemName = computed(() => systemConfigStore.systemName || DEFAULT_SYSTEM_NAME)
-const englishTitle = computed(() => systemConfigStore.displayEnglishTitle)
 const introduction = computed(
   () => systemConfigStore.systemIntroduction || DEFAULT_SYSTEM_INTRODUCTION,
 )
 
-const heroTagline = '企业数字化与智能化应用集成的模块化开发底座'
+const capabilityTags = ['Agent 智能体', 'RAG', '知识图谱', 'MCP', '工作流', 'Open API']
+const heroTagline = '编排智能体，连接知识与工具，开放 AI 能力'
 const heroSupport =
-  '统一技术架构、业务组件、伙伴单点登录与运维观测，帮助企业更快构建可集成、可扩展的数字化应用。'
+  '以 Agent 为核心，融合 RAG 检索、知识图谱、MCP 工具链与工作流编排，通过 Open API 对外开放，帮助企业快速构建可集成的智能化应用。'
 
 const openSourceHighlights = [
   {
@@ -213,7 +194,7 @@ const openSourceHighlights = [
   {
     mark: 'MOD',
     title: '模块化后端架构',
-    desc: 'zhishu-api / security / biz / core 分层清晰；security 含 JWT 登录与伙伴 SSO 换票，Spring Modulith 支撑模块独立演进。',
+    desc: 'zhishu-api / security / biz / ai / core 分层清晰；根目录一键启动前后端，Mock 演示模式无需后端即可体验。',
   },
   {
     mark: 'SSO',
@@ -221,55 +202,70 @@ const openSourceHighlights = [
     desc: 'Ticket 换票协议已落地，支持 RS256 与国密 SM2；提供 Java Partner SDK，万象 / 数智 IoT 可按文档对接。',
   },
   {
-    mark: 'ONE',
-    title: '一键联调启动',
-    desc: '仓库根目录 start.bat / start.ps1 / start.sh，同时拉起前端与后端开发服务。',
+    mark: 'API',
+    title: 'Open API 对外开放',
+    desc: 'AK/SK HMAC-SHA256 签名鉴权，支持 chat / knowledges / kg 三种 Scope；提供 Java SDK 与多语言签名协议，外部系统可按文档快速对接。',
   },
 ]
 
 const features = [
   {
-    title: '统一技术架构',
-    desc: 'Vue 3 + Spring Boot 4 前后端一体交付，约定统一、工程边界清晰，降低应用搭建成本。',
+    title: 'Agent 智能体',
+    desc: '多 Agent 编排与会话，工具调用、工作流与运行轨迹可观测，业务以智能体为入口落地。',
     icon: PortalCpuIcon,
   },
   {
-    title: '业务组件开箱',
-    desc: '用户、角色、菜单、单位、系统配置、公告与操作日志等能力即用，支撑组织与运维闭环。',
-    icon: PortalGridIcon,
+    title: '工作流编排',
+    desc: '基于 Vue Flow 的可视化 Graph 编辑器，拖拽连线编排 Agent 执行步骤，复杂业务流程一目了然。',
+    icon: PortalWorkflowIcon,
   },
   {
-    title: '权限安全体系',
-    desc: 'RBAC + JWT；本地登录（滑动验证码 + RSA）与伙伴 SSO（Ticket 换票，RS256 / 国密 SM2）并存。',
-    icon: PortalKeyIcon,
+    title: 'RAG 混合检索',
+    desc: '向量 + 关键词混合加强检索，知识库问答可追溯片段来源，降低幻觉、提升命中。',
+    icon: PortalSearchIcon,
   },
   {
-    title: '伙伴系统接入',
-    desc: '万象、数智 IoT 等通过 Partner SDK 签发短期 Ticket，经 /sso/callback 换票进入知枢，沿用本地 RBAC。',
+    title: '知识图谱',
+    desc: '实体关系可视化与 GraphRAG，补全关联路径与影响面，让检索不止于文档切片。',
+    icon: PortalShareIcon,
+  },
+  {
+    title: 'MCP Hub',
+    desc: '接入上游 MCP、对外签发 Client，工具目录统一编排，Agent 与外部协议双向打通。',
     icon: PortalConnectionIcon,
   },
   {
-    title: '行业扩展能力',
-    desc: '业务模块可插拔扩展，按行业沉淀组件与流程；新增 SSO 来源只需登记公钥，不必新增换票接口。',
-    icon: PortalSettingIcon,
+    title: 'Open API',
+    desc: 'AK/SK 签名鉴权对外开放 AI 对话、知识问答、知识图谱能力；附 Java SDK 与多语言签名协议。',
+    icon: PortalOpenApiIcon,
+  },
+  {
+    title: '权限与伙伴 SSO',
+    desc: 'RBAC + JWT；本地登录（滑动验证码 + RSA）与伙伴 Ticket 换票（RS256 / 国密 SM2）并存。',
+    icon: PortalKeyIcon,
   },
   {
     title: '运维观测闭环',
-    desc: '工作台总览运行状态；系统监控覆盖 JVM / 数据库 / Web 服务；操作日志按月分表，关键操作可审计。',
+    desc: '系统监控覆盖 JVM / 数据库 / Web 服务；操作日志按月分表，关键操作可审计。',
     icon: PortalOdometerIcon,
   },
 ]
 
 const techStack = [
-  { name: 'Vue 3', role: '前端框架' },
+  { name: 'Vue 3.5', role: '前端框架' },
   { name: 'TypeScript', role: '类型安全' },
   { name: 'Element Plus', role: 'UI 组件' },
   { name: 'Vite', role: '前端构建' },
   { name: 'Spring Boot 4', role: '后端框架' },
+  { name: 'Spring AI 2', role: 'AI 集成' },
   { name: 'Spring Security 7', role: '认证鉴权' },
   { name: 'Spring Modulith', role: '模块化' },
   { name: 'MyBatis-Plus', role: '数据访问' },
   { name: 'PostgreSQL', role: '数据存储' },
+  { name: 'Neo4j', role: '知识图谱' },
+  { name: 'MCP', role: '工具协议' },
+  { name: 'RAG / GraphRAG', role: '检索增强' },
+  { name: 'Open API', role: 'AK/SK 对外开放' },
   { name: 'JWT / RSA / SM2', role: '登录与 SSO' },
 ]
 
@@ -404,8 +400,8 @@ $max: 1120px;
 
 .portal-hero__brand {
   margin: 0 0 8px;
-  font-size: clamp(40px, 6.5vw, 64px);
-  font-weight: 700;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.03em;
   color: $fg;
@@ -420,17 +416,36 @@ $max: 1120px;
   color: $fg-muted;
 }
 
+.portal-hero__caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+
+  span {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: $accent;
+    background: rgba(9, 105, 218, 0.08);
+    border: 1px solid rgba(9, 105, 218, 0.16);
+    border-radius: 999px;
+  }
+}
+
 .portal-hero__tagline {
   margin: 0 0 12px;
-  font-size: clamp(20px, 2.4vw, 28px);
-  font-weight: 500;
-  line-height: 1.35;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
   color: $fg;
 }
 
 .portal-hero__desc {
   margin: 0 0 24px;
-  max-width: 480px;
+  max-width: 560px;
   font-size: 18px;
   line-height: 1.6;
   color: $fg-muted;
@@ -509,7 +524,7 @@ $max: 1120px;
 
 .portal-preview__shot {
   display: block;
-  width: min($max, 100%);
+  width: min(1100px, 100%);
   margin: 0 auto;
   height: auto;
   border: 1px solid $border;
@@ -855,8 +870,7 @@ $max: 1120px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .portal-hero__content,
-  :deep(.sky-cloud) {
+  .portal-hero__content {
     animation: none !important;
   }
 }

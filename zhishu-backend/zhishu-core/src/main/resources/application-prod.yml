@@ -32,7 +32,7 @@ yunqi:
     audience: ${YUNQI_SSO_AUDIENCE:zhishu-integrable-framework}
     clock-skew-seconds: ${YUNQI_SSO_CLOCK_SKEW_SECONDS:30}
     jti-ttl-seconds: ${YUNQI_SSO_JTI_TTL_SECONDS:180}
-    default-redirect: ${YUNQI_SSO_DEFAULT_REDIRECT:/home/dashboard}
+    default-redirect: ${YUNQI_SSO_DEFAULT_REDIRECT:/ai/chat}
     rate-limit-window-seconds: ${YUNQI_SSO_RATE_LIMIT_WINDOW_SECONDS:60}
     rate-limit-max-requests: ${YUNQI_SSO_RATE_LIMIT_MAX_REQUESTS:30}
     partners:

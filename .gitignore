@@ -6,6 +6,7 @@ Desktop.ini
 # ── IDE / Editor ──
 .cursor/mcp.json
 .idea/
+.qoder/
 *.iml
 *.ipr
 *.iws
@@ -19,6 +20,8 @@ Desktop.ini
 .classpath
 .project
 .factorypath
+.cursorindexingignore
+.qoderignore
 
 # ── Logs ──
 logs/

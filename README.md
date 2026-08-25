@@ -6,7 +6,7 @@
 
 一套面向企业数字化与智能化应用集成的模块化开发底座（MIT），简称 **ZSIF**（ZhiShu Integrable Framework）。提供前后端一体架构、RBAC 权限、伙伴 SSO，以及 Agent / RAG / 知识图谱 / MCP Hub / 开放 API。
 
-**源码仓库**：[DataFutureX/zhishu-integrable-framework](https://github.com/DataFutureX/zhishu-integrable-framework)（`origin` / `main`）
+**源码仓库**：[GitHub](https://github.com/DataFutureX/zhishu-integrable-framework) · [Gitee](https://gitee.com/DataFutureX/zhishu-integrable-framework)
 
 **在线演示**：[产品门户](https://zhishu.datafuturex.cn/portal) · [登录](https://zhishu.datafuturex.cn/login) · [文档](https://zhishu.datafuturex.cn/docs)
 
@@ -259,7 +259,7 @@ VITE_API_BASE_URL=http://localhost:8180
 | SDK | `zhishu-sdk/`（伙伴 SSO、开放 API） |
 | Java 包名 | `cn.datafuturex.zhishu` |
 | 数据库 | `zhishu_integrable_framework` |
-| 源码远程 | `origin` → `git@github.com:DataFutureX/zhishu-integrable-framework.git` |
+| 源码远程 | `origin` → [GitHub](https://github.com/DataFutureX/zhishu-integrable-framework) · [Gitee](https://gitee.com/DataFutureX/zhishu-integrable-framework) |
 
 ## 常见问题
 

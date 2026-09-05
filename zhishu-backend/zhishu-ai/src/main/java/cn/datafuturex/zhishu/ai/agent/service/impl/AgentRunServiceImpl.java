@@ -23,10 +23,22 @@ public class AgentRunServiceImpl implements AgentRunService {
 
     @Override
     public AiAgentRunEntity start(Long agentId, String conversationId) {
+        return start(agentId, conversationId, null, null, null, null, "CHAT");
+    }
+
+    @Override
+    public AiAgentRunEntity start(Long agentId, String conversationId,
+                                  String userMessage, String modelName,
+                                  String workflowType, String userId, String runType) {
         AiAgentRunEntity run = new AiAgentRunEntity();
         run.setAgentId(agentId);
         run.setConversationId(conversationId);
         run.setStatus("RUNNING");
+        run.setUserMessage(userMessage);
+        run.setModelName(modelName);
+        run.setWorkflowType(workflowType);
+        run.setUserId(userId);
+        run.setRunType(runType != null ? runType : "CHAT");
         run.setCreateTime(LocalDateTime.now());
         run.setUpdateTime(LocalDateTime.now());
         aiAgentRunMapper.insert(run);
@@ -35,6 +47,13 @@ public class AgentRunServiceImpl implements AgentRunService {
 
     @Override
     public void complete(Long runId, String status, String currentNode, List<AgentTraceEvent> traces) {
+        complete(runId, status, currentNode, traces, null, null, null, null, null, null);
+    }
+
+    @Override
+    public void complete(Long runId, String status, String currentNode, List<AgentTraceEvent> traces,
+                         Long durationMs, String responseSummary, String errorMessage,
+                         Long ttftMs, Long tpotMs, Integer tokenCount) {
         if (runId == null) {
             return;
         }
@@ -49,6 +68,19 @@ public class AgentRunServiceImpl implements AgentRunService {
         } catch (Exception e) {
             log.warn("序列化 run traces 失败: {}", e.getMessage());
             run.setStateJson("[]");
+        }
+        // 监控字段
+        run.setDurationMs(durationMs);
+        run.setResponseSummary(responseSummary);
+        run.setErrorMessage(errorMessage);
+        if (ttftMs != null && ttftMs >= 0) {
+            run.setTtftMs(ttftMs);
+        }
+        if (tpotMs != null && tpotMs >= 0) {
+            run.setTpotMs(tpotMs);
+        }
+        if (tokenCount != null && tokenCount > 0) {
+            run.setTokenCount(tokenCount);
         }
         run.setUpdateTime(LocalDateTime.now());
         aiAgentRunMapper.updateById(run);

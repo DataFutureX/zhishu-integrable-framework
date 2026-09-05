@@ -288,7 +288,8 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 5, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
 (104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 6, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
 (105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 7, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
-(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 8, 'views/ai/AgentGraphEditor.vue', NULL, 1)
+(108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 8, 'views/ai/AgentGraphEditor.vue', NULL, 1),
+(110, 10, '执行监控', '/ai/monitor', 'AIAgentMonitor', NULL, 'Monitor', 'MENU', 1, 1, 9, 'views/ai/AgentMonitor.vue', '{"title":"执行监控"}', 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
     title = EXCLUDED.title,
@@ -349,7 +350,8 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (10105, 101, '工作流编排', NULL, 'ai:agent:graph', NULL, NULL, 'BUTTON', 0, 1, 5, NULL, NULL, 1),
 (10401, 104, 'MCP 编辑', NULL, 'ai:mcp:edit', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (10601, 106, '知识图谱同步', NULL, 'ai:kg:sync', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
-(10901, 109, '知识检索查询', NULL, 'ai:qa:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
+(10901, 109, '知识检索查询', NULL, 'ai:qa:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(11001, 110, '监控查询', NULL, 'ai:monitor:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     route_name = EXCLUDED.route_name,

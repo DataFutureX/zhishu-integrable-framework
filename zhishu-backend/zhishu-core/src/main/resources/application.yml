@@ -179,6 +179,11 @@ zhishu:
   ai:
     # 仅用于加密入库的模型 Key，不是百炼/OpenAI 密钥。生产请覆盖。
     crypto-key: ${ZHISHU_AI_CRYPTO_KEY:zhishu-dev-model-key-wrap}
+  mcp:
+    server:
+      enabled: true
+      auth-key: ${ZHISHU_MCP_AUTH_KEY:}       # 生产环境必须配置，空 = 不鉴权（开发模式）
+      auth-header: X-API-Key
   briefing:
     event-scan:
       enabled: false

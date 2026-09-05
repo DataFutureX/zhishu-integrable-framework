@@ -29,6 +29,41 @@ public class AiAgentRunEntity {
     @TableField("state_json")
     private String stateJson;
 
+    // ---- 监控增强字段 ----
+
+    @TableField("user_message")
+    private String userMessage;
+
+    @TableField("response_summary")
+    private String responseSummary;
+
+    @TableField("duration_ms")
+    private Long durationMs;
+
+    @TableField("error_message")
+    private String errorMessage;
+
+    @TableField("model_name")
+    private String modelName;
+
+    @TableField("workflow_type")
+    private String workflowType;
+
+    @TableField("user_id")
+    private String userId;
+
+    @TableField("run_type")
+    private String runType;
+
+    @TableField("ttft_ms")
+    private Long ttftMs;
+
+    @TableField("tpot_ms")
+    private Long tpotMs;
+
+    @TableField("token_count")
+    private Integer tokenCount;
+
     @TableField("create_time")
     private LocalDateTime createTime;
 

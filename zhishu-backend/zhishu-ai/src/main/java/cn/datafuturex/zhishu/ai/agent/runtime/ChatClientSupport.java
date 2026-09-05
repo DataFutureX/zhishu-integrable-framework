@@ -24,6 +24,8 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +47,29 @@ public class ChatClientSupport {
     /** 当前执行步骤标签（供日志输出），由引擎层设置 */
     private static final ThreadLocal<String> STEP_LABEL = new ThreadLocal<>();
 
+    // ---- Token 计时采集（TTFT / TPOT / Token 总数） ----
+
+    /** 单次 LLM 调用的 Token 计时数据 */
+    public record TokenTiming(
+            long requestStartMs,
+            long firstTokenMs,
+            long lastTokenMs,
+            int tokenCount
+    ) {
+        public long ttft() {
+            return firstTokenMs > 0 ? firstTokenMs - requestStartMs : -1;
+        }
+
+        public long tpot() {
+            if (tokenCount <= 1) return -1;
+            return (lastTokenMs - firstTokenMs) / (tokenCount - 1);
+        }
+    }
+
+    /** 收集当前线程所有 LLM 调用的 Token 计时 */
+    private static final ThreadLocal<List<TokenTiming>> TOKEN_TIMINGS =
+            ThreadLocal.withInitial(ArrayList::new);
+
     /**
      * 设置当前线程的执行步骤标签（会附加到 [LLM请求] 日志）。
      *
@@ -52,6 +77,22 @@ public class ChatClientSupport {
      */
     public static void setStepLabel(String label) {
         STEP_LABEL.set(label);
+    }
+
+    /**
+     * 读取并清空当前线程的 Token 计时列表。
+     *
+     * @return 当前线程所有 LLM 调用的 TokenTiming 列表
+     */
+    public static List<TokenTiming> drainTokenTimings() {
+        List<TokenTiming> list = new ArrayList<>(TOKEN_TIMINGS.get());
+        TOKEN_TIMINGS.remove();
+        return list;
+    }
+
+    /** 兆底清理 ThreadLocal，防止内存泄漏。 */
+    public static void clearTokenTimings() {
+        TOKEN_TIMINGS.remove();
     }
 
     /**
@@ -243,13 +284,65 @@ public class ChatClientSupport {
         @Override
         public ChatResponse call(Prompt prompt) {
             logPrompt(prompt);
-            return delegate.call(prompt);
+            long start = System.currentTimeMillis();
+            ChatResponse response = delegate.call(prompt);
+            long now = System.currentTimeMillis();
+            try {
+                int tokens = 1;
+                if (response != null && response.getMetadata() != null
+                        && response.getMetadata().getUsage() != null) {
+                    long completionTokens = response.getMetadata().getUsage().getCompletionTokens();
+                    if (completionTokens > 0) {
+                        tokens = (int) completionTokens;
+                    }
+                }
+                TOKEN_TIMINGS.get().add(new TokenTiming(start, start, now, tokens));
+            } catch (Exception e) {
+                log.warn("[监控采集] 同步调用 Token 计时异常，已忽略", e);
+            }
+            return response;
         }
 
         @Override
         public reactor.core.publisher.Flux<ChatResponse> stream(Prompt prompt) {
             logPrompt(prompt);
-            return delegate.stream(prompt);
+            long start = System.currentTimeMillis();
+            AtomicLong firstToken = new AtomicLong(0);
+            AtomicLong lastToken = new AtomicLong(0);
+            AtomicInteger count = new AtomicInteger(0);
+            AtomicLong completionTokens = new AtomicLong(0);
+
+            return delegate.stream(prompt)
+                    .doOnNext(resp -> {
+                        try {
+                            long now = System.currentTimeMillis();
+                            lastToken.set(now);
+                            if (count.incrementAndGet() == 1) {
+                                firstToken.set(now);
+                            }
+                            // 尝试从响应元数据获取实际 token 数（部分 provider 在最后一个 chunk 返回）
+                            if (resp != null && resp.getMetadata() != null
+                                    && resp.getMetadata().getUsage() != null) {
+                                long ct = resp.getMetadata().getUsage().getCompletionTokens();
+                                if (ct > 0) {
+                                    completionTokens.set(ct);
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.warn("[监控采集] Token 计时异常，已忽略", e);
+                        }
+                    })
+                    .doFinally(signal -> {
+                        try {
+                            int tokens = completionTokens.get() > 0
+                                    ? (int) completionTokens.get()
+                                    : count.get();
+                            TOKEN_TIMINGS.get().add(new TokenTiming(
+                                    start, firstToken.get(), lastToken.get(), tokens));
+                        } catch (Exception e) {
+                            log.warn("[监控采集] TokenTiming 写入异常，已忽略", e);
+                        }
+                    });
         }
 
         @Override

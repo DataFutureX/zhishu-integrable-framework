@@ -12,6 +12,7 @@
     />
 
     <el-menu
+      ref="menuRef"
       :key="menuKey"
       :default-active="activeMenu"
       :collapse="collapse"
@@ -40,14 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import SidebarMenuItems from '@/components/SidebarMenuItems.vue'
 import LayoutLogo from '@/components/layout/LayoutLogo.vue'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { ThemeStyle } from '@/types'
 import type { MenuVO } from '@/types/menu'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     variant?: 'primary' | 'secondary'
     collapse?: boolean
@@ -65,6 +66,25 @@ withDefaults(
 )
 
 const themeStore = useThemeStore()
+
+/** Element Plus 的 el-menu 实例，用于强制同步激活状态 */
+const menuRef = ref<{ updateActiveIndex?: (val: string) => void } | null>(null)
+
+/**
+ * 防御性同步：当路由或菜单数据变化时，强制 el-menu 重新计算激活项。
+ * Element Plus 内部的 default-active watcher 在某些时序下（如页面刷新后菜单数据异步到达）
+ * 可能未能正确展开子菜单，此处通过 nextTick 后调用 expose 的 updateActiveIndex 兜底。
+ */
+const syncActiveMenu = () => {
+  const path = props.activeMenu
+  if (!path) return
+  nextTick(() => {
+    menuRef.value?.updateActiveIndex?.(path)
+  })
+}
+
+watch(() => props.activeMenu, syncActiveMenu)
+watch(() => props.menus, syncActiveMenu, { deep: true })
 
 const logoVariant = computed(() => {
   if (themeStore.currentTheme === ThemeStyle.BLUE) return 'hydro'

@@ -76,6 +76,14 @@ import type {
 import { postAiSse, type AiSseHandlers, type AiSseOptions } from '@/utils/aiSse'
 import { resolveAiUserId } from '@/utils/aiUser'
 import { parseJsonWithBigInt } from '@/utils/parseJson'
+import type {
+  AgentExecutionVO,
+  AgentExecutionDetailVO,
+  AgentMonitorStatsVO,
+  AgentMonitorQuery,
+  PageResult,
+  AgentStatsByAgentVO,
+} from '@/types/agentMonitor'
 
 export type { ChatRequestDTO, ChatResponseVO, ChatStructuredRequestDTO }
 
@@ -1009,3 +1017,29 @@ export function testModelProviderConnection(id: number): Promise<string> {
   return aiService.post(`/model-settings/${id}/test`)
 }
 
+
+
+/** 执行历史列表（分页） */
+export function getAgentExecutions(params: AgentMonitorQuery): Promise<PageResult<AgentExecutionVO>> {
+  return aiService.get('/agent-monitor/executions', { params })
+}
+
+/** 执行详情（含轨迹） */
+export function getAgentExecutionDetail(id: number): Promise<AgentExecutionDetailVO> {
+  return aiService.get(`/agent-monitor/executions/${id}`)
+}
+
+/** 统计概览 */
+export function getAgentMonitorStats(period: string = 'TODAY'): Promise<AgentMonitorStatsVO> {
+  return aiService.get('/agent-monitor/stats', { params: { period } })
+}
+
+/** 按智能体聚合统计 */
+export function getAgentStatsByAgent(): Promise<AgentStatsByAgentVO[]> {
+  return aiService.get('/agent-monitor/stats/agents')
+}
+
+/** 当前运行中的执行 */
+export function getAgentRunningExecutions(): Promise<AgentExecutionVO[]> {
+  return aiService.get('/agent-monitor/running')
+}

@@ -6,11 +6,13 @@ import cn.datafuturex.zhishu.ai.agent.runtime.AgentEngine;
 import cn.datafuturex.zhishu.ai.agent.runtime.AgentEngineSelector;
 import cn.datafuturex.zhishu.ai.agent.runtime.AgentRuntimeRequest;
 import cn.datafuturex.zhishu.ai.agent.runtime.AgentRuntimeResult;
+import cn.datafuturex.zhishu.ai.agent.runtime.ChatClientSupport;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import cn.datafuturex.zhishu.ai.agent.service.AgentDefinitionService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRunService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRuntimeService;
 import cn.datafuturex.zhishu.ai.agent.support.AgentJsonUtils;
+import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     private final AgentDefinitionService agentDefinitionService;
     private final AgentEngineSelector agentEngineSelector;
     private final AgentRunService agentRunService;
+    private final ChatClientSupport chatClientSupport;
 
     @Override
     public ChatResponseVO run(AiAgentEntity agent, String message, String conversationId,
@@ -48,37 +51,8 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
     public ChatResponseVO run(AiAgentEntity agent, String message, String conversationId,
                               Boolean enableRag, Integer maxTokens, Double temperature,
                               Consumer<AgentTraceEvent> onProgress, Consumer<String> onToken) {
-        String cid = StringUtils.hasText(conversationId) ? conversationId.trim() : UUID.randomUUID().toString();
-        AiAgentEntity effective = applyRuntimeOverrides(agent, maxTokens, temperature);
-        boolean enableMemory = Boolean.TRUE.equals(effective.getEnableMemory());
-        List<Long> documentIds = AgentJsonUtils.parseDocumentIds(effective.getDocumentIds());
-
-        AgentEngine engine = agentEngineSelector.select();
-        AiAgentRunEntity run = agentRunService.start(agent.getId(), cid);
-        AgentRuntimeRequest request = new AgentRuntimeRequest(
-                effective, message, cid, enableRag, enableMemory, maxTokens, temperature,
-                documentIds, onProgress, onToken);
-        try {
-            AgentRuntimeResult result = engine.execute(request);
-            String lastNode = lastNodeName(result.traces());
-            agentRunService.complete(run.getId(), "SUCCESS", lastNode, result.traces());
-            return ChatResponseVO.of(
-                    result.content(),
-                    result.model(),
-                    result.conversationId(),
-                    null,
-                    agent.getId(),
-                    result.traces());
-        } catch (AiException e) {
-            agentRunService.complete(run.getId(), "FAILED", null, List.of(
-                    AgentTraceEvent.of("NODE_END", "error", e.getMessage(), null)));
-            throw e;
-        } catch (Exception e) {
-            agentRunService.complete(run.getId(), "FAILED", null, List.of(
-                    AgentTraceEvent.of("NODE_END", "error", e.getMessage(), null)));
-            log.error("Agent 执行失败 agentId={}, code={}: {}", agent.getId(), agent.getCode(), e.getMessage(), e);
-            throw new AiException("智能体执行失败: " + e.getMessage());
-        }
+        return doExecute(agent, message, conversationId, enableRag, maxTokens, temperature,
+                onProgress, onToken, "CHAT");
     }
 
     @Override
@@ -105,7 +79,92 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         String cid = StringUtils.hasText(trialConversationId)
                 ? trialConversationId.trim()
                 : UUID.randomUUID().toString();
-        return run(trialAgent, message, cid, enableRag, null, null, onProgress, onToken);
+        return doExecute(trialAgent, message, cid, enableRag, null, null,
+                onProgress, onToken, "TRIAL");
+    }
+
+    /**
+     * 核心执行方法，统一处理监控字段采集。
+     */
+    private ChatResponseVO doExecute(AiAgentEntity agent, String message, String conversationId,
+                                     Boolean enableRag, Integer maxTokens, Double temperature,
+                                     Consumer<AgentTraceEvent> onProgress, Consumer<String> onToken,
+                                     String runType) {
+        String cid = StringUtils.hasText(conversationId) ? conversationId.trim() : UUID.randomUUID().toString();
+        AiAgentEntity effective = applyRuntimeOverrides(agent, maxTokens, temperature);
+        boolean enableMemory = Boolean.TRUE.equals(effective.getEnableMemory());
+        List<Long> documentIds = AgentJsonUtils.parseDocumentIds(effective.getDocumentIds());
+
+        long startTime = System.currentTimeMillis();
+        String modelName = chatClientSupport.resolveModelName(effective);
+        String userId = UserContext.getUserId();
+
+        // start: 写入监控字段
+        AiAgentRunEntity run = agentRunService.start(
+                agent.getId(), cid, message, modelName,
+                effective.getWorkflowType(), userId, runType);
+
+        AgentEngine engine = agentEngineSelector.select();
+        AgentRuntimeRequest request = new AgentRuntimeRequest(
+                effective, message, cid, enableRag, enableMemory, maxTokens, temperature,
+                documentIds, onProgress, onToken);
+        try {
+            AgentRuntimeResult result = engine.execute(request);
+            String lastNode = lastNodeName(result.traces());
+
+            // complete: 采集 Token 计时（异常隔离）
+            long durationMs = System.currentTimeMillis() - startTime;
+            long ttft = -1;
+            long tpot = -1;
+            int totalTokens = 0;
+            try {
+                List<ChatClientSupport.TokenTiming> timings = ChatClientSupport.drainTokenTimings();
+                log.info("[监控采集] 收集到 {} 条 TokenTiming 记录", timings.size());
+                ttft = timings.stream()
+                        .filter(t -> t.ttft() >= 0)
+                        .mapToLong(ChatClientSupport.TokenTiming::ttft)
+                        .findFirst().orElse(-1);
+                // TPOT 加权平均（按 token 数加权）
+                long weightedSum = 0;
+                int weightedCount = 0;
+                for (ChatClientSupport.TokenTiming t : timings) {
+                    if (t.tpot() >= 0 && t.tokenCount() > 1) {
+                        weightedSum += t.tpot() * (long) (t.tokenCount() - 1);
+                        weightedCount += t.tokenCount() - 1;
+                    }
+                    totalTokens += t.tokenCount();
+                }
+                tpot = weightedCount > 0 ? weightedSum / weightedCount : -1;
+            } catch (Exception e) {
+                log.warn("[监控采集] Token 计时汇总异常，已忽略", e);
+            } finally {
+                ChatClientSupport.clearTokenTimings();
+            }
+
+            String summary = truncate(result.content(), 500);
+            agentRunService.complete(run.getId(), "SUCCESS", lastNode, result.traces(),
+                    durationMs, summary, null, ttft, tpot, totalTokens);
+            return ChatResponseVO.of(
+                    result.content(),
+                    result.model(),
+                    result.conversationId(),
+                    null,
+                    agent.getId(),
+                    result.traces());
+        } catch (AiException e) {
+            long durationMs = System.currentTimeMillis() - startTime;
+            agentRunService.complete(run.getId(), "FAILED", null, List.of(
+                    AgentTraceEvent.of("NODE_END", "error", e.getMessage(), null)),
+                    durationMs, null, truncate(e.getMessage(), 1000), Long.valueOf(-1), Long.valueOf(-1), 0);
+            throw e;
+        } catch (Exception e) {
+            long durationMs = System.currentTimeMillis() - startTime;
+            agentRunService.complete(run.getId(), "FAILED", null, List.of(
+                    AgentTraceEvent.of("NODE_END", "error", e.getMessage(), null)),
+                    durationMs, null, truncate(e.getMessage(), 1000), Long.valueOf(-1), Long.valueOf(-1), 0);
+            log.error("Agent 执行失败 agentId={}, code={}: {}", agent.getId(), agent.getCode(), e.getMessage(), e);
+            throw new AiException("智能体执行失败: " + e.getMessage());
+        }
     }
 
     private static String lastNodeName(List<AgentTraceEvent> traces) {
@@ -153,5 +212,10 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         copy.setModelProviderId(source.getModelProviderId());
         copy.setStatus(source.getStatus());
         return copy;
+    }
+
+    private static String truncate(String text, int max) {
+        if (text == null) return null;
+        return text.length() <= max ? text : text.substring(0, max) + "…";
     }
 }

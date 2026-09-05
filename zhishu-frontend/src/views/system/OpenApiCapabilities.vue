@@ -80,6 +80,37 @@
             <p>接口文档：开发工具 → 接口文档（Swagger UI）</p>
           </div>
         </div>
+        <div class="guide-card guide-card--wide">
+          <div class="guide-card__icon guide-card__icon--mcp">
+            <el-icon :size="20"><Share /></el-icon>
+          </div>
+          <div class="guide-card__body">
+            <h3>MCP 服务接入</h3>
+            <p>
+              协议：<code>MCP Streamable HTTP</code> ·
+              端点：<code>/mcp</code> ·
+              鉴权：<code>X-API-Key: {your-api-key}</code>
+            </p>
+            <p>API Key 由管理员在「智能中心 → MCP Hub」中配置，开发环境默认不鉴权。</p>
+            <details class="mcp-code-details">
+              <summary>查看 SDK 接入示例</summary>
+              <div class="code-block code-block--scroll">
+                <pre><code>import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const transport = new StreamableHTTPClientTransport(
+  new URL("http://{host}:{port}/mcp"),
+  { requestInit: { headers: { "X-API-Key": "your-api-key" } } }
+);
+const client = new Client({ name: "my-app", version: "1.0.0" });
+await client.connect(transport);
+
+const { tools } = await client.listTools();
+const result = await client.callTool({ name: "getSystemIntroduction", arguments: {} });</code></pre>
+              </div>
+            </details>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -354,6 +385,7 @@ import {
   OfficeBuilding,
   Promotion,
   Plus,
+  Share,
 } from '@element-plus/icons-vue'
 import {
   listOpenAppsApi,
@@ -421,9 +453,10 @@ const categories: ApiCategory[] = [
     key: 'mcp',
     title: 'MCP 服务中枢',
     icon: Connection,
-    description: 'MCP（Model Context Protocol）服务中枢，支持对外提供 MCP 服务及接入他方 MCP 工具。',
-    basePath: '/api/v1/mcp',
+    description: 'MCP（Model Context Protocol）服务能力，支持他方系统通过 MCP 协议调用平台智能工具，同时支持接入他方 MCP 工具。',
+    basePath: '/mcp',
     endpoints: [
+      { method: 'POST', path: '/mcp', summary: 'MCP Streamable HTTP 端点（initialize / tools/list / tools/call），他方系统通过此端点调用平台 MCP 工具', requiresAuth: true },
       { method: 'GET', path: '/api/v1/mcp/overview', summary: 'MCP 中枢概览，展示客户端数量、上游数量等统计信息', requiresAuth: true },
       { method: 'GET', path: '/api/v1/mcp/catalog', summary: '对外能力与 Tool 目录，展示可用的 MCP 能力清单', requiresAuth: true },
       { method: 'GET', path: '/api/v1/mcp/clients', summary: '获取对外 MCP Client 列表', requiresAuth: true },
@@ -431,6 +464,16 @@ const categories: ApiCategory[] = [
       { method: 'PUT', path: '/api/v1/mcp/clients/{id}', summary: '更新对外 MCP Client 配置', requiresAuth: true },
       { method: 'POST', path: '/api/v1/mcp/clients/{id}/rotate-key', summary: '轮换 API Key', requiresAuth: true },
       { method: 'DELETE', path: '/api/v1/mcp/clients/{id}', summary: '删除对外 MCP Client', requiresAuth: true },
+    ],
+  },
+  {
+    key: 'mcp-tools',
+    title: 'MCP 可用工具',
+    icon: Share,
+    description: '当前通过 MCP 协议对外提供的工具清单，他方系统可通过 tools/list 动态发现更多工具。',
+    basePath: '/mcp (tools/call)',
+    endpoints: [
+      { method: 'POST', path: 'getSystemIntroduction', summary: '获取知枢可集成框架的系统介绍，包括系统名称、版本、核心功能与架构说明（无入参）', requiresAuth: true },
     ],
   },
   {
@@ -807,6 +850,11 @@ const handleDeleteApp = async (row: OpenAppVO) => {
     background: #e0e7ff;
     color: #4f46e5;
   }
+
+  &--mcp {
+    background: #fce7f3;
+    color: #db2777;
+  }
 }
 
 .guide-card__body {
@@ -1102,6 +1150,41 @@ const handleDeleteApp = async (row: OpenAppVO) => {
   font-size: 12px;
   color: var(--app-text-secondary, #656d76);
   line-height: 1.4;
+}
+
+.guide-card--wide {
+  grid-column: 1 / -1;
+}
+
+.mcp-code-details {
+  margin-top: 8px;
+
+  summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: #409eff;
+    user-select: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.code-block--scroll {
+  margin-top: 8px;
+  max-height: 260px;
+  overflow: auto;
+
+  pre {
+    margin: 0;
+    white-space: pre;
+  }
+
+  code {
+    font-size: 12px;
+    line-height: 1.6;
+  }
 }
 
 .cred-section .section-header {

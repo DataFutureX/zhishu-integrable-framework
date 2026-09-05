@@ -76,3 +76,43 @@ SELECT 100000 + m.id, 1, m.id
 FROM sys_menu m
 WHERE m.id IN (10101, 10102, 10103, 10104, 10105, 10401, 10601, 10901)
 ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
+
+-- Agent 执行监控菜单
+INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
+(110, 10, '执行监控', '/ai/monitor', 'AIAgentMonitor', NULL, 'Monitor', 'MENU', 1, 1, 8, 'views/ai/AgentMonitor.vue', '{"title":"执行监控"}', 1)
+ON CONFLICT (id) DO UPDATE SET
+    parent_id = EXCLUDED.parent_id,
+    title = EXCLUDED.title,
+    path = EXCLUDED.path,
+    route_name = EXCLUDED.route_name,
+    icon = EXCLUDED.icon,
+    menu_type = EXCLUDED.menu_type,
+    visible = EXCLUDED.visible,
+    sort = EXCLUDED.sort,
+    component = EXCLUDED.component,
+    meta = EXCLUDED.meta,
+    status = EXCLUDED.status;
+
+INSERT INTO sys_role_menu (id, role_id, menu_id)
+SELECT 10000 + m.id, 1, m.id
+FROM sys_menu m
+WHERE m.id IN (110)
+ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
+
+INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
+(11001, 110, '监控查询', NULL, 'ai:monitor:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
+ON CONFLICT (id) DO UPDATE SET
+    parent_id = EXCLUDED.parent_id,
+    title = EXCLUDED.title,
+    route_name = EXCLUDED.route_name,
+    menu_type = EXCLUDED.menu_type,
+    visible = EXCLUDED.visible,
+    requires_auth = EXCLUDED.requires_auth,
+    sort = EXCLUDED.sort,
+    status = EXCLUDED.status;
+
+INSERT INTO sys_role_menu (id, role_id, menu_id)
+SELECT 100000 + m.id, 1, m.id
+FROM sys_menu m
+WHERE m.id IN (11001)
+ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;

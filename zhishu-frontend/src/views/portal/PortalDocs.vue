@@ -51,9 +51,9 @@
       </header>
 
       <article
+        v-if="docLoading"
         ref="articleRef"
         class="portal-readme"
-        v-if="docLoading"
         aria-busy="true"
       >
         <p class="portal-docs__loading">文档加载中…</p>
@@ -62,8 +62,8 @@
         v-else
         ref="articleRef"
         class="portal-readme"
-        v-html="currentHtml"
         @click="onArticleClick"
+        v-html="currentHtml"
       />
     </div>
   </div>

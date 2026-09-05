@@ -1,5 +1,5 @@
 <template>
-  <div class="graph-editor" v-loading="loading">
+  <div v-loading="loading" class="graph-editor">
     <header class="graph-editor__bar">
       <div class="graph-editor__title">
         <el-button :icon="ArrowLeft" text @click="goBack">返回</el-button>
@@ -17,7 +17,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-button @click="runValidate" :loading="validating">校验</el-button>
+        <el-button :loading="validating" @click="runValidate">校验</el-button>
         <el-button type="primary" :loading="saving" @click="runSave">保存</el-button>
       </div>
     </header>

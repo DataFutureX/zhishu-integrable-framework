@@ -153,7 +153,7 @@
       </aside>
 
       <main class="kg-canvas-wrap">
-        <div ref="chartRef" class="kg-canvas" v-loading="loading" />
+        <div ref="chartRef" v-loading="loading" class="kg-canvas" />
         <div v-if="!subgraph.nodes.length && !loading" class="kg-empty">
           暂无图谱数据，请先执行同步；可选择「全部工程」或单个工程查看。
         </div>

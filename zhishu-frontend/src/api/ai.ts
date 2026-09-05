@@ -37,6 +37,7 @@ import type {
   WorkflowGraphDTO,
   WorkflowTemplateVO,
 } from '@/types/aiAgent'
+import type { ModelProviderCreateDTO, ModelProviderUpdateDTO, ModelProviderVO } from '@/types/modelProvider'
 import type {
   KnowledgesCategoryCreateDTO,
   KnowledgesCategoryUpdateDTO,
@@ -72,7 +73,7 @@ import type {
   McpUpstreamUpsertDTO,
   McpUpstreamVO,
 } from '@/types/mcp'
-import { postAiSse, type AiSseHandlers } from '@/utils/aiSse'
+import { postAiSse, type AiSseHandlers, type AiSseOptions } from '@/utils/aiSse'
 import { resolveAiUserId } from '@/utils/aiUser'
 import { parseJsonWithBigInt } from '@/utils/parseJson'
 
@@ -174,14 +175,14 @@ export function chat(data: ChatRequestDTO): Promise<ChatResponseVO> {
   return aiService.post('/chat', data)
 }
 
-/** 流式聊天 SSE */
+/** 流式聊天 SSE（options 可传中断信号与超时阈值） */
 export function chatStream(
   data: ChatRequestDTO,
   handlers: AiSseHandlers,
-  signal?: AbortSignal,
+  options?: AiSseOptions,
 ): Promise<void> {
-  if (isDemoMode) return mockChatStream(data, handlers)
-  return postAiSse('/chat/stream', data, handlers, signal)
+  if (isDemoMode) return mockChatStream(data, handlers, options?.signal)
+  return postAiSse('/chat/stream', data, handlers, options)
 }
 
 /** 结构化输出（对比 / 趋势 / 告警） */
@@ -319,14 +320,14 @@ export function documentQa(data: DocumentQueryDTO): Promise<ChatResponseVO> {
   return aiService.post('/knowledges/qa', data, { timeout: 120000 })
 }
 
-/** 知识库问答流式 SSE */
+/** 知识库问答流式 SSE（options 可传中断信号与超时阈值） */
 export function documentQaStream(
   data: DocumentQueryDTO,
   handlers: AiSseHandlers,
-  signal?: AbortSignal,
+  options?: AiSseOptions,
 ): Promise<void> {
-  if (isDemoMode) return mockDocumentQaStream(data, handlers)
-  return postAiSse('/knowledges/qa/stream', data, handlers, signal)
+  if (isDemoMode) return mockDocumentQaStream(data, handlers, options?.signal)
+  return postAiSse('/knowledges/qa/stream', data, handlers, options)
 }
 
 export function listQaHistory(scene: QaHistoryScene, limit = 200): Promise<QaHistoryVO[]> {
@@ -974,3 +975,37 @@ export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLog
   }
   return aiService.get('/mcp/calls', { params: { direction, limit } })
 }
+
+
+// ============ 模型设置 API ============
+
+/** 获取模型设置列表 */
+export function listModelProviders(): Promise<ModelProviderVO[]> {
+  return aiService.get('/model-settings')
+}
+
+/** 获取单个模型设置详情 */
+export function getModelProvider(id: number): Promise<ModelProviderVO> {
+  return aiService.get(`/model-settings/${id}`)
+}
+
+/** 新建模型设置 */
+export function createModelProvider(data: ModelProviderCreateDTO): Promise<ModelProviderVO> {
+  return aiService.post('/model-settings', data)
+}
+
+/** 更新模型设置 */
+export function updateModelProvider(id: number, data: ModelProviderUpdateDTO): Promise<ModelProviderVO> {
+  return aiService.put(`/model-settings/${id}`, data)
+}
+
+/** 删除模型设置 */
+export function deleteModelProvider(id: number): Promise<void> {
+  return aiService.delete(`/model-settings/${id}`)
+}
+
+/** 测试模型设置连通性 */
+export function testModelProviderConnection(id: number): Promise<string> {
+  return aiService.post(`/model-settings/${id}/test`)
+}
+

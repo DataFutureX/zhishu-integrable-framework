@@ -1,5 +1,5 @@
 <template>
-  <div class="model-config-page" v-loading="loading">
+  <div v-loading="loading" class="model-config-page">
     <header class="page-header">
       <div class="page-header__main">
         <h1 class="page-header__title">模型设置</h1>

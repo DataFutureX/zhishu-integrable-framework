@@ -118,6 +118,9 @@
             </p>
 
             <div class="agent-persona__specs">
+              <span v-if="resolveModelLabel(row)" class="agent-persona__spec agent-persona__spec--model">
+                {{ resolveModelLabel(row) }}
+              </span>
               <span v-if="row.enableMemory" class="agent-persona__spec">Memory</span>
               <span v-if="row.capabilities?.includes('RAG')" class="agent-persona__spec">RAG</span>
               <span v-if="row.builtin" class="agent-persona__spec">内置</span>
@@ -300,6 +303,24 @@
           />
           <p class="prompt-hint">依据名称、简介、工作流、能力、知识库与上游 MCP 生成可再编辑的初稿。</p>
         </el-form-item>
+        <el-form-item label="模型设置">
+          <el-select
+            v-model="form.modelProviderId"
+            filterable
+            clearable
+            placeholder="默认模型设置"
+            style="width: 280px"
+          >
+            <el-option
+              v-for="opt in modelProviderOptions"
+              :key="opt.id"
+              :label="opt.label"
+              :value="opt.id"
+              :disabled="opt.disabled"
+            />
+          </el-select>
+          <span class="form-item-hint">关联已配置的模型供应商，空则使用系统默认</span>
+        </el-form-item>
         <el-form-item label="模型参数">
           <div class="model-row">
             <el-switch v-model="followGlobalModel" active-text="跟随全局" inactive-text="自定义" />
@@ -370,6 +391,7 @@
       destroy-on-close
       class="agent-trial-dialog"
       :title="trialAgent ? `试运行 · ${trialAgent.name}` : '试运行'"
+      @closed="handleTrialClosed"
     >
       <div v-if="trialAgent" class="trial-meta">
         <code>{{ trialAgent.code }}</code>
@@ -393,6 +415,15 @@
         <el-checkbox v-model="trialEnableMemory">多轮记忆</el-checkbox>
         <el-checkbox v-model="trialStream">流式</el-checkbox>
         <el-button @click="clearTrialMemory">清空会话</el-button>
+        <el-button
+          v-if="trialLoading && trialStream"
+          type="danger"
+          plain
+          :icon="VideoPause"
+          @click="handleStopTrial"
+        >
+          停止
+        </el-button>
         <el-button type="primary" :loading="trialLoading" @click="runTrial">运行</el-button>
       </div>
       <el-scrollbar v-if="trialResult" max-height="240px" class="trial-result">
@@ -424,10 +455,11 @@ import {
   type FormInstance,
   type FormRules,
 } from 'element-plus'
-import { Cpu, Guide, Plus, Refresh, RefreshRight, Search, SetUp, Service, Share, Sort, Promotion, MagicStick } from '@element-plus/icons-vue'
+import { Cpu, Guide, Plus, Refresh, RefreshRight, Search, SetUp, Service, Share, Sort, Promotion, MagicStick, VideoPause } from '@element-plus/icons-vue'
 import AgentTracePanel from '@/components/ai/AgentTracePanel.vue'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import { useRouteActivate } from '@/composables/useRouteActivate'
+import { useAiStream } from '@/composables/useAiStream'
 import { PERMISSIONS } from '@/constants/permissions'
 import {
   createAgent,
@@ -438,16 +470,18 @@ import {
   listAgentRuns,
   listAgents,
   listMcpUpstreams,
+  listModelProviders,
   listWorkflowTemplates,
   setDefaultAgent,
   trialAgent as runAgentTrial,
   updateAgent,
 } from '@/api/ai'
-import { postAiSse } from '@/utils/aiSse'
+import { isAiSseUserAbort, postAiSse } from '@/utils/aiSse'
 import type { AgentRunVO, AgentVO, CapabilityVO, ToolInfoVO, WorkflowTemplateVO } from '@/types/aiAgent'
 import type { McpUpstreamVO } from '@/types/mcp'
 import type { AgentTraceEvent } from '@/types/aiChat'
 import type { DocumentVO } from '@/types/aiDocument'
+import type { ModelProviderVO } from '@/types/modelProvider'
 
 const router = useRouter()
 
@@ -479,6 +513,7 @@ const form = reactive({
   workflowType: 'REACT',
   documentIds: [] as number[],
   mcpUpstreamIds: [] as number[],
+  modelProviderId: null as string | null,
   enableMemory: true,
   status: 'ENABLED',
 })
@@ -486,6 +521,17 @@ const form = reactive({
 const documents = ref<DocumentVO[]>([])
 const docsLoading = ref(false)
 const mcpUpstreams = ref<McpUpstreamVO[]>([])
+const modelProviders = ref<ModelProviderVO[]>([])
+
+const modelProviderOptions = computed(() =>
+  modelProviders.value.map((p) => ({
+    id: String(p.id),
+    label: p.isDefault
+      ? `${p.name}（${p.chatModel}·默认）`
+      : `${p.name}（${p.chatModel}）`,
+    disabled: p.status !== 'ENABLED',
+  })),
+)
 
 const documentOptions = computed(() =>
   documents.value.map((d) => ({
@@ -522,6 +568,11 @@ const trialTraces = ref<AgentTraceEvent[]>([])
 const trialConversationId = ref('')
 const trialRuns = ref<AgentRunVO[]>([])
 
+/** 试运行流式请求的中断标识（单实例场景，固定 key 即可） */
+const TRIAL_STREAM_KEY = 'agent-trial'
+/** 管理 SSE 中断与首包/空闲超时，组件卸载时自动断流 */
+const aiStream = useAiStream()
+
 const defaultAgentName = computed(
   () => tableData.value.find((a) => a.defaultAgent)?.name || '',
 )
@@ -555,6 +606,12 @@ const capabilityMeta = (code: string) =>
   capabilities.value.find((c) => c.code === code)
 
 const capabilityLabel = (code: string) => capabilityMeta(code)?.label || code
+
+const resolveModelLabel = (row: AgentVO): string => {
+  if (!row.modelProviderId) return row.model || ''
+  const provider = modelProviders.value.find((p) => String(p.id) === String(row.modelProviderId))
+  return provider ? `${provider.name}·${provider.chatModel}` : row.model || ''
+}
 
 const capabilityDesc = (code: string) =>
   capabilityMeta(code)?.description || '暂无能力描述'
@@ -656,6 +713,16 @@ const fetchDocuments = async () => {
   }
 }
 
+const fetchModelProviders = async () => {
+  try {
+    const res = await listModelProviders()
+    modelProviders.value = Array.isArray(res) ? res : []
+  } catch (e) {
+    console.error(e)
+    modelProviders.value = []
+  }
+}
+
 const fetchList = async () => {
   loading.value = true
   try {
@@ -691,6 +758,7 @@ const resetForm = () => {
   form.workflowType = 'REACT'
   form.documentIds = []
   form.mcpUpstreamIds = []
+  form.modelProviderId = null
   form.enableMemory = true
   form.status = 'ENABLED'
 }
@@ -739,9 +807,10 @@ const generateSystemPromptDraft = async () => {
 const openCreate = () => {
   resetForm()
   formVisible.value = true
+  void fetchModelProviders()
 }
 
-const openEdit = (row: AgentVO) => {
+const openEdit = async (row: AgentVO) => {
   editingId.value = row.id
   form.code = row.code
   form.name = row.name
@@ -754,11 +823,13 @@ const openEdit = (row: AgentVO) => {
   form.workflowType = row.workflowType || 'REACT'
   form.documentIds = [...(row.documentIds || [])]
   form.mcpUpstreamIds = [...(row.mcpUpstreamIds || [])]
+  form.modelProviderId = row.modelProviderId ? String(row.modelProviderId) : null
   form.enableMemory = !!row.enableMemory
   form.status = row.status || 'ENABLED'
   followGlobalModel.value = !row.model && row.temperature == null && row.maxTokens == null
-  formVisible.value = true
+  await fetchModelProviders()
   void fetchDocuments()
+  formVisible.value = true
 }
 
 const openGraph = (row: AgentVO) => {
@@ -787,6 +858,7 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
+        modelProviderId: form.modelProviderId || null,
         enableMemory: form.enableMemory,
         status: form.status,
       })
@@ -802,6 +874,7 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
+        modelProviderId: form.modelProviderId || null,
         enableMemory: form.enableMemory,
         status: form.status,
       })
@@ -945,6 +1018,8 @@ const runTrial = async () => {
             }
           },
         },
+        // 携带中断信号与首包/空闲超时，避免后端卡死时试运行无限挂起
+        aiStream.begin(TRIAL_STREAM_KEY),
       )
     } else {
       const res = await runAgentTrial(trialAgent.value.id, payload)
@@ -954,14 +1029,38 @@ const runTrial = async () => {
     }
     trialRuns.value = await listAgentRuns(trialAgent.value.id, 8)
   } catch (e) {
-    console.error(e)
+    const detail = e instanceof Error ? e.message : '试运行失败'
+    if (isAiSseUserAbort(e)) {
+      // 用户主动停止：保留已输出的部分结果，不按错误处理
+      trialResult.value = trialResult.value || '（已停止，未收到内容）'
+      ElMessage.info('已停止试运行')
+    } else {
+      console.error(e)
+      trialResult.value = trialResult.value
+        ? `${trialResult.value}\n\n（回复已中断，以上为已接收的部分内容）`
+        : `试运行失败：${detail}`
+      ElMessage.error(detail)
+    }
   } finally {
+    aiStream.stop(TRIAL_STREAM_KEY)
     trialLoading.value = false
   }
 }
 
+/** 停止试运行流式输出 */
+const handleStopTrial = () => {
+  aiStream.stop(TRIAL_STREAM_KEY)
+}
+
+/** 关闭试运行弹窗时中断在途流式请求，避免后台幽灵连接 */
+const handleTrialClosed = () => {
+  aiStream.stop(TRIAL_STREAM_KEY)
+  trialLoading.value = false
+}
+
 useRouteActivate(() => {
   void fetchList()
+  void fetchModelProviders()
 })
 </script>
 
@@ -1175,6 +1274,17 @@ useRouteActivate(() => {
       border-color: #e8eef3;
       font-weight: 500;
     }
+
+    &--model {
+      color: #7c3aed;
+      background: rgba(124, 58, 237, 0.07);
+      border-color: rgba(124, 58, 237, 0.18);
+      font-weight: 600;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   &__skills {
@@ -1290,6 +1400,12 @@ useRouteActivate(() => {
   font-size: 12px;
   line-height: 1.5;
   color: var(--el-text-color-placeholder);
+}
+
+.form-item-hint {
+  margin-left: 12px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .workflow-picker {

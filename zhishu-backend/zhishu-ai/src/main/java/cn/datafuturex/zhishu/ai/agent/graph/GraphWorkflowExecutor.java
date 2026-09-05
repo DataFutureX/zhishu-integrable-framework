@@ -100,7 +100,9 @@ public class GraphWorkflowExecutor {
                         if (!StringUtils.hasText(prompt)) {
                             prompt = "你是助手，请用中文简洁回答。";
                         }
-                        ChatClient client = chatClientSupport.buildClient(prompt, List.of(), options, false);
+                        ChatClientSupport.setStepLabel(nodeLabel);
+                        ChatClient client = chatClientSupport.buildClient(
+                                agent.getModelProviderId(), prompt, List.of(), options, false);
                         // 意图澄清等中间节点不推 token，避免污染最终正文；仅「结果润色」或末级 LLM 推送
                         Consumer<String> tokenCb = shouldStreamLlmTokens(nodeLabel, onToken) ? onToken : null;
                         lastOutput = chatClientSupport.callOrStream(
@@ -121,8 +123,9 @@ public class GraphWorkflowExecutor {
                         }
                         List<ToolCallback> tools = chatClientSupport.resolveTools(
                                 caps, traces, onProgress, agent.getId());
+                        ChatClientSupport.setStepLabel(nodeLabel);
                         ChatClient client = chatClientSupport.buildClient(
-                                prompt, tools, options, enableMemory);
+                                agent.getModelProviderId(), prompt, tools, options, enableMemory);
                         Consumer<String> tokenCb = tools.isEmpty() && onToken != null ? onToken : null;
                         lastOutput = chatClientSupport.callOrStream(
                                 client, workingMessage, conversationId, enableMemory, tokenCb);
@@ -136,7 +139,9 @@ public class GraphWorkflowExecutor {
                         if (!StringUtils.hasText(prompt)) {
                             prompt = "你是路由调度器，只输出分支关键字。";
                         }
-                        ChatClient client = chatClientSupport.buildClient(prompt, List.of(), options, false);
+                        ChatClientSupport.setStepLabel(nodeLabel);
+                        ChatClient client = chatClientSupport.buildClient(
+                                agent.getModelProviderId(), prompt, List.of(), options, false);
                         String routeRaw = chatClientSupport.call(client, userMessage, null, false);
                         String nextId = WorkflowGraphCompiler.pickNext(
                                 outs.getOrDefault(current.getId(), List.of()), routeRaw);
@@ -175,6 +180,12 @@ public class GraphWorkflowExecutor {
                         System.currentTimeMillis() - start));
                 throw e;
             } catch (Exception e) {
+                if (isInterruptedException(e)) {
+                    Thread.currentThread().interrupt();
+                    emit(traces, onProgress, AgentTraceEvent.of("NODE_END", nodeLabel, "ERROR: 调用被中断",
+                            System.currentTimeMillis() - start));
+                    throw new AiException("模型调用被中断（可能因请求超时或客户端断开连接）");
+                }
                 emit(traces, onProgress, AgentTraceEvent.of("NODE_END", nodeLabel, "ERROR: " + e.getMessage(),
                         System.currentTimeMillis() - start));
                 throw new AiException("Graph 节点执行失败 [" + nodeLabel + "]: " + e.getMessage());
@@ -252,5 +263,20 @@ public class GraphWorkflowExecutor {
             return "";
         }
         return text.length() <= max ? text : text.substring(0, max) + "…";
+    }
+
+    /**
+     * 递归检查异常链中是否包含 InterruptedException 或 InterruptedIOException（Reactor/OkHttp 会包装异常）。
+     */
+    private static boolean isInterruptedException(Throwable e) {
+        Throwable current = e;
+        while (current != null) {
+            if (current instanceof InterruptedException
+                    || current instanceof java.io.InterruptedIOException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

@@ -52,6 +52,9 @@ public class AiAgentEntity {
     @TableField("enable_memory")
     private Boolean enableMemory;
 
+    @TableField("model_provider_id")
+    private Long modelProviderId;
+
     private String status;
 
     @TableField("is_builtin")

@@ -3,6 +3,9 @@
 export type AgentStatus = 'ENABLED' | 'DISABLED'
 export type WorkflowType = 'REACT' | 'SEQUENTIAL' | 'ROUTING' | 'GRAPH'
 
+/** 雪花 ID：超出 JS 安全整数范围，API 响应经 parseJsonWithBigInt 转为字符串 */
+export type SnowflakeId = number | string
+
 export type AgentCapabilityCode =
   | 'RAG'
   | 'MEMORY'
@@ -34,6 +37,7 @@ export interface AgentVO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
+  modelProviderId?: SnowflakeId | null
   status: AgentStatus | string
   builtin: boolean
   defaultAgent: boolean
@@ -56,6 +60,7 @@ export interface AgentCreateDTO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
+  modelProviderId?: SnowflakeId | null
   status?: string
 }
 
@@ -72,6 +77,7 @@ export interface AgentUpdateDTO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
+  modelProviderId?: SnowflakeId | null
   status: string
 }
 

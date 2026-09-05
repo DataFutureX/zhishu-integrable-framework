@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * AI 模型配置
+ * @deprecated 已被 {@link cn.datafuturex.zhishu.ai.modelconfig.controller.ModelSettingController} 替代
  */
+@Deprecated
 @RestController
 @RequestMapping("/api/v1/model-config")
 @RequiredArgsConstructor

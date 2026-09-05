@@ -40,6 +40,9 @@ public record AgentUpdateDTO(
         @Schema(description = "绑定的上游 MCP ID")
         List<Long> mcpUpstreamIds,
 
+        @Schema(description = "绑定的模型设置 ID，空=使用默认")
+        Long modelProviderId,
+
         @NotNull
         Boolean enableMemory,
 

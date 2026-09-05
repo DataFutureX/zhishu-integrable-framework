@@ -111,7 +111,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         entity.setCode(dto.code().trim());
         applyMutableFields(entity, dto.name(), dto.description(), dto.systemPrompt(), dto.model(),
                 dto.temperature(), dto.maxTokens(), capsJson, dto.workflowType(), dto.workflowConfig(),
-                dto.documentIds(), dto.enableMemory(), normalizeStatus(dto.status()));
+                dto.documentIds(), dto.enableMemory(), dto.modelProviderId(), normalizeStatus(dto.status()));
         entity.setBuiltin(false);
         entity.setDefaultAgent(false);
         entity.setCreatedBy(StringUtils.hasText(UserContext.getUserId()) ? UserContext.getUserId() : "unknown");
@@ -131,7 +131,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         String capsJson = AgentJsonUtils.toCapabilitiesJson(dto.capabilities());
         applyMutableFields(entity, dto.name(), dto.description(), dto.systemPrompt(), dto.model(),
                 dto.temperature(), dto.maxTokens(), capsJson, dto.workflowType(), dto.workflowConfig(),
-                dto.documentIds(), dto.enableMemory(), normalizeStatus(dto.status()));
+                dto.documentIds(), dto.enableMemory(), dto.modelProviderId(), normalizeStatus(dto.status()));
         entity.setUpdateTime(LocalDateTime.now());
         aiAgentMapper.updateById(entity);
         if (dto.mcpUpstreamIds() != null) {
@@ -199,6 +199,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
             String workflowConfig,
             List<Long> documentIds,
             Boolean enableMemory,
+            Long modelProviderId,
             String status) {
         entity.setName(name.trim());
         entity.setDescription(description);
@@ -212,6 +213,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         entity.setWorkflowConfig(workflowConfig);
         entity.setDocumentIds(AgentJsonUtils.toDocumentIdsJson(documentIds));
         entity.setEnableMemory(enableMemory);
+        entity.setModelProviderId(modelProviderId);
         entity.setStatus(status);
     }
 
@@ -241,6 +243,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
                 entity.getWorkflowConfig(),
                 AgentJsonUtils.parseDocumentIds(entity.getDocumentIds()),
                 entity.getEnableMemory(),
+                entity.getModelProviderId(),
                 entity.getStatus(),
                 entity.getBuiltin(),
                 entity.getDefaultAgent(),

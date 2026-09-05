@@ -95,7 +95,7 @@
         </el-button>
       </header>
 
-      <el-table :data="apps" v-loading="appsLoading" stripe style="width: 100%" row-key="id">
+      <el-table v-loading="appsLoading" :data="apps" stripe style="width: 100%" row-key="id">
         <el-table-column prop="name" label="应用名称" min-width="140" />
         <el-table-column prop="code" label="编码" min-width="140" />
         <el-table-column label="Access Key" min-width="200">

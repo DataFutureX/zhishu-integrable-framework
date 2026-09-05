@@ -150,6 +150,7 @@ public class AgentRuntimeServiceImpl implements AgentRuntimeService {
         copy.setWorkflowConfig(source.getWorkflowConfig());
         copy.setDocumentIds(source.getDocumentIds());
         copy.setEnableMemory(source.getEnableMemory());
+        copy.setModelProviderId(source.getModelProviderId());
         copy.setStatus(source.getStatus());
         return copy;
     }

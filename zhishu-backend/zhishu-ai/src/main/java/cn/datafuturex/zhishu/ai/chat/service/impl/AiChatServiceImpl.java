@@ -27,7 +27,7 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
 import java.util.List;
@@ -117,72 +117,76 @@ public class AiChatServiceImpl implements AiChatService {
                 conversationId, agentId, request.enableRag());
 
         UserContext.Snapshot userSnapshot = UserContext.snapshot();
-        return Flux.<ServerSentEvent<String>>create(sink -> {
-                    UserContext.restore(userSnapshot);
-                    try {
-                        java.util.concurrent.atomic.AtomicBoolean tokenStreamed =
-                                new java.util.concurrent.atomic.AtomicBoolean(false);
-                        ChatResponseVO vo = agentChatPort.run(
-                                agentId,
-                                request.message(),
-                                conversationId,
-                                request.enableRag(),
-                                request.maxTokens(),
-                                request.temperature(),
-                                event -> {
-                                    try {
-                                        String json = TRACE_MAPPER.writeValueAsString(event);
-                                        sink.next(ServerSentEvent.<String>builder()
-                                                .event("progress")
-                                                .data(json)
-                                                .build());
-                                    } catch (Exception e) {
-                                        log.warn("序列化 progress 失败: {}", e.getMessage());
-                                    }
-                                },
-                                chunk -> {
-                                    tokenStreamed.set(true);
-                                    sink.next(ServerSentEvent.<String>builder()
-                                            .event("message")
-                                            .data(chunk)
-                                            .build());
-                                });
-                        // 完整轨迹（兼容旧客户端）
-                        if (vo.traces() != null && !vo.traces().isEmpty()) {
+        // 使用 Sinks 桥接同步 Agent 执行与异步 SSE 推送，避免 Flux.create 同步阻塞导致事件缓冲
+        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
+
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            UserContext.restore(userSnapshot);
+            try {
+                java.util.concurrent.atomic.AtomicBoolean tokenStreamed =
+                        new java.util.concurrent.atomic.AtomicBoolean(false);
+                ChatResponseVO vo = agentChatPort.run(
+                        agentId,
+                        request.message(),
+                        conversationId,
+                        request.enableRag(),
+                        request.maxTokens(),
+                        request.temperature(),
+                        event -> {
                             try {
-                                String json = TRACE_MAPPER.writeValueAsString(vo.traces());
-                                sink.next(ServerSentEvent.<String>builder()
-                                        .event("trace")
+                                String json = TRACE_MAPPER.writeValueAsString(event);
+                                sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                        .event("progress")
                                         .data(json)
                                         .build());
-                            } catch (Exception ignored) {
-                                // ignore
+                            } catch (Exception e) {
+                                log.warn("序列化 progress 失败: {}", e.getMessage());
                             }
-                        }
-                        // 含 Tools 的路径无 token：结束后伪分片；真流式路径已推送 message
-                        if (!tokenStreamed.get()) {
-                            String content = vo.content() == null ? "" : vo.content();
-                            for (String chunk : ChatSseSupport.splitForSse(content)) {
-                                sink.next(ServerSentEvent.<String>builder()
-                                        .event("message")
-                                        .data(chunk)
-                                        .build());
-                            }
-                        }
-                        sink.next(ServerSentEvent.<String>builder()
-                                .event("done")
-                                .data(conversationId)
+                        },
+                        chunk -> {
+                            tokenStreamed.set(true);
+                            sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                    .event("message")
+                                    .data(chunk)
+                                    .build());
+                        });
+                // 完整轨迹（兼容旧客户端）
+                if (vo.traces() != null && !vo.traces().isEmpty()) {
+                    try {
+                        String json = TRACE_MAPPER.writeValueAsString(vo.traces());
+                        sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                .event("trace")
+                                .data(json)
                                 .build());
-                        sink.complete();
-                    } catch (Exception e) {
-                        sink.error(e);
-                    } finally {
-                        UserContext.clear();
+                    } catch (Exception ignored) {
+                        // ignore
                     }
-                })
-                .subscribeOn(Schedulers.boundedElastic())
+                }
+                // 含 Tools 的路径无 token：结束后伪分片；真流式路径已推送 message
+                if (!tokenStreamed.get()) {
+                    String content = vo.content() == null ? "" : vo.content();
+                    for (String chunk : ChatSseSupport.splitForSse(content)) {
+                        sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                .event("message")
+                                .data(chunk)
+                                .build());
+                    }
+                }
+                sink.tryEmitNext(ServerSentEvent.<String>builder()
+                        .event("done")
+                        .data(conversationId)
+                        .build());
+                sink.tryEmitComplete();
+            } catch (Exception e) {
+                sink.tryEmitError(e);
+            } finally {
+                UserContext.clear();
+            }
+        });
+
+        return sink.asFlux()
                 .doOnError(error -> log.error("流式响应失败: {}", error.getMessage(), error))
-                .timeout(Duration.ofMinutes(2));
+                .timeout(Duration.ofMinutes(10));
     }
 
     @Override

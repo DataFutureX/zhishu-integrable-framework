@@ -16,7 +16,7 @@
         >
           新建检索
         </el-button>
-        <div class="session-rail__list" v-loading="sessionsLoading">
+        <div v-loading="sessionsLoading" class="session-rail__list">
           <div v-if="!sessions.length && !sessionsLoading" class="session-rail__empty">
             暂无检索记录，点击上方新建开始问答
           </div>
@@ -137,7 +137,7 @@
           </div>
         </header>
 
-        <div ref="messagesRef" class="qa-messages" v-loading="historyLoading">
+        <div ref="messagesRef" v-loading="historyLoading" class="qa-messages">
           <div v-if="messages.length === 0" class="empty-state">
             <el-empty description="选择或新建检索记录后提问，支持多轮与流式回答" />
           </div>
@@ -159,6 +159,10 @@
               <template v-if="msg.role === 'assistant'">
                 <div class="message-reply-block">
                   <div class="message-text markdown-body" v-html="renderMarkdown(msg.content)" />
+                  <div v-if="msg.stopped" class="message-stopped">
+                    <el-icon><VideoPause /></el-icon>
+                    回复已中断，以上为已接收的部分内容
+                  </div>
                   <div v-if="msg.content" class="message-actions">
                     <el-button
                       link
@@ -252,9 +256,13 @@
               <template v-else-if="editingIndex != null">Ctrl + Enter 重新提问</template>
               <template v-else>Ctrl + Enter 发送</template>
             </div>
+            <el-button v-if="asking" type="danger" plain @click="handleStop">
+              <el-icon><VideoPause /></el-icon>
+              停止
+            </el-button>
             <el-button
+              v-else
               type="primary"
-              :loading="asking"
               :disabled="!inputMessage.trim() || !conversationId"
               @click="handleSend"
             >
@@ -284,6 +292,7 @@ import {
   Refresh,
   FullScreen,
   ScaleToOriginal,
+  VideoPause,
 } from '@element-plus/icons-vue'
 import MarkdownIt from 'markdown-it'
 import {
@@ -302,16 +311,22 @@ import type { QaHistoryVO } from '@/types/qaHistory'
 import { useUserStore } from '@/stores/useUserStore'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { usePanelMaximize } from '@/composables/usePanelMaximize'
+import { useAiStream } from '@/composables/useAiStream'
+import { isAiSseTimeout, isAiSseUserAbort } from '@/utils/aiSse'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  /** 流式被中断（用户停止或超时），已输出的部分回答予以保留 */
+  stopped?: boolean
 }
 
 const SCENE = 'DOCUMENT_QA' as const
 const WELCOME_TEXT = '您好！请选择检索范围后提问，我将基于知识库文档进行流式多轮回答。'
 const { isMaximized, toggleMaximize } = usePanelMaximize()
+/** 按会话维度管理 SSE 中断，组件卸载时自动断流 */
+const aiStream = useAiStream()
 
 const md = new MarkdownIt({
   html: false,
@@ -545,7 +560,7 @@ const renameSessionById = async (cid: string, currentTitle?: string) => {
     inputValue: currentTitle || '新检索',
     confirmButtonText: '保存',
     cancelButtonText: '取消',
-    inputValidator: (v) => (!!v?.trim() ? true : '标题不能为空'),
+    inputValidator: (v) => (v?.trim() ? true : '标题不能为空'),
   })
   await renameChatSession(cid, { title: value.trim() })
   await refreshSessionList()
@@ -674,6 +689,13 @@ const cancelEdit = () => {
   editingIndex.value = null
 }
 
+/** 停止当前检索会话的流式回答（中断 SSE 连接，保留已输出内容） */
+const handleStop = () => {
+  const cid = conversationId.value
+  if (!cid) return
+  aiStream.stop(cid)
+}
+
 const handleSend = async () => {
   const question = inputMessage.value.trim()
   if (!question || asking.value) return
@@ -740,6 +762,8 @@ const handleSend = async () => {
           }
         },
       },
+      // 携带中断信号与首包/空闲超时，避免后端卡死时前端无限挂起
+      aiStream.begin(activeCid),
     )
 
     if (!list[assistantIndex].content) {
@@ -762,13 +786,28 @@ const handleSend = async () => {
       console.warn('刷新检索列表失败:', error)
     }
   } catch (error) {
-    console.error('知识问答失败:', error)
-    list[assistantIndex].content =
-      error instanceof Error ? `抱歉，知识问答失败：${error.message}` : '抱歉，知识问答请求失败，请稍后重试。'
-    if (conversationId.value === activeCid) {
-      ElMessage.error(error instanceof Error ? error.message : '提问失败')
+    const detail = error instanceof Error ? error.message : '提问失败'
+    const partial = list[assistantIndex]
+
+    if (isAiSseUserAbort(error)) {
+      // 用户主动停止：保留已检索到的部分回答并标记中断，不按错误处理
+      partial.stopped = true
+      if (!partial.content) partial.content = '（已停止，未接收到回答内容）'
+      if (conversationId.value === activeCid) ElMessage.info('已停止回答')
+    } else {
+      console.error('知识问答失败:', error)
+      if (partial.content) {
+        // 超时前已输出部分回答：保留内容并标记中断，避免整段回答丢失
+        partial.stopped = true
+      } else {
+        partial.content = isAiSseTimeout(error)
+          ? `抱歉，${detail}`
+          : '抱歉，知识问答请求失败，请稍后重试。'
+      }
+      if (conversationId.value === activeCid) ElMessage.error(detail)
     }
   } finally {
+    aiStream.stop(activeCid)
     loadingByCid[activeCid] = false
     streamingByCid[activeCid] = false
     if (conversationId.value === activeCid) await scrollToBottom()
@@ -1143,6 +1182,16 @@ useRouteActivate(loadPage)
           height: 22px;
           font-size: 12px;
         }
+      }
+
+      .message-stopped {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--el-text-color-secondary);
       }
 
       .message-time {

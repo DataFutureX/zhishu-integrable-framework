@@ -18,7 +18,7 @@ cn.datafuturex.zhishu.ai
 ├── chat/           # 对话服务：同步/流式对话、会话记忆、问答历史
 ├── knowledge/      # 知识库：文档管理、解析、Embedding、Hybrid 检索、文档 QA
 ├── mcp/            # MCP 中枢：对外 MCP Server、接入他方 MCP、工具管理、审计
-├── modelconfig/    # 模型配置：动态 LLM 模型管理（运行时热切换）
+├── modelconfig/    # 模型设置：多供应商 LLM 管理（运行时按 Agent 路由，每供应商独立参数）
 ├── openapi/        # 开放 API：面向第三方系统的 Bearer Token 认证接口
 ├── platform/       # 平台支撑：全局异常处理、Web 配置、用户上下文
 └── shared/         # 公共组件：Result 封装、DTO/VO、SSE 工具、Trace 事件
@@ -32,8 +32,49 @@ cn.datafuturex.zhishu.ai
 | **RAG 知识库** | 文档上传解析（PDF/Office）、PGVector 向量检索 + Hybrid 关键词补充 |
 | **知识图谱 (KG)** | Neo4j 图引擎集成、拓扑检索、同步水位管理 |
 | **MCP 中枢** | 对外暴露 MCP Server（`/mcp`）、接入他方 MCP 上游、工具启用/停用、调用审计、限流与熔断 |
-| **动态模型** | 运行时切换 LLM 模型/参数，无需重启 |
+| **多模型设置** | 多供应商 LLM 管理，每个供应商独立参数（temperature/maxTokens/topP），Agent 按设置路由，运行时热切换 |
 | **开放 API** | Bearer Token 认证、Scope 权限控制、代调用户上下文 |
+
+---
+
+## 多模型设置架构
+
+### 设计思路
+
+每个「模型设置」是一条独立的供应商记录，包含完整的连接参数（baseUrl + apiKey + chatModel）和生成参数（temperature + maxTokens + topP），均走 OpenAI 兼容协议。Agent 通过 `model_provider_id` 绑定到某个模型设置，运行时 `ModelProviderRegistry` 按供应商 ID 缓存并提供对应的 `ChatModel` 实例。
+
+**文本嵌入模型（EmbeddingModel）统一使用默认模型设置**，全局只有一个 EmbeddingModel 实例。
+
+### 调用链路
+
+```
+用户请求 -> AiChatService -> AgentChatPort.run()
+  -> 加载 AiAgentEntity (modelProviderId)
+  -> ChatClientSupport.buildClient(providerId)
+  -> ModelProviderRegistry.resolve(providerId)
+  -> ChatModel (cached, 含该供应商的 temperature/maxTokens/topP)
+  -> 对应供应商 API (DashScope / DeepSeek / OpenAI ...)
+```
+
+### 核心组件
+
+| 组件 | 职责 |
+|------|------|
+| `ModelProviderRegistry` | 运行时注册表：按 providerId 缓存 ChatModel，全局唯一 EmbeddingModel |
+| `RefreshableOpenAiModels` | per-provider OpenAI 兼容客户端构建器 |
+| `ModelProviderPort` | 模型设置管理端口（CRUD + 连通性测试） |
+| `ModelSettingController` | REST API `/api/v1/model-settings` |
+
+### REST API
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/model-settings` | 模型设置列表 |
+| GET | `/api/v1/model-settings/{id}` | 详情 |
+| POST | `/api/v1/model-settings` | 新建 |
+| PUT | `/api/v1/model-settings/{id}` | 更新 |
+| DELETE | `/api/v1/model-settings/{id}` | 删除（默认不可删） |
+| POST | `/api/v1/model-settings/{id}/test` | 连通性测试 |
 
 ---
 
@@ -228,6 +269,26 @@ Accept: text/event-stream
 
 ## 数据模型
 
+### ai_model_provider — 模型设置
+
+| 列 | 类型 | 说明 |
+|----|------|------|
+| `id` | BIGSERIAL PK | 主键 |
+| `name` | VARCHAR(64) | 展示名称（如"通义千问"、"DeepSeek"） |
+| `provider_key` | VARCHAR(64) UNIQUE | 程序标识（如 dashscope / deepseek / openai） |
+| `base_url` | VARCHAR(512) | OpenAI 兼容 Base URL |
+| `api_key_enc` | TEXT | AES-GCM 加密 API Key |
+| `api_key_masked` | VARCHAR(128) | API Key 脱敏展示 |
+| `chat_model` | VARCHAR(64) | 对话模型名 |
+| `embedding_model` | VARCHAR(64) | 向量模型名（仅默认模型设置有效） |
+| `temperature` | NUMERIC(3,2) | 温度 0~2 |
+| `max_tokens` | INT | 最大 Token |
+| `top_p` | NUMERIC(3,2) | Top P 0~1 |
+| `is_default` | BOOLEAN | 是否为默认模型设置 |
+| `status` | VARCHAR(16) | ENABLED / DISABLED |
+| `sort_order` | INT | 排序 |
+| `create_time` / `update_time` | TIMESTAMP | 时间戳 |
+
 ### open_app — 开放应用
 
 | 列 | 类型 | 说明 |
@@ -311,7 +372,8 @@ curl -X POST http://localhost:8180/open/v1/knowledges/qa/stream \
 | `/api/v1/chat/**` | 控制台对话（同步/流式） |
 | `/api/v1/knowledges/**` | 知识库分类、文档管理、Embedding |
 | `/api/v1/mcp/**` | MCP 中枢管理（Client/Upstream/审计） |
-| `/api/v1/model-config/**` | 模型配置管理 |
+| `/api/v1/model-settings/**` | 模型设置管理（多供应商，替代原 model-config） |
+| `/api/v1/model-config/**` | ~~模型配置管理~~（已废弃，保留向后兼容） |
 | `/mcp` | MCP Server 端点（SSE/Streamable HTTP） |
 
 ---

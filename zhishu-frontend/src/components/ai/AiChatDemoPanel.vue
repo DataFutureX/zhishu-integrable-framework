@@ -1,8 +1,8 @@
 <template>
   <div
+    ref="rootRef"
     class="ai-chat-demo"
     :class="[`ai-chat-demo--${variant}`, { 'ai-chat-demo--fill': fill }]"
-    ref="rootRef"
   >
     <div class="ai-chat-demo__chrome">
       <div class="ai-chat-demo__chrome-left">
@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    <div class="ai-chat-demo__body" ref="bodyRef">
+    <div ref="bodyRef" class="ai-chat-demo__body">
       <div
         v-for="(msg, index) in visibleMessages"
         :key="`${msg.role}-${index}`"

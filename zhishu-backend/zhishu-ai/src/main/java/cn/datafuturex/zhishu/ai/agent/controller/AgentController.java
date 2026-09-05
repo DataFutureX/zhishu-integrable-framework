@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.publisher.Sinks;
 
 import java.util.List;
 import java.util.Map;
@@ -173,63 +173,67 @@ public class AgentController {
             @PathVariable Long id,
             @Valid @RequestBody AgentTrialDTO dto) {
         UserContext.Snapshot userSnapshot = UserContext.snapshot();
-        return Flux.<ServerSentEvent<String>>create(sink -> {
-                    UserContext.restore(userSnapshot);
-                    try {
-                        java.util.concurrent.atomic.AtomicBoolean tokenStreamed =
-                                new java.util.concurrent.atomic.AtomicBoolean(false);
-                        ChatResponseVO vo = agentRuntimeService.trial(
-                                id,
-                                dto.message(),
-                                dto.enableRag(),
-                                dto.conversationId(),
-                                dto.enableMemory(),
-                                event -> {
-                                    try {
-                                        sink.next(ServerSentEvent.<String>builder()
-                                                .event("progress")
-                                                .data(PROGRESS_MAPPER.writeValueAsString(event))
-                                                .build());
-                                    } catch (Exception ignored) {
-                                        // ignore
-                                    }
-                                },
-                                chunk -> {
-                                    tokenStreamed.set(true);
-                                    sink.next(ServerSentEvent.<String>builder()
-                                            .event("message")
-                                            .data(chunk)
-                                            .build());
-                                });
-                        if (vo.traces() != null && !vo.traces().isEmpty()) {
+        // 使用 Sinks 桥接同步 Agent 执行与异步 SSE 推送，避免 Flux.create 同步阻塞导致事件缓冲
+        Sinks.Many<ServerSentEvent<String>> sink = Sinks.many().multicast().onBackpressureBuffer();
+
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            UserContext.restore(userSnapshot);
+            try {
+                java.util.concurrent.atomic.AtomicBoolean tokenStreamed =
+                        new java.util.concurrent.atomic.AtomicBoolean(false);
+                ChatResponseVO vo = agentRuntimeService.trial(
+                        id,
+                        dto.message(),
+                        dto.enableRag(),
+                        dto.conversationId(),
+                        dto.enableMemory(),
+                        event -> {
                             try {
-                                sink.next(ServerSentEvent.<String>builder()
-                                        .event("trace")
-                                        .data(PROGRESS_MAPPER.writeValueAsString(vo.traces()))
+                                sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                        .event("progress")
+                                        .data(PROGRESS_MAPPER.writeValueAsString(event))
                                         .build());
                             } catch (Exception ignored) {
                                 // ignore
                             }
-                        }
-                        if (!tokenStreamed.get()) {
-                            ChatSseSupport
-                                    .toSseFluxWithTraces(vo.content(), vo.conversationId(), null)
-                                    .filter(e -> !"done".equals(e.event()))
-                                    .doOnNext(sink::next)
-                                    .blockLast();
-                        }
-                        sink.next(ServerSentEvent.<String>builder()
-                                .event("done")
-                                .data(vo.conversationId())
+                        },
+                        chunk -> {
+                            tokenStreamed.set(true);
+                            sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                    .event("message")
+                                    .data(chunk)
+                                    .build());
+                        });
+                if (vo.traces() != null && !vo.traces().isEmpty()) {
+                    try {
+                        sink.tryEmitNext(ServerSentEvent.<String>builder()
+                                .event("trace")
+                                .data(PROGRESS_MAPPER.writeValueAsString(vo.traces()))
                                 .build());
-                        sink.complete();
-                    } catch (Exception e) {
-                        sink.error(e);
-                    } finally {
-                        UserContext.clear();
+                    } catch (Exception ignored) {
+                        // ignore
                     }
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+                }
+                if (!tokenStreamed.get()) {
+                    ChatSseSupport
+                            .toSseFluxWithTraces(vo.content(), vo.conversationId(), null)
+                            .filter(e -> !"done".equals(e.event()))
+                            .toIterable()
+                            .forEach(sink::tryEmitNext);
+                }
+                sink.tryEmitNext(ServerSentEvent.<String>builder()
+                        .event("done")
+                        .data(vo.conversationId())
+                        .build());
+                sink.tryEmitComplete();
+            } catch (Exception e) {
+                sink.tryEmitError(e);
+            } finally {
+                UserContext.clear();
+            }
+        });
+
+        return sink.asFlux();
     }
 
     private AgentRunVO toRunVo(AiAgentRunEntity e) {

@@ -15,7 +15,7 @@
         >
           新建会话
         </el-button>
-        <div class="session-rail__list" v-loading="sessionsLoading">
+        <div v-loading="sessionsLoading" class="session-rail__list">
           <div v-if="!sessions.length && !sessionsLoading" class="session-rail__empty">
             暂无会话，点击上方新建开始对话
           </div>
@@ -168,7 +168,7 @@
           </div>
         </div>
 
-        <div class="chat-messages" ref="messagesRef" v-loading="historyLoading">
+        <div ref="messagesRef" v-loading="historyLoading" class="chat-messages">
           <div class="chat-messages__inner">
             <div v-if="messages.length === 0" class="chat-empty">
               <el-empty :description="emptyDescription" :image-size="88" />
@@ -260,6 +260,10 @@
                       </template>
                     </div>
                     <AgentTracePanel v-if="msg.traces?.length" :traces="msg.traces" />
+                    <div v-if="msg.stopped" class="message-stopped">
+                      <el-icon><VideoPause /></el-icon>
+                      回复已中断，以上为已接收的部分内容
+                    </div>
                     <div v-if="plainMessageText(msg)" class="message-actions">
                       <el-button
                         link
@@ -354,8 +358,17 @@
                 <span v-if="outputMode !== 'STREAM'"> · {{ outputModeLabel }}</span>
               </div>
               <el-button
+                v-if="loading"
+                type="danger"
+                plain
+                :icon="VideoPause"
+                @click="handleStop"
+              >
+                停止生成
+              </el-button>
+              <el-button
+                v-else
                 type="primary"
-                :loading="loading"
                 :disabled="!inputMessage.trim()"
                 :icon="Promotion"
                 @click="handleSend"
@@ -387,6 +400,7 @@ import {
   Plus,
   FullScreen,
   ScaleToOriginal,
+  VideoPause,
 } from '@element-plus/icons-vue'
 import MarkdownIt from 'markdown-it'
 import {
@@ -422,6 +436,8 @@ import { useUserStore } from '@/stores/useUserStore'
 import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { usePanelMaximize } from '@/composables/usePanelMaximize'
+import { useAiStream } from '@/composables/useAiStream'
+import { isAiSseTimeout, isAiSseUserAbort } from '@/utils/aiSse'
 import AgentTracePanel from '@/components/ai/AgentTracePanel.vue'
 
 interface Message {
@@ -432,12 +448,16 @@ interface Message {
   traces?: AgentTraceEvent[] | null
   /** 欢迎语示例提问（可点击填入） */
   examples?: string[]
+  /** 流式被中断（用户停止或超时），已输出的部分正文予以保留 */
+  stopped?: boolean
 }
 
 type OutputMode = 'STREAM' | StructuredChatType
 
 const SCENE = 'CHAT' as const
 const { isMaximized, toggleMaximize } = usePanelMaximize()
+/** 按会话维度管理 SSE 中断，组件卸载时自动断流 */
+const aiStream = useAiStream()
 
 /** 按会话缓存消息（含进行中的流式回复，切走后仍可回看） */
 const messageCache = reactive<Record<string, Message[]>>({})
@@ -994,6 +1014,13 @@ const handleSend = async () => {
   await sendUserMessage()
 }
 
+/** 停止当前会话的流式生成（中断 SSE 连接，保留已输出内容） */
+const handleStop = () => {
+  const cid = conversationId.value
+  if (!cid) return
+  aiStream.stop(cid)
+}
+
 const copyMessage = async (text: string) => {
   const value = text?.trim()
   if (!value) return
@@ -1085,9 +1112,12 @@ const sendUserMessage = async (preset?: string) => {
     await scrollToBottom()
   }
 
+  /** 提升到 try 外，便于 catch 中区分「已有部分正文」与「完全无响应」 */
+  let assistantIndex = -1
+
   try {
     if (outputMode.value === 'STREAM') {
-      const assistantIndex =
+      assistantIndex =
         list.push({
           role: 'assistant',
           content: '',
@@ -1162,6 +1192,8 @@ const sendUserMessage = async (preset?: string) => {
             }
           },
         },
+        // 携带中断信号与首包/空闲超时，避免后端卡死时前端无限挂起
+        aiStream.begin(activeCid),
       )
 
       if (!list[assistantIndex].content) {
@@ -1194,18 +1226,46 @@ const sendUserMessage = async (preset?: string) => {
       await scrollToBottom()
     }
   } catch (error) {
-    console.error('聊天失败:', error)
-    list.push({
-      role: 'assistant',
-      content: '抱歉，请求失败，请稍后重试。',
-      timestamp: new Date(),
-    })
-    if (conversationId.value === activeCid) {
-      ElMessage.error(error instanceof Error ? error.message : '发送失败，请稍后重试')
+    const isCurrent = conversationId.value === activeCid
+    const detail = error instanceof Error ? error.message : '发送失败，请稍后重试'
+    const partial = assistantIndex >= 0 ? list[assistantIndex] : undefined
+
+    if (isAiSseUserAbort(error)) {
+      // 用户主动停止：保留已输出的部分正文并标记中断，不按错误处理
+      if (partial) {
+        partial.stopped = true
+        if (!partial.content) partial.content = '（已停止，未收到回复内容）'
+      }
+      if (isCurrent) {
+        ElMessage.info('已停止生成')
+        await scrollToBottom()
+      }
     } else {
-      ElMessage.warning('后台会话回复失败，切回该会话可查看详情')
+      console.error('聊天失败:', error)
+      const failureText = isAiSseTimeout(error)
+        ? `抱歉，${detail}`
+        : '抱歉，请求失败，请稍后重试。'
+      if (partial?.content) {
+        // 超时前已输出部分正文：保留内容并标记中断，避免整段回复丢失
+        partial.stopped = true
+      } else if (partial) {
+        partial.content = failureText
+      } else {
+        list.push({
+          role: 'assistant',
+          content: failureText,
+          timestamp: new Date(),
+        })
+      }
+      if (isCurrent) {
+        ElMessage.error(detail)
+        await scrollToBottom()
+      } else {
+        ElMessage.warning('后台会话回复失败，切回该会话可查看详情')
+      }
     }
   } finally {
+    aiStream.stop(activeCid)
     loadingByCid[activeCid] = false
     streamingByCid[activeCid] = false
   }
@@ -1772,6 +1832,16 @@ useRouteActivate(loadHistory)
   .trend-desc {
     margin-top: 4px;
   }
+}
+
+.message-stopped {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--el-text-color-secondary);
 }
 
 .message-actions {

@@ -5,7 +5,9 @@ import cn.datafuturex.zhishu.ai.modelconfig.vo.AiModelConfigVO;
 
 /**
  * AI 模型运行时配置
+ * @deprecated 已被 {@link ModelProviderPort} 替代，保留仅为向后兼容
  */
+@Deprecated
 public interface ModelConfigPort {
 
     AiModelConfigVO getConfig();

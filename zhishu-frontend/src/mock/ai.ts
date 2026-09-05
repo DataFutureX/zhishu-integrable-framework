@@ -3,6 +3,7 @@
  * 遥测站 6（在线 4 / 离线 2）、视频站 3、工程 3、告警 3
  */
 import type { AiSseHandlers } from '@/utils/aiSse'
+import { createUserAbortError } from '@/utils/aiSse'
 import type {
   AlarmSummary,
   ChatRequestDTO,
@@ -695,10 +696,18 @@ export async function mockAiChat(data: ChatRequestDTO): Promise<ChatResponseVO> 
 /**
  * 演示模式 Agent 会话流式：对齐真实 SSE
  * progress（节点/Tool）→ message（真流式增量）→ trace → done
+ * signal 中断时立即停推并抛出用户中断错误，与真实 SSE 行为一致
  */
-export async function mockChatStream(data: ChatRequestDTO, handlers: AiSseHandlers): Promise<void> {
+export async function mockChatStream(
+  data: ChatRequestDTO,
+  handlers: AiSseHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
   const conversationId = ensureConversationId(data.conversationId)
   const content = buildChatReply(data.message, data.enableRag)
+  const ensureNotAborted = () => {
+    if (signal?.aborted) throw createUserAbortError()
+  }
   const traces: Array<{
     type: string
     name: string
@@ -708,9 +717,11 @@ export async function mockChatStream(data: ChatRequestDTO, handlers: AiSseHandle
   }> = []
 
   await delay(180)
+  ensureNotAborted()
 
   const steps = buildDemoProgressEvents(data.message)
   for (const step of steps) {
+    ensureNotAborted()
     const event = { ...step.event, timestamp: Date.now() }
     traces.push(event)
     handlers.onProgress?.(JSON.stringify(event))
@@ -719,6 +730,7 @@ export async function mockChatStream(data: ChatRequestDTO, handlers: AiSseHandle
 
   const tokens = tokenizeDemoStream(content)
   for (let i = 0; i < tokens.length; i++) {
+    ensureNotAborted()
     const token = tokens[i]
     let wait = 16
     if (/[\u4e00-\u9fff]/.test(token)) wait = 24
@@ -728,6 +740,7 @@ export async function mockChatStream(data: ChatRequestDTO, handlers: AiSseHandle
     await delay(wait)
     handlers.onMessage?.(token)
   }
+  ensureNotAborted()
 
   handlers.onTrace?.(JSON.stringify(traces))
   pushHistory('CHAT', data.message, content, 'demo-mock', undefined, conversationId)
@@ -909,15 +922,22 @@ export async function mockDocumentQa(data: DocumentQueryDTO): Promise<ChatRespon
 export async function mockDocumentQaStream(
   data: DocumentQueryDTO,
   handlers: AiSseHandlers,
+  signal?: AbortSignal,
 ): Promise<void> {
   const conversationId = ensureConversationId(data.conversationId)
+  const ensureNotAborted = () => {
+    if (signal?.aborted) throw createUserAbortError()
+  }
   const full = await mockDocumentQa({ ...data, conversationId })
+  ensureNotAborted()
   const text = full.content
   const chunkSize = 16
   for (let i = 0; i < text.length; i += chunkSize) {
+    ensureNotAborted()
     await delay(35)
     handlers.onMessage?.(text.slice(i, i + chunkSize))
   }
+  ensureNotAborted()
   handlers.onDone?.(conversationId)
 }
 

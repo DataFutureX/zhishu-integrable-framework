@@ -564,6 +564,45 @@ const demoChatSessions: DemoChatSession[] = [
   },
 ]
 
+const demoModelProviders: ModelProviderVO[] = [
+  {
+    id: 1,
+    name: 'OpenAI',
+    providerKey: 'openai',
+    baseUrl: 'https://api.openai.com/v1',
+    apiKeyMasked: 'sk-****abcd',
+    apiKeyConfigured: true,
+    chatModel: 'gpt-4o',
+    embeddingModel: 'text-embedding-3-small',
+    temperature: 0.7,
+    maxTokens: 4096,
+    topP: 0.9,
+    isDefault: true,
+    status: 'ENABLED',
+    sortOrder: 1,
+    remark: '演示默认 OpenAI 配置',
+    updateTime: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    name: 'Ollama 本地',
+    providerKey: 'ollama',
+    baseUrl: 'http://localhost:11434',
+    apiKeyMasked: null,
+    apiKeyConfigured: false,
+    chatModel: 'qwen2.5:7b',
+    embeddingModel: 'nomic-embed-text',
+    temperature: 0.7,
+    maxTokens: 4096,
+    topP: 0.9,
+    isDefault: false,
+    status: 'ENABLED',
+    sortOrder: 2,
+    remark: '本地 Ollama 部署',
+    updateTime: new Date().toISOString(),
+  },
+]
+
 export function listAgents(status?: string): Promise<AgentVO[]> {
   if (isDemoMode) {
     return Promise.resolve(
@@ -989,57 +1028,184 @@ export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLog
 
 /** 获取模型设置列表 */
 export function listModelProviders(): Promise<ModelProviderVO[]> {
+  if (isDemoMode) {
+    return Promise.resolve([...demoModelProviders])
+  }
   return aiService.get('/model-settings')
 }
 
 /** 获取单个模型设置详情 */
 export function getModelProvider(id: number): Promise<ModelProviderVO> {
+  if (isDemoMode) {
+    const found = demoModelProviders.find((p) => p.id === id)
+    if (!found) return Promise.reject(new Error('模型设置不存在'))
+    return Promise.resolve({ ...found })
+  }
   return aiService.get(`/model-settings/${id}`)
 }
 
 /** 新建模型设置 */
 export function createModelProvider(data: ModelProviderCreateDTO): Promise<ModelProviderVO> {
+  if (isDemoMode) {
+    const newId = Math.max(...demoModelProviders.map((p) => p.id), 0) + 1
+    const newItem: ModelProviderVO = {
+      id: newId,
+      name: data.name,
+      providerKey: data.providerKey,
+      baseUrl: data.baseUrl,
+      apiKeyMasked: data.apiKey ? '****' : null,
+      apiKeyConfigured: !!data.apiKey,
+      chatModel: data.chatModel,
+      embeddingModel: data.embeddingModel || null,
+      temperature: data.temperature,
+      maxTokens: data.maxTokens,
+      topP: data.topP,
+      isDefault: false,
+      status: 'ENABLED',
+      sortOrder: demoModelProviders.length + 1,
+      remark: data.remark || null,
+      updateTime: new Date().toISOString(),
+    }
+    demoModelProviders.push(newItem)
+    return Promise.resolve(newItem)
+  }
   return aiService.post('/model-settings', data)
 }
 
 /** 更新模型设置 */
 export function updateModelProvider(id: number, data: ModelProviderUpdateDTO): Promise<ModelProviderVO> {
+  if (isDemoMode) {
+    const idx = demoModelProviders.findIndex((p) => p.id === id)
+    if (idx < 0) return Promise.reject(new Error('模型设置不存在'))
+    const item = demoModelProviders[idx]
+    Object.assign(item, data, { updateTime: new Date().toISOString() })
+    return Promise.resolve({ ...item })
+  }
   return aiService.put(`/model-settings/${id}`, data)
 }
 
 /** 删除模型设置 */
 export function deleteModelProvider(id: number): Promise<void> {
+  if (isDemoMode) {
+    const idx = demoModelProviders.findIndex((p) => p.id === id)
+    if (idx >= 0) demoModelProviders.splice(idx, 1)
+    return Promise.resolve()
+  }
   return aiService.delete(`/model-settings/${id}`)
 }
 
 /** 测试模型设置连通性 */
 export function testModelProviderConnection(id: number): Promise<string> {
+  if (isDemoMode) {
+    return Promise.resolve('演示模式：连通性测试成功')
+  }
   return aiService.post(`/model-settings/${id}/test`)
 }
 
 
 
+const demoAgentExecutions: AgentExecutionVO[] = [
+  {
+    id: 1,
+    agentId: 1,
+    agentName: '演示默认监测智能体',
+    userMessage: '当前各站点水位情况',
+    responseSummary: '当前东区水位 12.3m，西区 8.7m...',
+    status: 'SUCCESS',
+    durationMs: 1520,
+    modelName: 'gpt-4o',
+    workflowType: 'REACT',
+    runType: 'CHAT',
+    ttftMs: 320,
+    tpotMs: 45,
+    tokenCount: 856,
+    userId: 'demo',
+    createTime: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 2,
+    agentId: 2,
+    agentName: '巡检智能体',
+    userMessage: '今日巡检任务完成情况',
+    responseSummary: '今日共 8 项巡检任务，已完成 6 项...',
+    status: 'SUCCESS',
+    durationMs: 980,
+    modelName: 'gpt-4o',
+    workflowType: 'SEQUENTIAL',
+    runType: 'CHAT',
+    ttftMs: 280,
+    tpotMs: 38,
+    tokenCount: 542,
+    userId: 'demo',
+    createTime: new Date(Date.now() - 7200000).toISOString(),
+  },
+]
+
 /** 执行历史列表（分页） */
 export function getAgentExecutions(params: AgentMonitorQuery): Promise<PageResult<AgentExecutionVO>> {
+  if (isDemoMode) {
+    const page = params.page || 1
+    const size = params.size || 10
+    let filtered = [...demoAgentExecutions]
+    if (params.agentId) filtered = filtered.filter((e) => e.agentId === params.agentId)
+    if (params.status) filtered = filtered.filter((e) => e.status === params.status)
+    return Promise.resolve({
+      current: page,
+      size,
+      total: filtered.length,
+      pages: Math.ceil(filtered.length / size),
+      records: filtered.slice((page - 1) * size, page * size),
+    })
+  }
   return aiService.get('/agent-monitor/executions', { params })
 }
 
 /** 执行详情（含轨迹） */
 export function getAgentExecutionDetail(id: number): Promise<AgentExecutionDetailVO> {
+  if (isDemoMode) {
+    const exec = demoAgentExecutions.find((e) => e.id === id)
+    if (!exec) return Promise.reject(new Error('执行记录不存在'))
+    return Promise.resolve({
+      ...exec,
+      errorMessage: null,
+      traces: [],
+      updateTime: exec.createTime,
+    })
+  }
   return aiService.get(`/agent-monitor/executions/${id}`)
 }
 
 /** 统计概览 */
 export function getAgentMonitorStats(period: string = 'TODAY'): Promise<AgentMonitorStatsVO> {
+  if (isDemoMode) {
+    return Promise.resolve({
+      totalCount: demoAgentExecutions.length,
+      successCount: demoAgentExecutions.filter((e) => e.status === 'SUCCESS').length,
+      failedCount: demoAgentExecutions.filter((e) => e.status === 'FAILED').length,
+      runningCount: demoAgentExecutions.filter((e) => e.status === 'RUNNING').length,
+      successRate: 100,
+      avgDurationMs: 1250,
+      todayCount: demoAgentExecutions.length,
+    })
+  }
   return aiService.get('/agent-monitor/stats', { params: { period } })
 }
 
 /** 按智能体聚合统计 */
 export function getAgentStatsByAgent(): Promise<AgentStatsByAgentVO[]> {
+  if (isDemoMode) {
+    return Promise.resolve([
+      { agentId: 1, agentName: '演示默认监测智能体', totalCount: 1, successCount: 1, successRate: 100, avgDurationMs: 1520 },
+      { agentId: 2, agentName: '巡检智能体', totalCount: 1, successCount: 1, successRate: 100, avgDurationMs: 980 },
+    ])
+  }
   return aiService.get('/agent-monitor/stats/agents')
 }
 
 /** 当前运行中的执行 */
 export function getAgentRunningExecutions(): Promise<AgentExecutionVO[]> {
+  if (isDemoMode) {
+    return Promise.resolve(demoAgentExecutions.filter((e) => e.status === 'RUNNING'))
+  }
   return aiService.get('/agent-monitor/running')
 }

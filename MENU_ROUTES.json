@@ -29,7 +29,8 @@
     "  ├─ Agents /ai/agents",
     "  ├─ 知识库 /ai/knowledges",
     "  ├─ MCP Hub /ai/mcp",
-    "  ├─ 模型设置 /ai/model-config",
+    "  ├─ 模型设置 /ai/model-settings",
+    "  ├─ Agent 监控 /ai/agent-monitor",
     "  └─ 工作流编排 /ai/agents/:id/graph（隐藏 PAGE）",
     "账号管理 /permission → /permission/user",
     "  ├─ 用户管理 /permission/user",
@@ -226,16 +227,31 @@
           "id": 105,
           "parentId": 10,
           "title": "模型设置",
-          "path": "/ai/model-config",
-          "routeName": "AIModelConfig",
+          "path": "/ai/model-settings",
+          "routeName": "AIModelSettings",
           "redirect": null,
           "icon": "SetUp",
           "menuType": "MENU",
           "visible": true,
           "requiresAuth": true,
           "sort": 7,
-          "component": "views/ai/ModelConfig.vue",
+          "component": "views/ai/ModelSettings.vue",
           "meta": { "title": "模型设置" }
+        },
+        {
+          "id": 110,
+          "parentId": 10,
+          "title": "Agent 监控",
+          "path": "/ai/agent-monitor",
+          "routeName": "AIAgentMonitor",
+          "redirect": null,
+          "icon": "Odometer",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 8,
+          "component": "views/ai/AgentMonitor.vue",
+          "meta": { "title": "Agent 监控" }
         },
         {
           "id": 108,
@@ -248,7 +264,7 @@
           "menuType": "PAGE",
           "visible": false,
           "requiresAuth": true,
-          "sort": 8,
+          "sort": 9,
           "component": "views/ai/AgentGraphEditor.vue"
         }
       ]
@@ -563,6 +579,7 @@
     { "from": "/system/unit", "to": "/permission/unit" },
     { "from": "/home/chat", "to": "/ai/chat" },
     { "from": "/home/dashboard", "to": "/ai/chat" },
-    { "from": "/ai/document-qa", "to": "/ai/qa" }
+    { "from": "/ai/document-qa", "to": "/ai/qa" },
+    { "from": "/ai/model-config", "to": "/ai/model-settings" }
   ]
 }

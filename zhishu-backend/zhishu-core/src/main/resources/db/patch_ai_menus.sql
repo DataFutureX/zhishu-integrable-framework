@@ -8,7 +8,7 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 3, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
 (102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 4, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
 (104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 5, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
-(105, 10, '模型设置', '/ai/model-config', 'AIModelConfig', NULL, 'SetUp', 'MENU', 1, 1, 6, 'views/ai/ModelConfig.vue', '{"title":"模型设置"}', 1),
+(105, 10, '模型设置', '/ai/model-settings', 'AIModelSettings', NULL, 'SetUp', 'MENU', 1, 1, 6, 'views/ai/ModelSettings.vue', '{"title":"模型设置"}', 1),
 (108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 7, 'views/ai/AgentGraphEditor.vue', NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
@@ -79,7 +79,7 @@ ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
 
 -- Agent 执行监控菜单
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
-(110, 10, '执行监控', '/ai/monitor', 'AIAgentMonitor', NULL, 'Monitor', 'MENU', 1, 1, 8, 'views/ai/AgentMonitor.vue', '{"title":"执行监控"}', 1)
+(110, 10, 'Agent 监控', '/ai/agent-monitor', 'AIAgentMonitor', NULL, 'Odometer', 'MENU', 1, 1, 8, 'views/ai/AgentMonitor.vue', '{"title":"Agent 监控"}', 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
     title = EXCLUDED.title,

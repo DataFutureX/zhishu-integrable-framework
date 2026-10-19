@@ -10,7 +10,7 @@ import type { DesktopRelease } from '../src/release.ts'
 import { developmentRuntimeDirectory, resolveDesktopBuildTarget } from './desktop-build-paths.mjs'
 import { prepareDevelopmentProject } from './development-project.ts'
 import { prepareDevelopmentApp } from './development-app.ts'
-import { preparePrimaryRuntime } from './prepare-primary-runtime.ts'
+import { preparedPrimaryRuntimeCurrent, preparePrimaryRuntime } from './prepare-primary-runtime.ts'
 
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
@@ -51,7 +51,7 @@ async function run(command: string, args: readonly string[], cwd: string, enviro
 async function runPackageScript(script: string, cwd: string): Promise<void> {
   const packageManager = process.env.npm_execpath
   if (packageManager === undefined || packageManager === '') {
-    throw new Error('desktop development: invoke this launcher through pnpm run dev:desktop or start:desktop')
+    throw new Error('desktop development: invoke this launcher through pnpm run dev:desktop, dev:desktop:fast, or start:desktop')
   }
   await run(process.execPath, [packageManager, 'run', script], cwd)
 }
@@ -90,12 +90,33 @@ async function launchElectron(): Promise<void> {
   ], APP_ROOT, environment)
 }
 
-async function main(): Promise<void> {
-  const { values } = parseArgs({ options: { 'skip-build': { type: 'boolean', default: false } } })
-  if (!values['skip-build']) {
+async function compileForLaunch(fast: boolean): Promise<void> {
+  const hostEntry = join(REPOSITORY_ROOT, 'apps', 'desktop-host', 'lib', 'index.js')
+  const webIndex = join(REPOSITORY_ROOT, 'apps', 'web', 'dist', 'index.html')
+  if (!fast) {
     await runPackageScript('build', REPOSITORY_ROOT)
     await runPackageScript('build', APP_ROOT)
+    return
   }
+  if (!existsSync(hostEntry) || !existsSync(webIndex)) {
+    console.log('desktop development: fast start needs the Host and Web frontend; running pnpm run build')
+    await runPackageScript('build', REPOSITORY_ROOT)
+    return
+  }
+  console.log('desktop development: fast start recompiles the Electron shell')
+  await runPackageScript('build', APP_ROOT)
+}
+
+async function main(): Promise<void> {
+  const { values } = parseArgs({ options: {
+    'skip-build': { type: 'boolean', default: false },
+    fast: { type: 'boolean', default: false },
+  } })
+  if (values.fast && values['skip-build']) throw new Error('desktop development: --fast and --skip-build cannot be combined')
+  if (values.fast && (process.env.DSH_DESKTOP_OPEN_DEVTOOLS === undefined || process.env.DSH_DESKTOP_OPEN_DEVTOOLS === '')) {
+    process.env.DSH_DESKTOP_OPEN_DEVTOOLS = '0'
+  }
+  if (!values['skip-build']) await compileForLaunch(values.fast)
   for (const path of [
     join(APP_ROOT, 'lib', 'main.js'),
     join(REPOSITORY_ROOT, 'apps', 'desktop-host', 'lib', 'index.js'),
@@ -120,7 +141,9 @@ async function main(): Promise<void> {
     release,
     target: resolveDesktopBuildTarget(),
   })
-  await preparePrimaryRuntime()
+  if (values.fast && preparedPrimaryRuntimeCurrent(version, pnpmVersion)) {
+    console.log('desktop development: reusing prepared primary runtime')
+  } else await preparePrimaryRuntime()
   await launchElectron()
 }
 

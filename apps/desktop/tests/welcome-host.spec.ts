@@ -35,7 +35,7 @@ describe('desktop welcome Web operations', () => {
   it('authenticates through Web and stores only through the configured credential reference', async () => {
     const host = transport()
     const backend = await connectDesktopWelcome(url, host.send)
-    expect(host.send).toHaveBeenCalledExactlyOnceWith(url, { credentials: 'include' })
+    expect(host.send).toHaveBeenCalledExactlyOnceWith('http://127.0.0.1:19387/', { credentials: 'include', redirect: 'manual' })
     expect(await backend.analyticsEnabled()).toBe(true)
     expect(await backend.save('sk-example')).toEqual({ ok: true })
     expect(host.keys.get('CUSTOM_DEEPSEEK_KEY')).toBe('sk-example')
@@ -108,6 +108,11 @@ describe('desktop welcome Web operations', () => {
 
   it('refuses an unauthenticated Web launch', async () => {
     const send = vi.fn<Parameters<typeof connectDesktopWelcome>[1]>(async () => new Response(null, { status: 401 }))
+    await expect(connectDesktopWelcome(url, send)).rejects.toThrow('Web authentication failed')
+  })
+
+  it('refuses a login redirect as an authenticated launch', async () => {
+    const send = vi.fn<Parameters<typeof connectDesktopWelcome>[1]>(async () => new Response(null, { status: 303, headers: { location: '/account/login' } }))
     await expect(connectDesktopWelcome(url, send)).rejects.toThrow('Web authentication failed')
   })
 })

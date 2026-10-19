@@ -37,6 +37,19 @@
     # once the web UI owns the choice per session.
     mode: !!js process.env.DSH_TOOLS_MODE
 
+# Custom username/password front door for Web and Desktop compositions.
+# A top-level insert: the loader appends insert items as rows and does not expand a nested insert.
+- insert:
+    - id: account-login
+      name: dsh-plugin-account
+      config:
+        users:
+          - username: admin
+            password: admin123
+        displayName: 自定义账号
+        allowLaunchToken: false
+        sessionDays: 7
+
 # ── web-only host rows, the transport layer, and the browser roster ─────────
 
 # `dsh.client` rows are the browser roster the modules node half scans into
@@ -138,19 +151,6 @@
     # which declare them in their own scope.
     - id: schedule
       name: '@deepseek-ai/dsh-schedule'
-
-    # Custom username/password front door replacing the printed launch-token
-    # URL for Web and Desktop compositions.
-    - insert:
-        - id: account-login
-          name: dsh-plugin-account
-          config:
-            users:
-              - username: admin
-                password: admin123
-            displayName: 自定义账号
-            allowLaunchToken: false
-            sessionDays: 7
 
     # Configuration-surface reads and writes over Typert Remote. Each method
     # reports an actionable error when its settings-domain provider is absent.

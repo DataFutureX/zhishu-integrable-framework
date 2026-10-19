@@ -1,7 +1,7 @@
 # Short names for the Web and Desktop application commands. The package.json
 # scripts they call stay the source of truth; docs/development.md documents both.
 .DEFAULT_GOAL := help
-.PHONY: help build clean web desktop dev-web dev-desktop
+.PHONY: help build clean web desktop dev-web dev-desktop dev-desktop-fast
 
 PNPM ?= pnpm
 ARGS ?=
@@ -13,6 +13,7 @@ help:
 	@echo "make desktop      pnpm run start:desktop   launch the built Desktop artifacts"
 	@echo "make dev-web      pnpm run dev:web         build, serve, and rebuild Web on source edits"
 	@echo "make dev-desktop  pnpm run dev:desktop     build, then launch Desktop"
+	@echo "make dev-desktop-fast  pnpm run dev:desktop:fast  recompile the Electron shell, then launch"
 	@echo "ARGS='--no-open --port 3081' forwards options to the launched application;"
 	@echo "the Web commands accept dsh web flags, the Desktop launcher accepts none."
 
@@ -33,3 +34,6 @@ dev-web:
 
 dev-desktop:
 	$(PNPM) run dev:desktop $(ARGS)
+
+dev-desktop-fast:
+	$(PNPM) run dev:desktop:fast $(ARGS)

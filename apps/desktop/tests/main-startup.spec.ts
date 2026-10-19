@@ -193,7 +193,10 @@ const harness = await vi.hoisted(async () => {
     failWindow(error: Error) { windowFailure = error },
     windows, hosts, handlers, app, FakeWindow, FakeHost, powerMonitor, nativeTheme, analytics,
     trays, FakeTray, backgroundNotice, shellDialog,
-    menu, popup, socketHeaders: vi.fn(), loginShell, readLoginShell, updateCheck, updateDownload, updateInstall,
+    menu, popup, socketHeaders: vi.fn(),
+    cookiesGet: vi.fn(async () => [] as { name: string; value: string }[]),
+    cookiesRemove: vi.fn(async () => {}),
+    loginShell, readLoginShell, updateCheck, updateDownload, updateInstall,
     platformDispose,
     platformCloseAndWait,
 
@@ -293,6 +296,7 @@ vi.mock('electron', () => ({
   session: { defaultSession: {
     setPermissionCheckHandler: vi.fn(), setPermissionRequestHandler: vi.fn(),
     webRequest: { onBeforeSendHeaders: harness.socketHeaders, onHeadersReceived: vi.fn() },
+    cookies: { get: harness.cookiesGet, remove: harness.cookiesRemove },
   } },
   protocol: { registerSchemesAsPrivileged: vi.fn(), handle: harness.protocolHandle },
   powerMonitor: harness.powerMonitor,
@@ -1173,6 +1177,36 @@ describe('desktop main startup', () => {
     window.webContents.emit('will-navigate', internal, 'dsh-app://app/session/task-1')
     expect(internal.preventDefault).not.toHaveBeenCalled()
     expect(harness.openExternal).not.toHaveBeenCalled()
+  })
+
+  it('hides the workspace while sign-out shows only the login window', async () => {
+    await readyForUpdate()
+    const main = harness.windows[0]!
+    const shown = main.show.mock.calls.length
+    const signedOut = invoke(DESKTOP_IPC.hostSignOut, 'app')
+    await vi.waitFor(() => { expect(harness.windows).toHaveLength(2) })
+    expect(main.hide).toHaveBeenCalledOnce()
+    const login = harness.windows[1]!
+    expect(login.urls[0]).toBe('http://127.0.0.1:3080/account/login')
+    expect(main.show.mock.calls).toHaveLength(shown)
+    harness.cookiesGet.mockResolvedValue([{ name: 'dsh-account', value: 'fresh' }])
+    await vi.advanceTimersByTimeAsync(200)
+    await signedOut
+    expect(main.urls.at(-1)).toBe('dsh-app://app/')
+    expect(main.show.mock.calls).toHaveLength(shown + 1)
+    expect(main.focus).toHaveBeenCalled()
+    expect(harness.app.quit).not.toHaveBeenCalled()
+  })
+
+  it('quits when sign-out login is closed before a new session', async () => {
+    await readyForUpdate()
+    const main = harness.windows[0]!
+    const signedOut = invoke(DESKTOP_IPC.hostSignOut, 'app')
+    await vi.waitFor(() => { expect(harness.windows).toHaveLength(2) })
+    harness.windows[1]!.close()
+    await signedOut
+    expect(main.hide).toHaveBeenCalled()
+    expect(harness.app.quit).toHaveBeenCalled()
   })
 
   async function readyForUpdate() {

@@ -1,8 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest'
+import { createServer } from 'node:http'
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { authenticateWebHost, tryAuthenticateWebHost, forwardWebRequest, serveWebDocument } from '../src/web-document.ts'
+import { authenticateWebHost, tryAuthenticateWebHost, forwardWebRequest, hostFetch, hostSessionRequestInit, serveWebDocument } from '../src/web-document.ts'
 
 const roots: string[] = []
 afterEach(async () => {
@@ -25,6 +26,43 @@ it('serves the Web entry and assets without starting or contacting a Host', asyn
   expect(fetch).not.toHaveBeenCalled()
   expect((await serveWebDocument(new Request('dsh-app://app/%2e%2e%2fprivate'), root)).status).toBe(403)
   expect((await serveWebDocument(new Request('dsh-app://app/missing.js'), root)).status).toBe(404)
+})
+
+it('sends the main-process gate session and drops browser-site markers', () => {
+  const init = hostSessionRequestInit('dsh-account=owned', {
+    method: 'POST', credentials: 'include', redirect: 'manual',
+    headers: { origin: 'null', 'sec-fetch-site': 'cross-site', 'content-type': 'application/json' },
+  })
+  expect(init.headers).toEqual({ cookie: 'dsh-account=owned', 'content-type': 'application/json' })
+  expect(init).toMatchObject({ method: 'POST', credentials: 'include', redirect: 'manual' })
+})
+
+it('delivers the gate cookie to the Host and keeps a login redirect', async () => {
+  const server = createServer((request, response) => {
+    if (request.headers.cookie === 'dsh-account=owned') {
+      response.writeHead(200, { 'content-type': 'text/plain' })
+      response.end('ok')
+      return
+    }
+    response.writeHead(303, { location: '/account/login' })
+    response.end()
+  })
+  await new Promise<void>((resolve, reject) => {
+    server.listen(0, '127.0.0.1', () => { resolve() })
+    server.once('error', reject)
+  })
+  const address = server.address()
+  const port = typeof address === 'object' && address !== null ? address.port : 0
+  try {
+    const denied = await hostFetch(`http://127.0.0.1:${String(port)}/?token=secret`, { redirect: 'manual' })
+    expect(denied.status).toBe(303)
+    expect(denied.headers.get('location')).toBe('/account/login')
+    const admitted = await hostFetch(`http://127.0.0.1:${String(port)}/`, hostSessionRequestInit('dsh-account=owned', { redirect: 'manual' }))
+    expect(admitted.status).toBe(200)
+    expect(await admitted.text()).toBe('ok')
+  } finally {
+    await new Promise<void>((resolve) => { server.close(() => { resolve() }) })
+  }
 })
 
 it('requires the Host authentication exchange and retains only its cookie value', async () => {

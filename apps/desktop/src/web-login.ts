@@ -13,8 +13,30 @@ export function webLoginUrl(hostUrl: string): string {
 /** Read an already-stored gate session for this Host, when one exists. */
 export async function existingWebLoginCookie(hostUrl: string): Promise<string | undefined> {
   const cookies = await session.defaultSession.cookies.get({ url: hostUrl, name: SESSION_COOKIE_NAME })
-  const hit = cookies.find(cookie => cookie.name === SESSION_COOKIE_NAME)
+  const hit = cookies.find(cookie => cookie.name === SESSION_COOKIE_NAME && cookie.value.length > 0)
   return hit === undefined ? undefined : `${hit.name}=${hit.value}`
+}
+
+/**
+ * Use a stored gate cookie only when this Host accepts it.
+ * The cookie is bound to `host:port`, while the browser jar is not, so a cookie from
+ * the previous listen port must be dropped and replaced by a login on this port.
+ * @param input - stored cookie, login prompt, jar removal, and a probe of the current Host. The prompt receives the rejected cookie so it does not return that same value.
+ * @returns a cookie the probe accepted.
+ */
+export async function resolveHostSessionCookie(input: {
+  stored: () => Promise<string | undefined>
+  prompt: (rejected: string | undefined) => Promise<string>
+  forget: () => Promise<void>
+  probe: (cookie: string) => Promise<boolean>
+}): Promise<string> {
+  const stored = await input.stored()
+  if (stored !== undefined && await input.probe(stored)) return stored
+  if (stored !== undefined) await input.forget()
+  const minted = await input.prompt(stored)
+  if (await input.probe(minted)) return minted
+  await input.forget()
+  throw new Error('desktop welcome: Web authentication failed (303)')
 }
 
 /**
@@ -22,11 +44,12 @@ export async function existingWebLoginCookie(hostUrl: string): Promise<string | 
  * session cookie lands in the default session. A session already stored in
  * that session resolves without prompting.
  * @param hostUrl - running Host URL (its origin selects the login page).
+ * @param rejected - a cookie this Host already refused. It is not reused.
  * @returns the `dsh-account` cookie as `name=value`, ready for Host forwarding.
  */
-export async function promptWebHostLogin(hostUrl: string): Promise<string> {
+export async function promptWebHostLogin(hostUrl: string, rejected?: string): Promise<string> {
   const existing = await existingWebLoginCookie(hostUrl)
-  if (existing !== undefined) return existing
+  if (existing !== undefined && existing !== rejected) return existing
   const window = new BrowserWindow({
     width: 480,
     height: 620,
@@ -55,7 +78,7 @@ export async function promptWebHostLogin(hostUrl: string): Promise<string> {
     }
     const poll = setInterval(() => {
       void existingWebLoginCookie(hostUrl)
-        .then((next) => { if (next !== undefined) finish(next) })
+        .then((next) => { if (next !== undefined && next !== rejected) finish(next) })
         .catch((_error: unknown) => {
           // A poll failure keeps the window open; loading or closing it reports the real failure.
         })

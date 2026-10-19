@@ -27,6 +27,7 @@
     "build:web": "pnpm --filter @deepseek-ai/dsh-web-frontend run build",
     "build:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run build",
     "dev:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run dev",
+    "dev:desktop:fast": "pnpm --filter @deepseek-ai/dsh-desktop run dev:fast",
     "start:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run start",
     "prepare:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run prepare:package",
     "package:desktop": "pnpm --filter @deepseek-ai/dsh-desktop run package",

@@ -1,11 +1,33 @@
 /** Desktop resource locations and signing-aware verification for the shared runtime builder. */
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { preparePrimaryRuntime as preparePayload, smokePrimaryRuntime as smokePayload } from '../../../scripts/primary-runtime/prepare.ts'
+import { preparePrimaryRuntime as preparePayload, primaryRuntimePayloadDigest, smokePrimaryRuntime as smokePayload } from '../../../scripts/primary-runtime/prepare.ts'
+import lock from '../../../scripts/primary-runtime/lock.json' with { type: 'json' }
 import { parsePrimaryRuntime, workspaceDependencyPaths } from '../../../packages/skill/tool-workspace-dependencies/src/index.ts'
-import { resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+import { developmentRuntimeDirectory, resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
 import { scrubWindowsSigningEnvironment } from './windows-sign.mjs'
+
+/**
+ * Report whether the selected target already has a payload for this Desktop version and lock.
+ * @param version - Desktop package version written into `runtime.json`.
+ * @param pnpmVersion - Package-manager version included in the payload digest.
+ * @returns true when the payload and Office skill assets can be reused.
+ */
+export function preparedPrimaryRuntimeCurrent(version: string, pnpmVersion: string): boolean {
+  const root = developmentRuntimeDirectory()
+  const manifestPath = join(root, 'runtime.json')
+  if (!existsSync(manifestPath) || !existsSync(join(root, '..', 'office-skills'))) return false
+  let manifest: { desktopVersion?: string; payloadDigest?: string }
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { desktopVersion?: string; payloadDigest?: string }
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) throw error
+    return false
+  }
+  return manifest.desktopVersion === version
+    && manifest.payloadDigest === primaryRuntimePayloadDigest(resolveDesktopBuildTarget(), lock, pnpmVersion)
+}
 
 /**
  * Prepare Desktop resources for its selected packaging target.

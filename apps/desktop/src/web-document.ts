@@ -1,4 +1,6 @@
 /** Local Web document and authenticated HTTP forwarding for the application window. */
+import { request as httpRequest, type IncomingMessage } from 'node:http'
+import { request as httpsRequest } from 'node:https'
 import { readFile } from 'node:fs/promises'
 import { extname, resolve, sep } from 'node:path'
 
@@ -32,6 +34,116 @@ export async function serveWebDocument(request: Request, root: string): Promise<
     ? body.toString().replace('<head>', '<head>' + BOOT) : new Uint8Array(body)
   return new Response(request.method === 'HEAD' ? null : content, {
     headers: { 'content-type': MIME[extname(target)] ?? 'application/octet-stream' },
+  })
+}
+
+/**
+ * Request options for a main-process call to the owned Host.
+ * The gate session is sent on `Cookie`. `Origin` and `Sec-Fetch-Site` are removed:
+ * Chromium may mark this fetch cross-site, and the Host refuses that marker before it reads the session.
+ * @param cookie - `name=value` session held by the main process.
+ * @param init - caller method, body, and signal.
+ * @returns the same options with Host session headers applied.
+ */
+export function hostSessionRequestInit(cookie: string, init?: RequestInit): RequestInit {
+  const headers = new Headers(init?.headers)
+  headers.delete('origin')
+  headers.delete('sec-fetch-site')
+  const plain: Record<string, string> = {}
+  for (const [key, value] of headers) plain[key] = value
+  plain.cookie = cookie
+  return { ...init, headers: plain }
+}
+
+/**
+ * Fetch the owned Host through Node.
+ * Electron's fetch discards a caller-supplied `Cookie` header, so the gate session must be sent here.
+ * `redirect: 'manual'` returns the 3xx response. `redirect: 'error'` rejects it. `follow` replays a GET to `Location`.
+ * @param input - absolute Host URL.
+ * @param init - method, headers, body, redirect mode, and abort signal. The body must be a string or bytes.
+ * @returns the Host response. A manual redirect is returned rather than followed.
+ */
+export function hostFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  return hostFetchAt(input, init, 5)
+}
+
+/** @param remainingRedirects - follows left before a `follow` redirect is refused. */
+function hostFetchAt(input: string, init: RequestInit, remainingRedirects: number): Promise<Response> {
+  const url = new URL(input)
+  const outgoing = outgoingHeaders(init.headers)
+  const body = init.body
+  if (body != null && typeof body !== 'string' && !(body instanceof Uint8Array)) {
+    return Promise.reject(new Error('desktop host fetch: body must be a string or bytes'))
+  }
+  const signal = init.signal
+  if (signal?.aborted) {
+    const reason = signal.reason
+    return Promise.reject(reason instanceof Error ? reason : new Error('desktop host fetch: aborted'))
+  }
+  const transport = url.protocol === 'https:' ? httpsRequest : httpRequest
+  return new Promise((resolvePromise, reject) => {
+    const req = transport(url, { method: init.method ?? 'GET', headers: outgoing }, (incoming) => {
+      const status = incoming.statusCode ?? 0
+      const mode = init.redirect ?? 'follow'
+      if (status >= 300 && status < 400 && mode !== 'manual') {
+        incoming.resume()
+        if (mode === 'error' || remainingRedirects <= 0 || typeof incoming.headers.location !== 'string') {
+          reject(new Error('desktop host fetch: redirect refused'))
+          return
+        }
+        const next = { ...init, method: 'GET' }
+        delete next.body
+        resolvePromise(hostFetchAt(new URL(incoming.headers.location, url).href, next, remainingRedirects - 1))
+        return
+      }
+      void readIncoming(incoming).then((bytes) => {
+        const responseHeaders = new Headers()
+        for (const [key, value] of Object.entries(incoming.headers)) {
+          if (typeof value === 'string') responseHeaders.set(key, value)
+          else if (Array.isArray(value)) for (const item of value) responseHeaders.append(key, item)
+        }
+        const payload = new ArrayBuffer(bytes.byteLength)
+        new Uint8Array(payload).set(bytes)
+        resolvePromise(new Response(payload, { status, headers: responseHeaders }))
+      }, reject)
+    })
+    const abort = (): void => {
+      const reason = signal?.reason
+      req.destroy(reason instanceof Error ? reason : new Error('desktop host fetch: aborted'))
+    }
+    signal?.addEventListener('abort', abort, { once: true })
+    req.once('error', reject)
+    req.once('close', () => { signal?.removeEventListener('abort', abort) })
+    if (typeof body === 'string' || body instanceof Uint8Array) req.end(body)
+    else req.end()
+  })
+}
+
+/**
+ * Copy request headers without the forbidden-header filter.
+ * A `Headers` instance may drop `Cookie`; a plain map is copied as given.
+ * @param headers - caller headers.
+ * @returns lower-cased names sent on the Node request.
+ */
+function outgoingHeaders(headers: HeadersInit | undefined): Record<string, string> {
+  const outgoing: Record<string, string> = {}
+  if (headers == null) return outgoing
+  if (typeof headers === 'object' && !Array.isArray(headers) && !(headers instanceof Headers)) {
+    for (const [key, value] of Object.entries(headers)) outgoing[key.toLowerCase()] = value
+    return outgoing
+  }
+  const parsed = new Headers(headers)
+  for (const [key, value] of parsed) outgoing[key] = value
+  return outgoing
+}
+
+/** @param incoming - Host response whose body is still unread. @returns the full body. */
+function readIncoming(incoming: IncomingMessage): Promise<Uint8Array> {
+  return new Promise((resolvePromise, reject) => {
+    const chunks: Buffer[] = []
+    incoming.on('data', (chunk: Buffer) => { chunks.push(chunk) })
+    incoming.once('end', () => { resolvePromise(new Uint8Array(Buffer.concat(chunks))) })
+    incoming.once('error', reject)
   })
 }
 

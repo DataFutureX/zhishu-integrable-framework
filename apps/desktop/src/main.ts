@@ -14,7 +14,6 @@ import {
   powerMonitor,
   nativeImage,
   nativeTheme,
-  net,
   protocol,
   session,
   shell,
@@ -34,8 +33,8 @@ import { desktopUpdateReadyConfirmation, formatDesktopMessage, resolveDesktopLoc
 import { claimDesktopSingleInstance } from './single-instance.ts'
 import { DesktopUpdateCoordinator } from './update-coordinator.ts'
 import { DesktopCommandManager } from './command-management.ts'
-import { serveWebDocument, tryAuthenticateWebHost, forwardWebRequest } from './web-document.ts'
-import { promptWebHostLogin } from './web-login.ts'
+import { serveWebDocument, tryAuthenticateWebHost, forwardWebRequest, hostFetch, hostSessionRequestInit } from './web-document.ts'
+import { existingWebLoginCookie, promptWebHostLogin, resolveHostSessionCookie } from './web-login.ts'
 import { DesktopFatalRecovery } from './fatal-recovery.ts'
 import { pruneCrashReports, RendererConsoleTail, writeCrashReport, type CrashReportSource } from './crash-report.ts'
 import { openWelcomeWindow } from './welcome-window.ts'
@@ -447,10 +446,26 @@ async function main(): Promise<void> {
       start: async () => {
         const ready = await host.start()
         hostUrl = ready.url
-        hostCookie = await tryAuthenticateWebHost(ready.url) ?? await promptWebHostLogin(ready.url)
+        const origin = new URL(ready.url).origin
+        const probe = async (cookie: string): Promise<boolean> => {
+          const response = await hostFetch(new URL('/', origin).href, hostSessionRequestInit(cookie, { redirect: 'manual' }))
+          await response.body?.cancel()
+          return response.ok
+        }
+        let cookie = await tryAuthenticateWebHost(ready.url)
+        if (cookie === undefined || !await probe(cookie)) {
+          cookie = await resolveHostSessionCookie({
+            stored: () => existingWebLoginCookie(ready.url),
+            prompt: rejected => promptWebHostLogin(ready.url, rejected),
+            forget: async () => { await session.defaultSession.cookies.remove(origin, 'dsh-account') },
+            probe,
+          })
+        }
+        hostCookie = cookie
         if (ready.injections === undefined) throw new Error('Desktop Host did not provide boot injections')
         injections = ready.injections
-        welcomeBackend = await connectDesktopWelcome(ready.url, (input, init) => net.fetch(input, init), async () => (await session.defaultSession.cookies.get({ url: ready.url })).map(cookie => `${cookie.name}=${cookie.value}`).join('; '))
+        welcomeBackend = await connectDesktopWelcome(ready.url,
+          (input, init) => hostFetch(input, hostSessionRequestInit(cookie, init)), async () => cookie)
         analyticsEnabled = await welcomeBackend.analyticsEnabled().catch(() => false)
         if (!reportedLaunch) { reportedLaunch = true; void track('desktop_app_launch', {}) }
       },
@@ -668,13 +683,31 @@ async function main(): Promise<void> {
 
   ipcMain.handle(DESKTOP_IPC.hostSignOut, async (event) => {
     assertDesktopSender(event, ['app'])
-    if (hostUrl !== undefined) {
-      await session.defaultSession.cookies.remove(hostUrl, 'dsh-account').catch((error: unknown) => {
-        console.warn(`dsh desktop: could not clear the Host gate cookie: ${String(error)}`)
-      })
-    }
+    if (hostUrl === undefined || reauthenticating) return
+    reauthenticating = true
+    const rejected = hostCookie ?? await existingWebLoginCookie(hostUrl)
+    const origin = new URL(hostUrl).origin
+    await session.defaultSession.cookies.remove(origin, 'dsh-account').catch((error: unknown) => {
+      console.warn(`dsh desktop: could not clear the Host gate cookie: ${String(error)}`)
+    })
     hostCookie = undefined
-    await reauthenticateHost()
+    const main = mainWindow
+    if (main !== undefined && !main.isDestroyed()) main.hide()
+    try {
+      const cookie = await promptWebHostLogin(hostUrl, rejected)
+      if (quitting) return
+      hostCookie = cookie
+      navigation = undefined
+      await navigateMain(applicationUrl)
+      if (quitting || main === undefined || main.isDestroyed()) return
+      main.show()
+      main.focus()
+    } catch (_error) {
+      // Closing the login window leaves no signed-in client. Quit without asking about the hidden window.
+      if (!quitting) quitWithoutConfirmation()
+    } finally {
+      reauthenticating = false
+    }
   })
 
   session.defaultSession.webRequest.onBeforeSendHeaders({ urls: ['ws://127.0.0.1/*', 'wss://127.0.0.1/*'] }, (details, callback) => {

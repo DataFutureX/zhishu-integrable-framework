@@ -34,7 +34,7 @@ function record(value: unknown): value is Record<string, unknown> {
 /**
  * Connect native credential operations to the standard authenticated Web backend.
  * @param authenticatedUrl - URL supplied by the running Desktop Host.
- * @param send - Electron session fetch, retaining the gate authentication cookie.
+ * @param send - Host fetch. The caller attaches the gate session cookie; this function does not read a cookie jar.
  * @param cookies - Electron session cookie reader.
  * @returns metadata reads and write-only credential operations over standard RPC.
  */
@@ -44,9 +44,11 @@ export async function connectDesktopWelcome(
   cookies: () => Promise<string> = () => Promise.resolve(''),
 ): Promise<DesktopWelcomeBackend> {
   const origin = new URL(authenticatedUrl).origin
-  const authenticated = await send(authenticatedUrl, { credentials: 'include' })
+  // The launch URL still carries `?token=`. A valid gate session is admitted on `/` itself;
+  // probing the token URL answers 303 even after login.
+  const authenticated = await send(new URL('/', origin).href, { credentials: 'include', redirect: 'manual' })
   await authenticated.body?.cancel()
-  if (!authenticated.ok) throw new Error('desktop welcome: Web authentication failed')
+  if (!authenticated.ok) throw new Error(`desktop welcome: Web authentication failed (${String(authenticated.status)})`)
   const invoke = async (
     request: { namespace: string; method: string; args: Record<string, unknown> },
     signal?: AbortSignal,

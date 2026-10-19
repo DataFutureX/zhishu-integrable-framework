@@ -1486,3 +1486,20 @@
 [51768:29844:1019/115825.248:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
 [51768:29844:1019/115934.143:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
 [51768:29844:1019/115936.717:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120815.870:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120815.870:WARNING:t_skinfilemap.cpp(56)] SGRenderLog:CheckUpdate newMem.OpenMem failed, szNewMem:Local\sgime_skin.v43.filemap.sogouime err:系统错误2: 系统找不到指定的文件。  
+打开Filemap失败: Local\sgime_skin.v43.filemap.sogouime4777863fd27
+[72688:72988:1019/120815.870:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:1
+[72688:72988:1019/120815.870:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:43
+[72688:72988:1019/120815.935:WARNING:t_skinfilemap.cpp(63)] SGRenderLog:CheckUpdate newMem.OpenMem Suc, szNewMem:Local\sgime_skin.Dpi106.v43.filemap.sogouime
+[72688:72988:1019/120815.935:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:43
+[72688:72988:1019/120815.935:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:43
+[72688:72988:1019/120827.132:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120828.203:WARNING:t_skinfilemap.cpp(56)] SGRenderLog:CheckUpdate newMem.OpenMem failed, szNewMem:Local\sgime_skin.Dpi106.v44.filemap.sogouime err:系统错误2: 系统找不到指定的文件。  
+打开Filemap失败: Local\sgime_skin.Dpi106.v44.filemap.sogouime4777863fd27
+[72688:72988:1019/120828.203:WARNING:t_skinfilemap.cpp(65)] SGRenderLog:CheckUpdate finish: old version:43
+[72688:72988:1019/120828.203:WARNING:t_skinfilemap.cpp(67)] SGRenderLog:CheckUpdate finish: new version:44
+[72688:72988:1019/120833.392:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120837.806:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120837.972:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1
+[72688:72988:1019/120843.349:WARNING:kernel_parameter_setter.cc(150)] [KernelParameterSetter] NotifyDoublePinyinSchemeChanged failed, scheme=Sogou status=1

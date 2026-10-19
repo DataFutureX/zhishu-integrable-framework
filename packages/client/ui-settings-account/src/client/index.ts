@@ -1,8 +1,16 @@
 /** Custom account settings registration, Desktop renderer only. */
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
+import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { TranscriptViewMode } from '@deepseek-ai/dsh-client-ui-chat/client'
+import { DesktopOnboardingEntry } from './DesktopOnboardingEntry.tsx'
+import { DesktopOnboardingController } from './onboarding-state.ts'
+import { readOnboardingApiKeyPresence } from './onboarding-credentials.ts'
+import { DESKTOP_ONBOARDING_NAMESPACE, type OnboardingSettings } from '../onboarding-settings.ts'
+import type { AccountSnapshot } from './AccountSection.tsx'
 import { CustomAccountMenu } from './CustomAccountMenu.tsx'
 import { CustomAccountSection, type CustomAccountInjected, type CustomAccountSnapshot } from './CustomAccountSection.tsx'
 import { en, zh, type AccountKey } from './locales.ts'
@@ -15,8 +23,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap { 'settings.account': AccountKey }
 }
 
-/** Services required by account settings. */
-export const inject = ['slots', 'locale']
+/** Services required by account settings and the first-run guide. */
+export const inject = ['slots', 'locale', 'configForms']
 
 /** One `/account/api/session` response, narrowed to the fields the UI reads. */
 interface SessionPayload {
@@ -53,8 +61,24 @@ export function apply(ctx: Context): void {
   const t = ctx.locale.bind('settings.account')
   const listeners = new Set<() => void>()
   let snapshot: CustomAccountSnapshot = { status: 'loading', authenticated: false, username: null, displayName: null }
+  const accountListeners = new Set<() => void>()
+  let accountSnapshot: AccountSnapshot = { view: undefined, details: undefined, failed: false }
+  const publishAccount = (next: CustomAccountSnapshot): void => {
+    const signedIn = next.status === 'ready' && next.authenticated
+    accountSnapshot = {
+      view: next.status === 'loading' ? undefined : {
+        status: signedIn ? 'credential-stored' : 'signed-out',
+        attempt: null,
+        links: { usageUrl: 'http://127.0.0.1/', topUpUrl: 'http://127.0.0.1/' },
+      },
+      details: undefined,
+      failed: next.status === 'error',
+    }
+    for (const listener of accountListeners) listener()
+  }
   const publish = (next: CustomAccountSnapshot): void => {
     snapshot = next
+    publishAccount(next)
     for (const listener of listeners) listener()
   }
   let generation = 0
@@ -92,6 +116,20 @@ export function apply(ctx: Context): void {
       subscribe: (listener: () => void) => { listeners.add(listener); return () => { listeners.delete(listener) } },
     },
   }
+  const onboardingAccount = {
+    getSnapshot: () => accountSnapshot,
+    subscribe: (listener: () => void) => { accountListeners.add(listener); return () => { accountListeners.delete(listener) } },
+  }
+  const onboarding = new DesktopOnboardingController(
+    ctx.configForms.get<OnboardingSettings>(DESKTOP_ONBOARDING_NAMESPACE),
+    ctx.configForms.get<{ transcriptView?: TranscriptViewMode | null; performanceUsage: 'compact' | 'detailed' }>('ui-chat'),
+    enabled => ctx.configForms.developerTools.setEnabled(enabled),
+    onboardingAccount,
+    readOnboardingApiKeyPresence,
+    ctx.configForms.describe(),
+  )
+  ctx.effect(() => () => { onboarding.dispose() }, 'account: onboarding')
+  publishAccount(snapshot)
   const injected = (): CustomAccountInjected => ({ hooks, signOut, refresh })
   ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section', id: 'account', order: -10, label: () => t('nav'),
@@ -100,4 +138,13 @@ export function apply(ctx: Context): void {
   ctx.slots.inject('settings.launcher', () => ctx.slots.register({
     name: 'settings.launcher', locale: 'settings.account', inject: injected,
   }, CustomAccountMenu))
+  ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+    name: 'shell.overlay', id: 'desktop-onboarding', locale: 'settings.account',
+    inject: () => ({
+      hooks: { onboarding: onboarding.state, account: onboardingAccount },
+      update: change => onboarding.update(change),
+      complete: reason => onboarding.complete(reason),
+      retry: () => onboarding.retry(),
+    }),
+  }, DesktopOnboardingEntry))
 }

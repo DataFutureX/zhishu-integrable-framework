@@ -37,6 +37,7 @@ it('registers the section and launcher on Desktop and reads the gate session', a
     })
   })
   expect(fetch).toHaveBeenCalledWith('/account/api/session', expect.anything())
+  expect(c.ctx.slots.entries('shell.overlay').some(entry => entry.options.id === 'desktop-onboarding')).toBe(true)
 }, 60_000)
 
 it('reports a refused session read without crashing the section', async ({ start }) => {

@@ -1,0 +1,19 @@
+# dsh-plugin-account — bundle patch.
+#
+# 把账号密码登录门禁（宿主半）注册进宿主 cordis 树。
+# 凭据按第一版需求写死在此；改账号密码只改下面的 config，删掉 config 则用插件默认值
+# （admin / admin123）。
+#
+# 也可以不用 bundle，直接把这一个 insert 行拷进 profile 的 cordis.patch.yml。
+- insert:
+    - id: account-login
+      name: dsh-plugin-account
+      config:
+        users:
+          - username: admin
+            password: admin123
+        # 登录后账号页 / 顶栏菜单显示的名称；后续接 HTTP 用户信息接口后由接口覆盖。
+        displayName: 自定义账号
+        # false = 启动打印的 ?token= URL 不再自动登录，所有入口都必须走登录页。
+        allowLaunchToken: false
+        sessionDays: 7

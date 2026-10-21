@@ -70,12 +70,26 @@
           </div>
         </div>
         <div class="guide-card">
+          <div class="guide-card__icon guide-card__icon--sso">
+            <el-icon :size="20"><Cellphone /></el-icon>
+          </div>
+          <div class="guide-card__body">
+            <h3>桌面客户端接入</h3>
+            <p>面向 Electron / WPF / JavaFX 等桌面端软件提供专用登录通道（<code>/desktop/v1/auth</code>）：</p>
+            <div class="code-block">
+              <code>GET /desktop/v1/auth/public-key → POST /desktop/v1/auth/login</code>
+            </div>
+            <p>与控制台认证同构（RSA 加密 + JWT），<strong>不要求滑动验证码</strong>。</p>
+            <p>详见 <strong>docs/Desktop登录模块接入指南.md</strong>。</p>
+          </div>
+        </div>
+        <div class="guide-card">
           <div class="guide-card__icon guide-card__icon--base">
             <el-icon :size="20"><Monitor /></el-icon>
           </div>
           <div class="guide-card__body">
             <h3>基础信息</h3>
-            <p>Base URL：<code>/api/v1</code>（管理）· <code>/open/v1</code>（开放）</p>
+            <p>Base URL：<code>/api/v1</code>（管理）· <code>/open/v1</code>（开放）· <code>/desktop/v1</code>（桌面端）</p>
             <p>数据格式：JSON · 字符编码：UTF-8</p>
             <p>接口文档：开发工具 → 接口文档（Swagger UI）</p>
           </div>
@@ -377,6 +391,7 @@ import {
   Unlock,
   Link,
   Monitor,
+  Cellphone,
   Grid,
   Position,
   Guide,
@@ -489,6 +504,20 @@ const categories: ApiCategory[] = [
       { method: 'POST', path: '/api/v1/auth/login', summary: '用户登录，根据加密凭据获取 JWT Token', requiresAuth: false },
       { method: 'POST', path: '/api/v1/auth/logout', summary: '退出登录，将当前 Token 加入黑名单', requiresAuth: true },
       { method: 'POST', path: '/api/v1/auth/sso/exchange', summary: 'SSO 换票，校验伙伴签发的短期 Ticket 并签发业务 JWT', requiresAuth: false },
+    ],
+  },
+  {
+    key: 'desktop',
+    title: '桌面客户端 API',
+    icon: Cellphone,
+    description: '为桌面客户端（Electron / WPF / JavaFX / 移动端等）提供专用的登录、服务发现接口；与控制台同构的 RSA + JWT 认证，不要求滑动验证码。',
+    basePath: '/desktop/v1',
+    endpoints: [
+      { method: 'GET', path: '/desktop/v1/health', summary: '健康检查（无需鉴权，桌面端启动或心跳探测）', requiresAuth: false },
+      { method: 'GET', path: '/desktop/v1/auth/public-key', summary: '获取 RSA 公钥，用于加密用户名和密码', requiresAuth: false },
+      { method: 'POST', path: '/desktop/v1/auth/login', summary: '桌面端登录（不验证验证码），返回 JWT Token 及用户基本信息', requiresAuth: false },
+      { method: 'POST', path: '/desktop/v1/auth/logout', summary: '退出登录，将当前 Token 加入黑名单', requiresAuth: true },
+      { method: 'GET', path: '/desktop/v1/info', summary: '桌面端服务能力清单（需 X-Desktop-Key）', requiresAuth: true },
     ],
   },
   {

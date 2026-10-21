@@ -6,6 +6,7 @@ package cn.datafuturex.zhishu.security.sso;
 public final class LoginChannel {
 
     public static final String LOCAL = "LOCAL";
+    public static final String DESKTOP = "DESKTOP";
     public static final String WANXIANG = "WANXIANG";
     public static final String SHUZHI_IOT = "SHUZHI_IOT";
 

@@ -20,9 +20,9 @@ yunqi:
     # 开发模式：放行 API 文档相关路径
     api-docs-permit-all: true
   datasource:
-    host: localhost
+    host: 192.168.11.14
     port: 5432
-    database: zhishu_integrable_framework
+    database: letswork-dev
     username: postgres
     password: mysecretpassword
     params: sslmode=disable

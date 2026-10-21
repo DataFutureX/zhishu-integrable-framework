@@ -12,6 +12,7 @@
 | [单点登录对接说明.md](单点登录对接说明.md) | 万象 / 数智 IoT 等伙伴以 ticket 换票登录知枢的协议、接口与联调清单 |
 | [万象接入联调实现步骤.md](万象接入联调实现步骤.md) | 万象侧逐步联调清单 |
 | [他方SSO接入SDK使用说明.md](他方SSO接入SDK使用说明.md) | 伙伴侧 Java SDK：密钥生成、Ticket 签发、回调 URL（源码见 `sdk/yunqi-sso-partner-sdk`） |
+| [Desktop登录模块接入指南.md](Desktop登录模块接入指南.md) | 桌面客户端接入 `/desktop/v1/auth` 登录、退出的RSA 加密方案与多语言代码示例 |
 
 ## API 接口测试报告
 

@@ -56,6 +56,7 @@ public class SecurityConfig {
                     .requestMatchers("/error").permitAll()
                     .requestMatchers("/open/v1/**").permitAll()
                     .requestMatchers("/mcp", "/mcp/**").permitAll()
+                    .requestMatchers("/desktop/v1/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll();
                 permitApiDocsIfEnabled(auth);
                 auth.anyRequest().authenticated();

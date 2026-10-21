@@ -184,6 +184,11 @@ zhishu:
       enabled: true
       auth-key: ${ZHISHU_MCP_AUTH_KEY:}       # 生产环境必须配置，空 = 不鉴权（开发模式）
       auth-header: X-API-Key
+  desktop:
+    enabled: ${ZHISHU_DESKTOP_ENABLED:true}
+    auth-key: ${ZHISHU_DESKTOP_AUTH_KEY:}     # 生产环境必须配置，空 = 不鉴权（开发模式）
+    auth-header: X-Desktop-Key
+    api-version: 1.0.0
   briefing:
     event-scan:
       enabled: false

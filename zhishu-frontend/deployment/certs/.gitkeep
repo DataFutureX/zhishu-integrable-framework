@@ -1,0 +1,3 @@
+# 占位：HTTPS 证书目录（挂载为容器 /etc/nginx/certs，只读）
+# 启用 HTTPS 时放入 fullchain.pem 与 privkey.pem，并把 .env 的 ENABLE_HTTPS 置为 true
+# 证书文件已被 .gitignore 排除，切勿提交私钥

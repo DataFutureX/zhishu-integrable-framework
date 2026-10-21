@@ -1,0 +1,3 @@
+# 镜像内不再 COPY 任何宿主机文件（jar 通过 ./app 只读挂载，日志/上传件通过 ./data 挂载），
+# 因此构建上下文保持为空，docker compose build 只装运行时（JRE + 字体 + curl）。
+*

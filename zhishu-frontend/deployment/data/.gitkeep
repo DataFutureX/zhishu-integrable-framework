@@ -1,0 +1,2 @@
+# 占位：运行时数据目录（nginx 访问/错误日志落 data/logs，已挂载到容器 /var/log/nginx）
+# data/logs 由 scripts/deploy-web.sh 自动创建且不入库；备份站点日志直接打包 data/logs 即可

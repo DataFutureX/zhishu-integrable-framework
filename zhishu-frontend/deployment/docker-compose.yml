@@ -1,0 +1,51 @@
+# 知枢前端 Nginx 容器部署：不发镜像（无 Dockerfile），直接用官方 nginx 镜像 + 宿主机挂载。
+# 站点产物在 ./web（Windows 侧 package-web.ps1 生成），配置由 scripts/deploy-web.sh 渲染到 ./nginx/generated。
+# 使用前：cp .env.example .env，确认 BACKEND_UPSTREAM 指向可达的后端。
+name: zhishu-web
+
+services:
+  zhishu-web:
+    image: ${NGINX_IMAGE:-nginx:1.27-alpine}
+    container_name: zhishu-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      # 官方镜像的 envsubst 只对匹配该正则的环境变量做替换，
+      # 否则模板里的 $host / $uri 等 nginx 变量会被吃掉
+      NGINX_ENVSUBST_FILTER: '^(BACKEND_|NGINX_)'
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-host.docker.internal:8180}
+      NGINX_HTTP_PORT: ${NGINX_HTTP_PORT:-80}
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME:-_}
+    ports:
+      - "${WEB_PORT:-80}:${NGINX_HTTP_PORT:-80}"
+      # 未启用 HTTPS 时容器不监听 443，该映射存在但不通，不影响启动
+      - "${HTTPS_PORT:-443}:443"
+    # 便于 BACKEND_UPSTREAM=host.docker.internal 时访问宿主机上的后端（Linux 需要 host-gateway）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # 站点根：换 web/ 内容即刻生效，无需重启容器
+      - ./web:/usr/share/nginx/html:ro
+      # 生效的 server 配置（deploy-web.sh 按 ENABLE_HTTPS 从 nginx/optional 渲染生成）
+      # 生成的文件必须叫 default.conf.template —— 这样才能覆盖镜像自带的 default.conf
+      - ./nginx/generated:/etc/nginx/templates:ro
+      # server 块内 include 的公共片段
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      # 证书目录（HTTP 模式下保持为空即可）
+      - ./certs:/etc/nginx/certs:ro
+      # nginx 访问/错误日志落宿主机
+      - ./data/logs:/var/log/nginx
+    healthcheck:
+      # /nginx-health 由配置内置，不依赖 web/ 是否已有产物
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:${NGINX_HTTP_PORT:-80}/nginx-health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

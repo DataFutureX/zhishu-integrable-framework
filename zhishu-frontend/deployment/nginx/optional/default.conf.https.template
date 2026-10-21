@@ -1,0 +1,46 @@
+# HTTPS 站点模板（ENABLE_HTTPS=true 时生效）
+# 由 scripts/deploy-web.sh 复制到 nginx/generated/default.conf.template（同样必须叫 default，
+# 才能覆盖镜像自带的 conf.d/default.conf，否则 80 端口会出现两个默认 server）。
+# 证书：deployment/certs/fullchain.pem 与 privkey.pem（容器内 /etc/nginx/certs，只读挂载）。
+
+upstream zhishu_backend {
+    server ${BACKEND_UPSTREAM};
+    keepalive 32;
+}
+
+# 80 只做跳转；保留 /nginx-health 供容器健康检查（不跟随 301 到自签域名）
+server {
+    listen       ${NGINX_HTTP_PORT};
+    server_name  ${NGINX_SERVER_NAME};
+
+    location = /nginx-health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen       443 ssl;
+    http2        on;
+    server_name  ${NGINX_SERVER_NAME};
+
+    ssl_certificate     /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # 证书可信后再开启，避免无法回退的强绑定
+    # add_header Strict-Transport-Security "max-age=31536000" always;
+
+    root  /usr/share/nginx/html;
+
+    include /etc/nginx/snippets/static.conf;
+    include /etc/nginx/snippets/proxy.conf;
+}

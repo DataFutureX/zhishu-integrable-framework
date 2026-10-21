@@ -1,0 +1,20 @@
+# HTTP 站点模板（ENABLE_HTTPS=false 时生效）
+# 由 scripts/deploy-web.sh 复制到 nginx/generated/default.conf.template；
+# 官方镜像的 entrypoint 会对 /etc/nginx/templates/*.template 做 envsubst，
+# 输出到 /etc/nginx/conf.d/default.conf —— 必须保持 default 这个名字，才能覆盖镜像自带的同名配置。
+# ${} 变量只允许 BACKEND_ / NGINX_ 前缀（受 NGINX_ENVSUBST_FILTER 限制），$host 等 nginx 变量不受影响。
+
+upstream zhishu_backend {
+    server ${BACKEND_UPSTREAM};
+    keepalive 32;
+}
+
+server {
+    listen       ${NGINX_HTTP_PORT};
+    server_name  ${NGINX_SERVER_NAME};
+
+    root  /usr/share/nginx/html;
+
+    include /etc/nginx/snippets/static.conf;
+    include /etc/nginx/snippets/proxy.conf;
+}

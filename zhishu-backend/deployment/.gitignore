@@ -1,0 +1,10 @@
+# jar 暂存目录：由 scripts/package-jar.ps1 从 ../zhishu-core/target 拷入，不入库
+app/*.jar
+
+# 运行时数据（容器日志与上传件）：整目录不入库，由 scripts/build-image.sh 启动时 mkdir -p 创建
+# （上级 zhishu-backend/.gitignore 的 logs/ 与 uploads/ 规则也会覆盖这两个目录）
+data/logs/
+data/uploads/
+
+# 真实环境变量含数据库密码与密钥，禁止提交（保留 .env.example）
+.env

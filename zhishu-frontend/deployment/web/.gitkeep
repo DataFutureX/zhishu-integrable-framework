@@ -1,0 +1,2 @@
+# 占位：本目录存放前端站点产物（package-web.ps1 从 ../dist 拷入），挂载为容器 /usr/share/nginx/html
+# 更新站点 = 覆盖本目录内容，即刻生效，无需重启容器

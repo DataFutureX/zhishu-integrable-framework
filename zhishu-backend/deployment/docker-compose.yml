@@ -1,0 +1,45 @@
+# 知枢后端单容器部署：只跑 zhishu-core 可执行 jar，数据库 / 前端 / Neo4j 均在本 compose 之外。
+# 使用前：cp .env.example .env 并填写必填项（业务与敏感配置全部由 env_file 注入容器）。
+name: zhishu
+
+services:
+  zhishu-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zhishu-backend:${ZHISHU_VERSION:-1.0.0}
+    container_name: zhishu-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # 这三项优先级高于 .env，保证 profile 与监听端口不被意外改写
+      TZ: ${TZ:-Asia/Shanghai}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: ${SERVER_PORT:-8180}
+    ports:
+      - "${APP_PORT:-8180}:${SERVER_PORT:-8180}"
+    # 2G 堆 + 约 1G 余量（Metaspace / 线程栈 / CodeCache / pgvector 与 Neo4j 客户端堆外）
+    mem_limit: ${MEM_LIMIT:-3g}
+    # 便于 YUNQI_DB_HOST=host.docker.internal 指向宿主机 PostgreSQL（Linux 与 Docker Desktop 通用）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # 日志与上传件直接落到宿主机 deployment/data，换 jar / 重建容器都不会丢
+      - ./data/logs:/app/logs
+      - ./data/uploads:/app/uploads
+      # jar 不入镜像，改为只读挂载：替换 deployment/app 下的 jar 后 docker compose restart 即生效
+      - ./app:/app/deploy:ro
+    healthcheck:
+      # 免鉴权健康接口，见 SecurityConfig 的 permitAll 列表
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${SERVER_PORT:-8180}/api/v1/system/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Spring Boot + Spring AI + pgvector 建表首启较慢，留足窗口
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

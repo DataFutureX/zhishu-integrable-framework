@@ -1,0 +1,16 @@
+# 站点产物：由 scripts/package-web.ps1 从 ../dist 拷入，不入库
+web/*
+!web/.gitkeep
+
+# deploy-web.sh 按 ENABLE_HTTPS 渲染出的生效配置，不入库（源模板在 nginx/optional 下）
+nginx/generated/*
+!nginx/generated/.gitkeep
+
+# 证书与运行日志，禁止入库
+certs/*
+!certs/.gitkeep
+data/logs/
+data/*.log
+
+# 真实环境变量，禁止提交（保留 .env.example）
+.env

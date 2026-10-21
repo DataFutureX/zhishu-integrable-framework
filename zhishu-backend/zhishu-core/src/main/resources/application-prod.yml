@@ -5,7 +5,7 @@ spring:
       on-profile: prod
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8180}
 
 # 数据库（生产）—— 敏感信息务必通过环境变量注入，勿将真实密码提交仓库
 yunqi:

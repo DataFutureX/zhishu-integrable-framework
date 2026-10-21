@@ -1,0 +1,5 @@
+# 运行时数据目录（容器 /app/logs 与 /app/uploads 的宿主机落盘位置）
+# data/logs 与 data/uploads 由 scripts/build-image.sh 自动 mkdir 创建，且被 gitignore 排除（不入库）：
+#   - deployment/.gitignore 显式忽略 data/logs、data/uploads
+#   - 上级 zhishu-backend/.gitignore 的 logs/ 与 uploads/ 规则同样覆盖这两个目录
+# 本文件仅作为 data 目录本身的占位锚点。

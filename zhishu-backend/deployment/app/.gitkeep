@@ -1,0 +1,2 @@
+# 占位：本目录存放可执行 jar（由 scripts/package-jar.ps1 生成），运行时只读挂载到容器 /app/deploy
+# 升级 = 用新 jar 覆盖本目录下的文件，然后 docker compose restart；建议只保留一个 jar

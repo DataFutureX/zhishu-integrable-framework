@@ -13,6 +13,7 @@ zhishu-frontend/deployment/
 ├── nginx/
 │   ├── snippets/static.conf            # 静态资源、gzip、缓存、SPA history 回退
 │   ├── snippets/proxy.conf             # /api、/uploads、/mcp 等反代与 SSE 参数
+│   ├── snippets/proxy-headers.conf     # 转发头集合（Host / X-Forwarded-*）
 │   ├── optional/default.conf.http.template    # HTTP server 源模板
 │   ├── optional/default.conf.https.template   # HTTPS server 源模板（含 80 跳转）
 │   └── generated/                      # deploy-web.sh 渲染出的 default.conf.template
@@ -29,6 +30,9 @@ zhishu-frontend/deployment/
 - **更新即覆盖文件**：覆盖 `web/` 内容即刻生效（`index.html` 已设 `no-cache`，`/assets/` 长强缓存），无需 `restart`。
 - **配置走 envsubst**：官方镜像只对 `BACKEND_` / `NGINX_` 前缀变量做替换，`$host`、`$uri` 等 nginx 变量不受影响。
 - **生成的配置必须叫 `default.conf.template`**：这样 envsubst 产物会覆盖镜像自带的 `conf.d/default.conf`，避免 80 端口出现两个默认 server。
+- **转发头单一份 snippet**：nginx 的 `proxy_set_header` 继承是“全有或全无”，location 只要自己定义了任意一条，就不再继承 server 级的全部转发头；
+  此时若不重新 include，Host 会退化为 upstream 名 `zhishu_backend`（含下划线），**Tomcat 会直接返回 400**（请求进不到应用）。
+  所以 `/api/` 块里除了 `proxy_set_header Connection ""` 之外，必须同时 `include proxy-headers.conf`。
 
 ## 1. 前置条件
 
@@ -135,6 +139,9 @@ docker compose exec -T zhishu-web nginx -t        # 只校验容器内实际生�
 docker compose exec -T zhishu-web nginx -s reload # 配置变更后热加载（重建容器时不需要）
 ```
 
+snippets 与模板是挂载进容器的普通文件：改完 `nginx/snippets/*.conf` 只需 `nginx -t` 后 `nginx -s reload`，
+无需重建容器；只改 `nginx/optional/*.template`（含 envsubst 变量）才需要重跑 `./scripts/deploy-web.sh`。
+
 - **日志**：宿主机 `deployment/data/logs/{access,error}.log`（对应容器 `/var/log/nginx`）；
   stdout 由 Docker `json-file` 收集，单文件 20MB、保留 5 个。
 - **上传体积**：nginx `client_max_body_size 20m`，后端 multipart 上限 10MB（`application.yml`），
@@ -153,6 +160,7 @@ docker compose exec -T zhishu-web nginx -s reload # 配置变更后热加载（�
 | 刷新子路由 404 | 站点配置未回退到 index.html；确认 `nginx/snippets/static.conf` 的 `location / { try_files $uri $uri/ /index.html; }` 未被删改 |
 | 图标/上传件不显示 | 前端拼的是 `/api/uploads/**`，后端在 `/uploads/**`；确认 `proxy.conf` 中 `/api/uploads/` 的映射还在 |
 | SSE 收不到推送 / 流式卡住不出字 | `/api/` 的 `proxy_buffering off` 与 `proxy_read_timeout 300s` 被去掉；若前面还有云 LB/上层 nginx，也要关缓冲 |
+| **经 nginx 的 `/api/**` 全部 400，直连后端 200（`/uploads/**` 却正常）** | 响应体是 Tomcat 错误页而非 nginx 页 → Host 头退化：某 location 自定义了 `proxy_set_header` 却没重新 include `proxy-headers.conf`，导致 `Host: zhishu_backend`（下划线被 Tomcat 拒）。另外 nginx 不认单引号，`Connection '';` 应为 `Connection "";` |
 | `host not found in upstream` | `BACKEND_UPSTREAM` 写错或后端未启动；`host.docker.internal` 需 compose 里的 `extra_hosts: host-gateway` |
 | 启用 HTTPS 后 nginx -t 报证书找不到 | `certs/` 下缺 `fullchain.pem` / `privkey.pem`，或文件名不符；目录是只读挂载，权限需可读 |
 | `nginx: [emerg] duplicate ... 80` | `nginx/generated` 里出现了多个 `*.template`，或手工放了额外配置；该目录只应由 `deploy-web.sh` 渲染出唯一的 `default.conf.template` |

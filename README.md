@@ -16,6 +16,7 @@
 - [两种体验路径](#两种体验路径)
 - [路径 A：仅前端演示（无需后端）](#路径-a仅前端演示无需后端)
 - [路径 B：前后端联调](#路径-b前后端联调)
+- [生产部署（Docker Compose）](#生产部署docker-compose)
 - [默认账号](#默认账号)
 - [联调验证清单](#联调验证清单)
 - [技术栈一览](#技术栈一览)
@@ -114,8 +115,8 @@ npm run dev:demo
 
 ```text
 zhishu-integrable-framework/
-├── zhishu-frontend/   # Vue 3 前端
-├── zhishu-backend/    # Java 后端（Maven 父工程）
+├── zhishu-frontend/   # Vue 3 前端（deployment/ = Nginx 容器部署）
+├── zhishu-backend/    # Java 后端（Maven 父工程，deployment/ = Docker 容器部署）
 ├── zhishu-sdk/        # 伙伴 SSO SDK、开放 API Java SDK
 ├── docs/              # 对接说明
 ├── screenshot/        # 界面截图
@@ -204,6 +205,87 @@ VITE_API_BASE_URL=http://localhost:8180
 
 联调默认管理员：`admin` / `admin123`（滑动验证码）。
 
+## 生产部署（Docker Compose）
+
+本地体验用路径 A / B，正式环境部署用本章。前后端各有一个独立部署目录，均采用**打包与运行分离**的两步流程：Windows 只出产物，Linux 只跑容器。
+
+| 项 | 后端 `zhishu-backend/deployment/` | 前端 `zhishu-frontend/deployment/` |
+|----|-----------------------------------|-----------------------------------|
+| 运行载体 | `eclipse-temurin:21-jre` 镜像 + 宿主机 jar（镜像内不含 jar） | 官方 `nginx:1.27-alpine`（不自建镜像） |
+| 步骤 1（Windows） | `scripts/package-jar.ps1` → `app/zhishu-core-1.0.0.jar` | `scripts/package-web.ps1` → `web/`（dist 内容） |
+| 步骤 2（Linux） | `scripts/build-image.sh --up` | `scripts/deploy-web.sh`（可用 `--down` 停止） |
+| 默认端口 | 8180（`APP_PORT` / `SERVER_PORT`） | 80（`WEB_PORT`） |
+| 资源默认 | `-Xms512m -Xmx2g`，`mem_limit=3g` | — |
+| 数据落盘 | `data/logs`、`data/uploads` | `data/logs`（nginx 访问/错误日志） |
+| 更新方式 | 覆盖 `app/*.jar` + `docker compose restart` | 覆盖 `web/` 内容即刻生效 |
+| 详细文档 | [后端部署说明](./zhishu-backend/deployment/README.md) | [前端部署说明](./zhishu-frontend/deployment/README.md) |
+
+前置：Linux 侧只需 Docker 24+ / Compose v2（无需 JDK、Maven、Node）；Windows 侧需 JDK 21 + Maven 3.9（后端）与 Node 18+（前端）。`app/*.jar`、`web/`、`.env` 均被 `.gitignore` 忽略，需 `scp -r` 整目录传输。
+
+### 1. 初始化数据库（一次性）
+
+```bash
+# 在仓库根目录执行（需已安装 pgvector 扩展的 PostgreSQL 14+）
+psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
+psql -U postgres -d zhishu_integrable_framework -f zhishu-backend/zhishu-core/src/main/resources/db/init.sql
+psql -U postgres -d zhishu_integrable_framework -f zhishu-backend/zhishu-core/src/main/resources/db/init_ai.sql
+```
+
+`init_ai.sql` 会执行 `CREATE EXTENSION IF NOT EXISTS vector`，需目标库已安装 pgvector 且账号有建扩展权限。
+
+### 2. 部署后端
+
+```powershell
+# Windows：打可执行 jar 并暂存到 deployment/app/
+.\zhishu-backend\deployment\scripts\package-jar.ps1
+```
+
+```bash
+# 传到 Linux 后
+cd zhishu-backend/deployment
+cp .env.example .env            # 必填：YUNQI_DB_*、JWT_SECRET、ZHISHU_AI_CRYPTO_KEY 等
+./scripts/build-image.sh --up   # 构建运行时镜像 + up -d
+curl http://localhost:8180/api/v1/system/health
+```
+
+要点：
+
+- 容器内激活 `prod` profile，敏感项全部来自 `.env`，不改 `application-prod.yml`。
+- 外部 PostgreSQL 不支持 SSL 时设 `YUNQI_DATASOURCE_PARAMS=sslmode=disable`（prod 默认写死 `require`）。
+- 无 Neo4j 时设 `WANXIANG_KG_ENABLED=false`，知识图谱自动降级，不影响主链路。
+- `ZHISHU_MCP_AUTH_KEY` / `ZHISHU_DESKTOP_AUTH_KEY` 生产必须填（留空 = 不鉴权）。
+- **改 `.env` 必须 `docker compose up -d`**（restart 不会重新读取环境变量）；只有换 jar 用 `docker compose restart`。
+
+### 3. 部署前端
+
+```powershell
+# Windows：构建 dist 并暂存到 deployment/web/（构建期强制 VITE_API_BASE_URL=/api）
+.\zhishu-frontend\deployment\scripts\package-web.ps1
+```
+
+```bash
+cd zhishu-frontend/deployment
+cp .env.example .env            # BACKEND_UPSTREAM 默认 host.docker.internal:8180
+./scripts/deploy-web.sh
+curl http://localhost/api/v1/system/health   # 经 nginx 反代，应与后端直连一致
+```
+
+要点：
+
+- **同域反向代理**：nginx 既发静态资源，又把 `/api`、`/uploads`、`/mcp` 转发到后端，浏览器全程同源，无需给后端配 CORS。
+- `/api/**` 已关闭缓冲并设 300s 读超时，保证公告 SSE 与 AI 流式对话不被网关提前切断。
+- `web/` 与 `nginx/snippets/*.conf` 都是挂载文件：覆盖 `web/` 即刻生效；改 snippet 后 `docker compose exec -T zhishu-web nginx -s reload` 热加载。
+- HTTPS 默认关闭：证书放入 `certs/{fullchain,privkey}.pem`，`.env` 设 `ENABLE_HTTPS=true` 后重跑脚本。
+- 两套 compose 默认互不耦合（经宿主机端口访问）。想让 nginx 直连后端容器，可共用一个外部网络并把 `BACKEND_UPSTREAM` 改为 `zhishu-app:8180`。
+
+### 4. 上线前检查
+
+- 修改默认管理员 `admin` / `admin123` 的密码
+- `JWT_SECRET` 换成随机串；`ZHISHU_AI_CRYPTO_KEY` 定稿后不再变更（改了已入库的模型 Key 无法解密）
+- `NGINX_SERVER_NAME` 按域名收紧，按需启用 HTTPS
+- 备份范围：数据库 + `zhishu-backend/deployment/data/uploads`（上传件与系统图标）
+- 单实例约束：验证码会话与 SSO `jti` 存在进程内存里，多副本部署需先外置 Redis
+
 ## 默认账号
 
 | 场景 | 用户名 | 密码 | 说明 |
@@ -285,11 +367,19 @@ npm install
 netstat -ano | findstr ":3100 :8180"
 ```
 
+**容器化部署异常**
+
+- 先看容器在不在：`docker compose ps`（后端在 `zhishu-backend/deployment`，前端在 `zhishu-frontend/deployment`）
+- 接口 400/404 而直连后端正常：先看响应体是 nginx 页还是 Tomcat 页，再按两侧部署文档的「常见问题」对照
+- 完整排查表：[后端部署说明](./zhishu-backend/deployment/README.md)、[前端部署说明](./zhishu-frontend/deployment/README.md)
+
 ## 下一步
 
 - 产品门户文档：本地 [http://localhost:3100/docs](http://localhost:3100/docs) · 线上 [https://zhishu.datafuturex.cn/docs](https://zhishu.datafuturex.cn/docs)
 - 前端完整说明：[zhishu-frontend/README.md](./zhishu-frontend/README.md)
 - 后端完整说明：[zhishu-backend/README.md](./zhishu-backend/README.md)
+- 后端容器部署：[zhishu-backend/deployment/README.md](./zhishu-backend/deployment/README.md)
+- 前端容器部署：[zhishu-frontend/deployment/README.md](./zhishu-frontend/deployment/README.md)
 - 单点登录协议：[docs/单点登录对接说明.md](./docs/单点登录对接说明.md)
 - 开放 API SDK：[zhishu-sdk/zhishu-openapi-sdk/README.md](./zhishu-sdk/zhishu-openapi-sdk/README.md)
 

@@ -111,6 +111,16 @@ public class GatewayException extends RuntimeException {
     }
 
     /**
+     * 503：网关未就绪（建表/迁移未完成）。
+     *
+     * @param message 可操作的原因
+     * @return 异常
+     */
+    public static GatewayException notReady(String message) {
+        return new GatewayException(503, "gateway_unavailable", "gateway_not_ready", message, null, null, null);
+    }
+
+    /**
      * 503：上游不可达或未配置。
      *
      * @param message 错误说明

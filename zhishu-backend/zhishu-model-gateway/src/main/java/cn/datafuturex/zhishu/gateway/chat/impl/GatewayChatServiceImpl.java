@@ -5,6 +5,7 @@ import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelView;
 import cn.datafuturex.zhishu.gateway.chat.GatewayChatService;
 import cn.datafuturex.zhishu.gateway.compat.GatewayException;
+import cn.datafuturex.zhishu.gateway.compat.GatewayRateLimiter;
 import cn.datafuturex.zhishu.gateway.compat.TokenEstimator;
 import cn.datafuturex.zhishu.gateway.config.GatewayProperties;
 import cn.datafuturex.zhishu.gateway.quota.GatewayQuotaService;
@@ -47,6 +48,7 @@ public class GatewayChatServiceImpl implements GatewayChatService {
     private final GatewayQuotaService quotaService;
     private final GatewayUsageService usageService;
     private final TokenEstimator tokenEstimator;
+    private final GatewayRateLimiter rateLimiter;
     private final UpstreamHttpClient upstreamHttpClient;
     private final GatewayProperties properties;
 
@@ -70,6 +72,10 @@ public class GatewayChatServiceImpl implements GatewayChatService {
         GatewayModelView view = catalogService.find(modelId)
                 .orElseThrow(() -> GatewayException.modelNotFound(modelId));
 
+        if (!rateLimiter.tryAcquire(principal.username(), modelId)) {
+            throw GatewayException.rateLimited("请求过于频繁，请稍后再试");
+        }
+
         long promptEstimate = tokenEstimator.estimateRequest(request);
         long reserve = promptEstimate + reserveOutput(view, request);
         QuotaReservation reservation = quotaService.reserve(principal, reserve);
@@ -83,6 +89,11 @@ public class GatewayChatServiceImpl implements GatewayChatService {
         log.info("[网关推理] requestId={}, user={}, model={} -> {}/{}, stream={}, 预留={}",
                 requestId, principal.username(), modelId, view.upstream().providerKey(),
                 view.upstreamModel(), stream, reserve);
+        if (properties.getLog().isPromptBodies()) {
+            log.warn("[网关推理] requestId={}, prompt={}", requestId, truncate(rawBody, 2000));
+        } else {
+            log.debug("[网关推理] requestId={}, promptLength={}", requestId, rawBody == null ? 0 : rawBody.length());
+        }
 
         if (stream) {
             forwardStream(view, upstreamBody, modelId, promptEstimate, reservation, usageId, startNanos, response);

@@ -102,7 +102,7 @@ public class GraphWorkflowExecutor {
                         }
                         ChatClientSupport.setStepLabel(nodeLabel);
                         ChatClient client = chatClientSupport.buildClient(
-                                agent.getModel(), agent.getModelProviderId(), prompt, List.of(), options, false);
+                                agent.getModel(), prompt, List.of(), options, false);
                         // 意图澄清等中间节点不推 token，避免污染最终正文；仅「结果润色」或末级 LLM 推送
                         Consumer<String> tokenCb = shouldStreamLlmTokens(nodeLabel, onToken) ? onToken : null;
                         lastOutput = chatClientSupport.callOrStream(
@@ -125,7 +125,7 @@ public class GraphWorkflowExecutor {
                                 caps, traces, onProgress, agent.getId());
                         ChatClientSupport.setStepLabel(nodeLabel);
                         ChatClient client = chatClientSupport.buildClient(
-                                agent.getModel(), agent.getModelProviderId(), prompt, tools, options, enableMemory);
+                                agent.getModel(), prompt, tools, options, enableMemory);
                         Consumer<String> tokenCb = tools.isEmpty() && onToken != null ? onToken : null;
                         lastOutput = chatClientSupport.callOrStream(
                                 client, workingMessage, conversationId, enableMemory, tokenCb);
@@ -141,7 +141,7 @@ public class GraphWorkflowExecutor {
                         }
                         ChatClientSupport.setStepLabel(nodeLabel);
                         ChatClient client = chatClientSupport.buildClient(
-                                agent.getModel(), agent.getModelProviderId(), prompt, List.of(), options, false);
+                                agent.getModel(), prompt, List.of(), options, false);
                         String routeRaw = chatClientSupport.call(client, userMessage, null, false);
                         String nextId = WorkflowGraphCompiler.pickNext(
                                 outs.getOrDefault(current.getId(), List.of()), routeRaw);

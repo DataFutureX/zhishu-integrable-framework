@@ -247,12 +247,12 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
 (1, 0, '工作台', '/home', 'Home', NULL, 'HomeFilled', 'DIRECTORY', 0, 1, 1, NULL, NULL, 0),
 (11, 1, '仪表盘', '/home/dashboard', 'Dashboard', NULL, 'Odometer', 'MENU', 0, 1, 9, 'views/dashboard/Dashboard.vue', NULL, 0),
-(5, 0, '账号管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
+(5, 0, '账号管理', '/permission', 'Permission', '/permission/user', 'Key', 'DIRECTORY', 1, 1, 4, NULL, NULL, 1),
 (61, 5, '用户管理', '/permission/user', 'User', NULL, 'User', 'MENU', 1, 1, 1, 'views/user/UserList.vue', NULL, 1),
 (63, 5, '菜单管理', '/permission/menu', 'MenuManage', NULL, 'Menu', 'MENU', 1, 1, 2, 'views/system/MenuList.vue', NULL, 1),
 (64, 5, '角色管理', '/permission/role', 'RoleManage', NULL, 'Avatar', 'MENU', 1, 1, 3, 'views/system/RoleList.vue', NULL, 1),
 (66, 5, '单位管理', '/permission/unit', 'UnitManage', NULL, 'OfficeBuilding', 'MENU', 1, 1, 4, 'views/system/UnitList.vue', NULL, 1),
-(6, 0, '系统设置', '/system', 'System', '/system/config', 'SetUp', 'DIRECTORY', 1, 1, 4, NULL, NULL, 1),
+(6, 0, '系统设置', '/system', 'System', '/system/config', 'SetUp', 'DIRECTORY', 1, 1, 5, NULL, NULL, 1),
 (65, 6, '参数配置', '/system/config', 'SystemConfig', NULL, 'Tools', 'MENU', 1, 1, 1, 'views/system/SystemConfig.vue', NULL, 1),
 (68, 6, '操作日志', '/system/operation-log', 'OperationLog', NULL, 'Document', 'MENU', 1, 1, 2, 'views/system/OperationLogList.vue', NULL, 1),
 (69, 6, '公告管理', '/system/announcement', 'AnnouncementManage', NULL, 'Notification', 'MENU', 1, 1, 3, 'views/system/AnnouncementList.vue', NULL, 1),
@@ -287,7 +287,6 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 4, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
 (102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 5, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
 (104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 6, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
-(105, 10, '供应商管理', '/gateway/providers', 'GatewayProviders', NULL, 'Connection', 'MENU', 1, 1, 7, 'views/gateway/GatewayProviderList.vue', '{"title":"供应商管理"}', 1),
 (110, 10, 'Agent 监控', '/ai/agent-monitor', 'AIAgentMonitor', NULL, 'Odometer', 'MENU', 1, 1, 8, 'views/ai/AgentMonitor.vue', '{"title":"Agent 监控"}', 1),
 (108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 9, 'views/ai/AgentGraphEditor.vue', NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
@@ -306,6 +305,29 @@ ON CONFLICT (id) DO UPDATE SET
     status = EXCLUDED.status;
 
 UPDATE sys_menu SET sort = 9, update_time = CURRENT_TIMESTAMP WHERE id = 7;
+
+-- 模型网关目录（供应商与模型拆分：供应商连接 / 模型与生成参数）
+INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type, visible, requires_auth, sort, component, meta, status) VALUES
+(12, 0, '模型网关', '/gateway', 'ModelGateway', '/gateway/providers', 'Connection', 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
+(105, 12, '供应商管理', '/gateway/providers', 'GatewayProviders', NULL, 'Connection', 'MENU', 1, 1, 1, 'views/gateway/GatewayProviderList.vue', '{"title":"供应商管理"}', 1),
+(1201, 12, '模型设置', '/gateway/models', 'GatewayModels', NULL, 'Grid', 'MENU', 1, 1, 2, 'views/gateway/GatewayModelList.vue', '{"title":"模型设置"}', 1),
+(1202, 12, '额度策略', '/gateway/quotas', 'GatewayQuotas', NULL, 'Histogram', 'MENU', 1, 1, 3, 'views/gateway/GatewayQuotaPolicy.vue', '{"title":"额度策略"}', 1),
+(1203, 12, '调用用量', '/gateway/usage', 'GatewayUsage', NULL, 'DataLine', 'MENU', 1, 1, 4, 'views/gateway/GatewayUsageList.vue', '{"title":"调用用量"}', 1),
+(1204, 12, '接入说明', '/gateway/guide', 'GatewayGuide', NULL, 'Document', 'MENU', 1, 1, 5, 'views/gateway/GatewayGuide.vue', '{"title":"接入说明"}', 1)
+ON CONFLICT (id) DO UPDATE SET
+    parent_id = EXCLUDED.parent_id,
+    title = EXCLUDED.title,
+    path = EXCLUDED.path,
+    route_name = EXCLUDED.route_name,
+    redirect = EXCLUDED.redirect,
+    icon = EXCLUDED.icon,
+    menu_type = EXCLUDED.menu_type,
+    visible = EXCLUDED.visible,
+    requires_auth = EXCLUDED.requires_auth,
+    sort = EXCLUDED.sort,
+    component = EXCLUDED.component,
+    meta = EXCLUDED.meta,
+    status = EXCLUDED.status;
 
 -- 清理已废弃的顶层目录（系统监控、开发工具）
 DELETE FROM sys_role_menu WHERE menu_id IN (8, 9);
@@ -351,7 +373,14 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (10401, 104, 'MCP 编辑', NULL, 'ai:mcp:edit', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (10601, 106, '知识图谱同步', NULL, 'ai:kg:sync', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (10901, 109, '知识检索查询', NULL, 'ai:qa:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
-(11001, 110, '监控查询', NULL, 'ai:monitor:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
+(11001, 110, '监控查询', NULL, 'ai:monitor:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10501, 105, '供应商查询', NULL, 'gateway:provider:list', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10502, 105, '供应商维护', NULL, 'gateway:provider:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
+(120101, 1201, '网关模型查询', NULL, 'gateway:model:list', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(120102, 1201, '网关模型维护', NULL, 'gateway:model:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
+(120201, 1202, '额度查询', NULL, 'gateway:quota:list', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(120202, 1202, '额度维护', NULL, 'gateway:quota:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
+(120301, 1203, '用量查询', NULL, 'gateway:usage:query', NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     title = EXCLUDED.title,
     route_name = EXCLUDED.route_name,

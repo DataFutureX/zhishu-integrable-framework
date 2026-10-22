@@ -130,14 +130,13 @@ public class ChatClientSupport {
             List<ToolCallback> tools,
             OpenAiChatOptions options,
             boolean enableMemory) {
-        return buildClient(null, null, systemPrompt, tools, options, enableMemory);
+        return buildClient(null, systemPrompt, tools, options, enableMemory);
     }
 
     /**
-     * 构建 ChatClient（按网关 model_id 路由；回退模式用 providerId）。
+     * 构建 ChatClient（按网关 model_id 路由）。
      *
      * @param gatewayModelId 网关模型 id，空=网关默认模型
-     * @param providerId     旧 provider id（仅回退模式使用）
      * @param systemPrompt   系统提示词
      * @param tools          工具列表
      * @param options        ChatOptions
@@ -146,12 +145,11 @@ public class ChatClientSupport {
      */
     public ChatClient buildClient(
             String gatewayModelId,
-            Long providerId,
             String systemPrompt,
             List<ToolCallback> tools,
             OpenAiChatOptions options,
             boolean enableMemory) {
-        ChatModel chatModel = gatewayChatModelRegistry.resolve(gatewayModelId, providerId);
+        ChatModel chatModel = gatewayChatModelRegistry.resolve(gatewayModelId);
         ChatModel loggingModel = new LoggingChatModel(chatModel, gatewayModelId);
         String effectivePrompt = AgentTimeContext.appendBlock(systemPrompt);
         var builder = ChatClient.builder(loggingModel)
@@ -236,7 +234,7 @@ public class ChatClientSupport {
      * @return 模型名
      */
     public String resolveModelName(AiAgentEntity entity) {
-        return gatewayChatModelRegistry.describeModel(entity.getModel(), entity.getModelProviderId());
+        return gatewayChatModelRegistry.describeModel(entity.getModel());
     }
 
     private static OpenAiChatOptions.Builder toOptionsBuilder(OpenAiChatOptions options) {
@@ -334,7 +332,7 @@ public class ChatClientSupport {
 
         private void logPrompt(Prompt prompt) {
             String endpoint = gatewayChatModelRegistry.completionsEndpoint();
-            String modelLabel = gatewayChatModelRegistry.describeModel(gatewayModelId, null);
+            String modelLabel = gatewayChatModelRegistry.describeModel(gatewayModelId);
             String step = STEP_LABEL.get();
             String stepPrefix = step != null ? "[" + step + "] " : "";
 

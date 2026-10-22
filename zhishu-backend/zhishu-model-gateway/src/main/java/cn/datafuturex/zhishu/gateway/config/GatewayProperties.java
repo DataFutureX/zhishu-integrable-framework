@@ -132,6 +132,22 @@ public class GatewayProperties {
 
         /** 预留时单次输出上限的封顶值 */
         private int reserveMaxOutputTokens = 4096;
+
+        /** 限流（默认关闭；按「用户 × 模型」计 QPS） */
+        private RateLimit rateLimit = new RateLimit();
+
+        /**
+         * 限流参数。
+         */
+        @Data
+        public static class RateLimit {
+
+            /** 是否启用 */
+            private boolean enabled = false;
+
+            /** 每用户每模型每秒允许的请求数 */
+            private int qps = 5;
+        }
     }
 
     /**

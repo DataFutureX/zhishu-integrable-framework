@@ -1,4 +1,10 @@
-/** 模型设置（Model Provider）类型定义 */
+/**
+ * 模型设置（Model Provider）类型定义。
+ *
+ * @deprecated v2 已将供应商与模型设置拆分：
+ *   供应商请用 `@/types/modelGateway` 的 `GatewayProviderVO`，
+ *   对话/向量模型请用 `GatewayModelVO`；本文件仅供旧接口回滚期保留。
+ */
 
 export interface ModelProviderVO {
   id: number

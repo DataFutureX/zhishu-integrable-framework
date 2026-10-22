@@ -132,6 +132,9 @@ public class ModelProviderRegistry {
 
     private EmbeddingModel legacyEmbeddingModel() {
         ModelProviderEntity def = loadDefaultProvider();
+        if (!StringUtils.hasText(def.getEmbeddingModel())) {
+            throw new AiException("未配置默认向量模型：请在「模型网关 · 模型设置」中添加一条 EMBEDDING 模型并设为默认");
+        }
         String fp = embeddingFingerprint(def);
         EmbeddingSnapshot snap = embeddingCache;
         if (snap != null && fp.equals(snap.fingerprint)) {
@@ -187,6 +190,10 @@ public class ModelProviderRegistry {
     // ---- 内部方法 ----
 
     private ChatModel buildChatModel(ModelProviderEntity entity) {
+        if (!StringUtils.hasText(entity.getChatModel())) {
+            throw new AiException("供应商「" + (entity.getName() == null ? entity.getId() : entity.getName())
+                    + "」未配置对话模型：请在「模型网关 · 模型设置」中添加 CHAT 模型，并为 Agent 绑定该模型");
+        }
         String apiKey = resolveApiKey(entity);
         Double temperature = entity.getTemperature() != null ? entity.getTemperature().doubleValue() : 0.7;
         Double topP = entity.getTopP() != null ? entity.getTopP().doubleValue() : 0.9;

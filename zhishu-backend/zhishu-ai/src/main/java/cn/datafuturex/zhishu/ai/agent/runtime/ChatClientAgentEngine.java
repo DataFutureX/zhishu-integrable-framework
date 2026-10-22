@@ -161,7 +161,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         List<ToolCallback> tools = chatClientSupport.resolveTools(
                 capabilities, traces, request.onProgress(), agent.getId());
         ChatClient client = chatClientSupport.buildClient(
-                agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                agent.getModel(), agent.getSystemPrompt(), tools, options, enableMemory);
         // 无 Tools 时可真流式；有 Tools 必须同步 call
         Consumer<String> tokenCb = tools.isEmpty() && request.streamingTokens() ? request::emitToken : null;
         String content = chatClientSupport.callOrStream(
@@ -185,7 +185,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         ChatClientSupport.setStepLabel("意图澄清");
         long t1 = System.currentTimeMillis();
         ChatClient clarify = chatClientSupport.buildClient(
-                agent.getModel(), agent.getModelProviderId(),
+                agent.getModel(),
                 """
                 你是意图澄清助手。用中文重述用户监测或巡检相关需求要点。
                 硬性要求：
@@ -219,7 +219,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         List<ToolCallback> tools = chatClientSupport.resolveTools(
                 capabilities, traces, request.onProgress(), agent.getId());
         ChatClient main = chatClientSupport.buildClient(
-                agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                agent.getModel(), agent.getSystemPrompt(), tools, options, enableMemory);
         String worked = chatClientSupport.call(main, workInput, conversationId, enableMemory);
         trace(traces, request, AgentTraceEvent.of("NODE_END", "工具执行", truncate(worked, 200),
                 System.currentTimeMillis() - t2));
@@ -242,7 +242,7 @@ public class ChatClientAgentEngine implements AgentEngine {
                 5. 综合总结，避免简单罗列工具返回的原始 JSON 或表格。
                 """.formatted(userText, worked == null ? "" : worked);
         ChatClient polish = chatClientSupport.buildClient(
-                agent.getModel(), agent.getModelProviderId(),
+                agent.getModel(),
                 "你是结果润色助手。将上一阶段结果整理为清晰专业的中文 Markdown 报告，保留关键数据、表格与正确的报告周期，不要编造日期或数据。",
                 List.of(), options, false);
         Consumer<String> tokenCb = request.streamingTokens() ? request::emitToken : null;
@@ -268,7 +268,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         long t1 = System.currentTimeMillis();
         String routerPrompt = RoutingCapabilitySupport.buildRouterPrompt(capabilities);
         ChatClient router = chatClientSupport.buildClient(
-                agent.getModel(), agent.getModelProviderId(), routerPrompt, List.of(), options, false);
+                agent.getModel(), routerPrompt, List.of(), options, false);
         String routeRaw = chatClientSupport.call(router, userText, null, false);
         String route = RoutingCapabilitySupport.resolveRoute(routeRaw, capabilities);
         AgentTraceEvent routeEv = AgentTraceEvent.of("ROUTE", "路由", "route=" + route,
@@ -286,7 +286,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         Consumer<String> tokenCb = null;
         if (knowledge) {
             target = chatClientSupport.buildClient(
-                    agent.getModel(), agent.getModelProviderId(),
+                    agent.getModel(),
                     """
                             你是知识问答子智能体。请基于用户消息及其中【知识库检索片段】严谨作答。
                             若片段不足请明确说明，不要编造监测数据。使用中文。
@@ -298,7 +298,7 @@ public class ChatClientAgentEngine implements AgentEngine {
             List<ToolCallback> tools = chatClientSupport.resolveTools(
                     routeCaps, traces, request.onProgress(), agent.getId());
             target = chatClientSupport.buildClient(
-                    agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                    agent.getModel(), agent.getSystemPrompt(), tools, options, enableMemory);
         }
         String content = chatClientSupport.callOrStream(
                 target, userText, conversationId, enableMemory, tokenCb);

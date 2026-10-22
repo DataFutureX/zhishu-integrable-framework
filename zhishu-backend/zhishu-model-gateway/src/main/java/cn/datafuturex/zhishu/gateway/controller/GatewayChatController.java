@@ -60,7 +60,12 @@ public class GatewayChatController {
         if (StringUtils.hasText(header)) {
             return header.trim().toUpperCase();
         }
-        // 平台内部调用经本机回环打进来（无自定义 header），与外部桌面端区分
+        // 经反代/网关转发的请求一定带转发头，视为外部客户端
+        if (StringUtils.hasText(request.getHeader("X-Forwarded-For"))
+                || StringUtils.hasText(request.getHeader("X-Real-IP"))) {
+            return DEFAULT_CHANNEL;
+        }
+        // 无转发头且来源为本机回环 → 平台内部调用
         String remote = request.getRemoteAddr();
         if ("127.0.0.1".equals(remote) || "0:0:0:0:0:0:0:1".equals(remote) || "::1".equals(remote)) {
             return CONSOLE_CHANNEL;

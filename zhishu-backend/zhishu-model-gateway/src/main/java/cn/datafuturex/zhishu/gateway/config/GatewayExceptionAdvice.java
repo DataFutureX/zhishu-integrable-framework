@@ -8,6 +8,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -38,6 +39,26 @@ public class GatewayExceptionAdvice {
         return ResponseEntity.status(e.getStatus())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(OpenAiErrors.body(e));
+    }
+
+    /**
+     * 数据库结构缺失（如迁移未执行）时给出可操作提示，而不是 500「系统内部错误」。
+     *
+     * @param e        异常
+     * @param response 响应
+     * @return OpenAI 错误体
+     */
+    @ExceptionHandler(BadSqlGrammarException.class)
+    public ResponseEntity<String> handleBadSqlGrammar(BadSqlGrammarException e, HttpServletResponse response) {
+        log.error("[网关] 数据库结构不匹配，请执行 db/patch_provider_model_split.sql", e);
+        if (response.isCommitted()) {
+            return null;
+        }
+        GatewayException wrapped = GatewayException.notReady(
+                "模型网关数据库结构未完成迁移，请执行 db/patch_provider_model_split.sql 后重启");
+        return ResponseEntity.status(wrapped.getStatus())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(OpenAiErrors.body(wrapped));
     }
 
     /**

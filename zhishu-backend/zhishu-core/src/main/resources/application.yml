@@ -219,6 +219,9 @@ zhishu:
       default-monthly-tokens: ${ZHISHU_GATEWAY_DEFAULT_TOKENS:5000000}
       estimate-chars-per-token: 2.0
       reserve-max-output-tokens: 4096
+      rate-limit:
+        enabled: ${ZHISHU_GATEWAY_RATE_LIMIT_ENABLED:false}   # 按「用户×模型」计 QPS，默认关闭
+        qps: ${ZHISHU_GATEWAY_RATE_LIMIT_QPS:5}
     catalog:
       cache-ttl-seconds: 60
     log:

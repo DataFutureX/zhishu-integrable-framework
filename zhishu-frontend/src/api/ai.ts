@@ -1024,7 +1024,7 @@ export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLog
 }
 
 
-// ============ 模型设置 API ============
+// ============ 模型设置 API（@deprecated 改用 @/api/gateway 的供应商/模型接口） ============
 
 /** 获取模型设置列表 */
 export function listModelProviders(): Promise<ModelProviderVO[]> {

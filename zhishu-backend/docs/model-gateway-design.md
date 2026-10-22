@@ -193,6 +193,7 @@ baseURL = `<知枢后端根>`（默认 `http://192.168.11.14:8180`），客户�
 | 额度不足 | 429 | `quota_exceeded` | `insufficient_quota` |
 | 用户/模型限流 | 429 | `rate_limit_error` | `rate_limit_exceeded`（带 `retry-after`） |
 | 上游不可达 | 503 | `upstream_error` | `upstream_unavailable` |
+| 网关未就绪（迁移未完成） | 503 | `gateway_unavailable` | `gateway_not_ready` |
 | 上游超时 | 504 | `upstream_error` | `upstream_timeout` |
 | 请求体非法 | 400 | `invalid_request_error` | `invalid_request_error` |
 
@@ -1086,4 +1087,46 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 5. **菜单 id**：105 复用为「供应商管理」、1201 更名为「模型设置」；`AgentManage.vue` 仍绑定网关 `model_id`，无需改动。
 6. **前端旧页**：`views/ai/ModelSettings.vue` 已删除；`src/api/ai.ts` 中的旧 `model-settings` 封装保留一版供回滚。
 7. **验证**：后端 `mvn -DskipTests compile` 全量通过；前端 `vue-tsc --noEmit` 与 `eslint` 通过。
+
+### 16.12 加固项（第二轮）
+
+| 加固 | 实现 |
+|---|---|
+| **DDL 顺序风险** | `GatewaySchemaInitializer` 先跑 `init_gateway.sql`，检测缺 `model_type` 且默认供应商唯一时**自动执行** `patch_provider_model_split.sql`；仍缺列则标记网关不可用 |
+| **就绪闸门** | 新增 `GatewayReadiness` + `GatewayReadyFilter`：结构未就绪时 `/v1/*` 返回 503 `gateway_not_ready`（带可操作原因），不抛 SQL 异常 |
+| **迁移失败可读** | `GatewayExceptionAdvice` 新增 `BadSqlGrammarException` 处理，返回「请执行 patch_provider_model_split.sql」而不是 500 |
+| **channel 判定** | 先看 `X-Forwarded-For`/`X-Real-IP`（反代转发 → `DESKTOP`）；无转发头且源为回环才判 `CONSOLE` |
+| **限流接线** | `GatewayRateLimiter`：`quota.rate-limit.enabled/qps` 按「用户×模型」计，超限 429 `rate_limit_exceeded`（进程内单实例语义） |
+| **prompt 日志开关** | `log.prompt-bodies=true` 时记录截断正文（2000 字），否则仅记长度；默认关闭 |
+| **显式失败** | 供应商未配对话模型 / 无默认向量模型时抛明确的 `AiException`，不再静默回退到错误模型 |
+| **菜单** | 目录 12 的 redirect 改为 `/gateway/providers`；新增 `gateway:provider:list` / `gateway:provider:update` 按钮权限并授权 ADMIN |
+| **文档** | 根 `MENU_ROUTES.json` 与 `zhishu-frontend/docs/MENU_ROUTES.json` 补齐 id=12 子树与 105/1201 新定义，兼容重定向指向 `/gateway/providers` |
+
+### 17. 待办与已知限制
+
+#### 17.1 本轮已补充完成
+
+| 项 | 内容 |
+|---|---|
+| **基线收敛** | `init.sql` 直接建 id=12「模型网关」目录 + 105 供应商管理 + 1201~1204 + 按钮权限；一级目录 sort 顺延（5→4、6→5）；ADMIN 授权由 `SELECT ... FROM sys_menu` 自动覆盖 |
+| **Agent 字段清理** | `AgentCreateDTO` / `AgentUpdateDTO` / `AgentVO` 移除 `modelProviderId`；`AiAgentEntity#modelProviderId` 保留列但标 `@Deprecated`；`GatewayChatModelRegistry.resolve/describeModel` 去掉 `legacyProvider` 参数，回退模式改用 `AiChatTargetPort` + 默认供应商 |
+| **前端清理** | `types/aiAgent.ts` 三个接口去掉 `modelProviderId`；`AgentManage.vue` 表单与提交不再携带 |
+
+#### 17.2 待办
+
+| 优先级 | 项 | 说明 |
+|---|---|---|
+| P1 | **测试补齐** | 单测（`TokenEstimator`、SSE 切帧、额度滚动、错误映射）与集成测试（假上游、流式、429、双用户隔离、迁移幂等）；项目约定默认不产出测试代码，建议单独立任务 |
+| P1 | **桌面插件联调 + 客户端接入文档** | 按 `dsh-plugin-model-gateway` 契约在 `docs/` 补 `/v1` 接入说明（curl/示例/错误码/渠道头） |
+| P2 | **模型可见性白名单** | 按角色/用户控制 `/v1/models`；`ai_gateway_model_acl` 未建 |
+| P2 | **供应商页连贯流程** | 拉取上游模型后一键跳「模型设置」并带上 providerId 与预选模型 |
+| P3 | **旧接口彻底移除** | `/api/v1/model-settings`、`src/api/ai.ts` 的 model-settings 封装、`types/modelProvider.ts`；建议保留一个大版本后再删 |
+
+#### 17.3 已知限制
+
+1. **单实例语义**：token 黑名单、限流计数、额度/目录缓存均为进程内；多实例需共享存储。
+2. **保留列**：`ai_agent.model_provider_id` 不再读写，下个版本可 `DROP COLUMN`；`ai_model_provider` 的 `chat_model`/`embedding_model`/参数列保留（DEPRECATED），仅回滚期依赖。
+3. **流式线程模型**：`/v1` 流式为阻塞式响应，一条流占一个请求线程；生产建议开启 `spring.threads.virtual.enabled=true`。
+4. **自动迁移前提**：只有「默认供应商唯一」时才自动执行 `patch_provider_model_split.sql`；多默认需人工收敛。
+5. **结构未就绪时的表现**：`/v1/*` 返回 503 `gateway_not_ready`，管理面返回「请执行 db/patch_provider_model_split.sql」提示，应用本身可正常启动。
 

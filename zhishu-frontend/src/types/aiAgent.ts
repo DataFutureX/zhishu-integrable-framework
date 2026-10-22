@@ -37,7 +37,6 @@ export interface AgentVO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
-  modelProviderId?: SnowflakeId | null
   status: AgentStatus | string
   builtin: boolean
   defaultAgent: boolean
@@ -60,7 +59,6 @@ export interface AgentCreateDTO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
-  modelProviderId?: SnowflakeId | null
   status?: string
 }
 
@@ -77,7 +75,6 @@ export interface AgentUpdateDTO {
   documentIds?: number[] | null
   mcpUpstreamIds?: number[] | null
   enableMemory: boolean
-  modelProviderId?: SnowflakeId | null
   status: string
 }
 

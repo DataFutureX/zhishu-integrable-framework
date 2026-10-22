@@ -10,7 +10,7 @@
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type,
                       visible, requires_auth, sort, component, meta, status)
 VALUES
-(12,   0,  '模型网关', '/gateway',        'ModelGateway',  '/gateway/models', 'Connection',
+(12,   0,  '模型网关', '/gateway',        'ModelGateway',  '/gateway/providers', 'Connection',
                 'DIRECTORY', 1, 1, 3, NULL, NULL, 1),
 (1201, 12, '模型设置', '/gateway/models', 'GatewayModels', NULL, 'Grid',
                 'MENU', 1, 1, 2, 'views/gateway/GatewayModelList.vue',  '{"title":"模型设置"}', 1),
@@ -70,7 +70,9 @@ VALUES
 (120102, 1201, '网关模型维护', NULL, 'gateway:model:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
 (120201, 1202, '额度查询',     NULL, 'gateway:quota:list',   NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
 (120202, 1202, '额度维护',     NULL, 'gateway:quota:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1),
-(120301, 1203, '用量查询',     NULL, 'gateway:usage:query',  NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1)
+(120301, 1203, '用量查询',     NULL, 'gateway:usage:query',  NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10501,  105,  '供应商查询',   NULL, 'gateway:provider:list',   NULL, NULL, 'BUTTON', 0, 1, 1, NULL, NULL, 1),
+(10502,  105,  '供应商维护',   NULL, 'gateway:provider:update', NULL, NULL, 'BUTTON', 0, 1, 2, NULL, NULL, 1)
 ON CONFLICT (id) DO UPDATE SET
     parent_id = EXCLUDED.parent_id,
     title = EXCLUDED.title,
@@ -84,5 +86,5 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO sys_role_menu (id, role_id, menu_id)
 SELECT 10000 + m.id, 1, m.id
 FROM sys_menu m
-WHERE m.id IN (12, 105, 1201, 1202, 1203, 1204, 120101, 120102, 120201, 120202, 120301)
+WHERE m.id IN (12, 105, 1201, 1202, 1203, 1204, 120101, 120102, 120201, 120202, 120301, 10501, 10502)
 ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;

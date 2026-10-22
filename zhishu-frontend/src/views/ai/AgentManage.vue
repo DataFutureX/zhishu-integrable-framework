@@ -512,7 +512,6 @@ const form = reactive({
   workflowType: 'REACT',
   documentIds: [] as number[],
   mcpUpstreamIds: [] as number[],
-  modelProviderId: null as string | null,
   enableMemory: true,
   status: 'ENABLED',
 })
@@ -754,7 +753,6 @@ const resetForm = () => {
   form.workflowType = 'REACT'
   form.documentIds = []
   form.mcpUpstreamIds = []
-  form.modelProviderId = null
   form.enableMemory = true
   form.status = 'ENABLED'
 }
@@ -819,7 +817,6 @@ const openEdit = async (row: AgentVO) => {
   form.workflowType = row.workflowType || 'REACT'
   form.documentIds = [...(row.documentIds || [])]
   form.mcpUpstreamIds = [...(row.mcpUpstreamIds || [])]
-  form.modelProviderId = null
   form.enableMemory = !!row.enableMemory
   form.status = row.status || 'ENABLED'
   followGlobalModel.value = !row.model && row.temperature == null && row.maxTokens == null
@@ -854,7 +851,6 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
-        modelProviderId: null,
         enableMemory: form.enableMemory,
         status: form.status,
       })
@@ -870,7 +866,6 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
-        modelProviderId: null,
         enableMemory: form.enableMemory,
         status: form.status,
       })

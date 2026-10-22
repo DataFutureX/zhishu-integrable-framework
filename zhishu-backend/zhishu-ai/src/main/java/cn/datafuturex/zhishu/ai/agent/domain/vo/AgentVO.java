@@ -20,7 +20,6 @@ public record AgentVO(
         String workflowConfig,
         List<Long> documentIds,
         Boolean enableMemory,
-        Long modelProviderId,
         String status,
         Boolean builtin,
         Boolean defaultAgent,

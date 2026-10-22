@@ -52,6 +52,13 @@ public class AiAgentEntity {
     @TableField("enable_memory")
     private Boolean enableMemory;
 
+    /**
+     * 模型设置 ID。
+     *
+     * @deprecated v2 起模型统一由模型网关提供（{@link #model} 存网关 model_id），本列仅为兼容保留，
+     *         API 不再暴露，也不参与路由。
+     */
+    @Deprecated
     @TableField("model_provider_id")
     private Long modelProviderId;
 

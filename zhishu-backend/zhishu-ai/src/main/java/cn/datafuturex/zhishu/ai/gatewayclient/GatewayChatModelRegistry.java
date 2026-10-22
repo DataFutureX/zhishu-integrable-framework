@@ -52,12 +52,11 @@ public class GatewayChatModelRegistry {
      * 解析 ChatModel。
      *
      * @param gatewayModelId Agent 绑定的网关模型 id，空=用网关默认模型
-     * @param legacyProvider 旧 provider id（仅回退模式使用）
      * @return ChatModel
      */
-    public ChatModel resolve(String gatewayModelId, Long legacyProvider) {
+    public ChatModel resolve(String gatewayModelId) {
         if (!enabled()) {
-            return fallbackChatModel(gatewayModelId, legacyProvider);
+            return fallbackChatModel(gatewayModelId);
         }
         String modelId = resolveModelId(gatewayModelId);
         String bearer = bearer();
@@ -67,13 +66,12 @@ public class GatewayChatModelRegistry {
     }
 
     /**
-     * 回退模式：优先按模型行直连上游，取不到再退回旧 provider 配置。
+     * 回退模式：优先按模型行直连上游，取不到再用默认供应商。
      *
      * @param gatewayModelId 网关模型 id
-     * @param legacyProvider 旧 provider id
      * @return ChatModel
      */
-    private ChatModel fallbackChatModel(String gatewayModelId, Long legacyProvider) {
+    private ChatModel fallbackChatModel(String gatewayModelId) {
         AiChatTargetPort port = chatTargetPort.getIfAvailable();
         if (port != null && port.enabled() && StringUtils.hasText(gatewayModelId)) {
             var target = port.resolveByModelId(gatewayModelId);
@@ -84,7 +82,7 @@ public class GatewayChatModelRegistry {
                         value.temperature(), value.maxTokens(), value.topP()));
             }
         }
-        return modelProviderRegistry.resolve(legacyProvider);
+        return modelProviderRegistry.resolveDefault();
     }
 
     /**
@@ -111,14 +109,13 @@ public class GatewayChatModelRegistry {
      * 描述本次使用的模型（日志/监控用，不抛异常）。
      *
      * @param gatewayModelId 绑定的网关模型 id
-     * @param legacyProvider 旧 provider id（回退模式）
      * @return 模型名；无法解析时返回原值或 null
      */
-    public String describeModel(String gatewayModelId, Long legacyProvider) {
+    public String describeModel(String gatewayModelId) {
         if (!enabled()) {
             cn.datafuturex.zhishu.ai.modelconfig.domain.ModelProviderEntity provider =
-                    modelProviderRegistry.getProvider(legacyProvider);
-            if (provider != null) {
+                    modelProviderRegistry.getProvider(null);
+            if (provider != null && StringUtils.hasText(provider.getChatModel())) {
                 return provider.getChatModel();
             }
             return gatewayModelId;

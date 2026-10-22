@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.ai.modelconfig.service.impl;
 
 import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayDefaultModelPort;
 import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
 import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.ai.modelconfig.domain.AiModelConfigEntity;
@@ -10,6 +11,7 @@ import cn.datafuturex.zhishu.ai.modelconfig.vo.AiModelConfigVO;
 import cn.datafuturex.zhishu.ai.platform.ai.AiConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -48,6 +50,7 @@ public class ModelConfigServiceImpl implements ModelConfigPort {
     private final AiModelConfigMapper aiModelConfigMapper;
     private final CacheManager cacheManager;
     private final ModelConfigProperties modelConfigProperties;
+    private final ObjectProvider<GatewayDefaultModelPort> gatewayDefaultModelPort;
 
     @Value("${spring.ai.openai.base-url:}")
     private String envBaseUrl;
@@ -101,6 +104,14 @@ public class ModelConfigServiceImpl implements ModelConfigPort {
 
     @Override
     public String currentChatModel() {
+        // 默认模型统一由模型网关提供；网关未启用或未配置目录时回退旧单例配置
+        GatewayDefaultModelPort gatewayPort = gatewayDefaultModelPort.getIfAvailable();
+        if (gatewayPort != null && gatewayPort.enabled()) {
+            var gatewayDefault = gatewayPort.defaultModelId();
+            if (gatewayDefault.isPresent()) {
+                return gatewayDefault.get();
+            }
+        }
         AiModelConfigEntity entity = cachedEntity();
         return StringUtils.hasText(entity.getChatModel()) ? entity.getChatModel() : AiConfig.DEFAULT_MODEL;
     }

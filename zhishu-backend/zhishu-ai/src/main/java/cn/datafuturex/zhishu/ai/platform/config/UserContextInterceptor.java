@@ -56,6 +56,11 @@ public class UserContextInterceptor implements HandlerInterceptor {
         }
         UserContext.setUserId(username);
         UserContext.setUsername(username);
+        // 内部经模型网关调用时需带上当前用户 token（仅宿主内部使用，不下发浏览器）
+        String authorization = request.getHeader("Authorization");
+        if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer ")) {
+            UserContext.setToken(authorization.substring(7).trim());
+        }
         return true;
     }
 

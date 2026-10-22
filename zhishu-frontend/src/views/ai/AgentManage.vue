@@ -303,30 +303,29 @@
           />
           <p class="prompt-hint">依据名称、简介、工作流、能力、知识库与上游 MCP 生成可再编辑的初稿。</p>
         </el-form-item>
-        <el-form-item label="模型设置">
+        <el-form-item label="网关模型">
           <el-select
-            v-model="form.modelProviderId"
+            v-model="form.model"
             filterable
             clearable
-            placeholder="默认模型设置"
+            :disabled="followGlobalModel"
+            placeholder="空则使用网关默认模型"
             style="width: 280px"
           >
             <el-option
-              v-for="opt in modelProviderOptions"
-              :key="opt.id"
+              v-for="opt in gatewayModelOptions"
+              :key="opt.value"
               :label="opt.label"
-              :value="opt.id"
-              :disabled="opt.disabled"
+              :value="opt.value"
             />
           </el-select>
-          <span class="form-item-hint">关联已配置的模型供应商，空则使用系统默认</span>
+          <span class="form-item-hint">来自「模型网关 · 网关模型」，空则使用网关默认模型</span>
         </el-form-item>
         <el-form-item label="模型参数">
           <div class="model-row">
             <el-switch v-model="followGlobalModel" active-text="跟随全局" inactive-text="自定义" />
           </div>
           <div v-if="!followGlobalModel" class="model-fields">
-            <el-input v-model="form.model" placeholder="模型名，如 qwen-plus" style="width: 200px" />
             <el-input-number v-model="form.temperature" :min="0" :max="2" :step="0.1" :precision="2" />
             <el-input-number v-model="form.maxTokens" :min="256" :max="16000" :step="256" />
           </div>
@@ -470,7 +469,6 @@ import {
   listAgentRuns,
   listAgents,
   listMcpUpstreams,
-  listModelProviders,
   listWorkflowTemplates,
   setDefaultAgent,
   trialAgent as runAgentTrial,
@@ -481,7 +479,8 @@ import type { AgentRunVO, AgentVO, CapabilityVO, ToolInfoVO, WorkflowTemplateVO 
 import type { McpUpstreamVO } from '@/types/mcp'
 import type { AgentTraceEvent } from '@/types/aiChat'
 import type { DocumentVO } from '@/types/aiDocument'
-import type { ModelProviderVO } from '@/types/modelProvider'
+import type { GatewayModelVO } from '@/types/modelGateway'
+import { listAvailableGatewayModelsApi } from '@/api/gateway'
 
 const router = useRouter()
 
@@ -521,15 +520,12 @@ const form = reactive({
 const documents = ref<DocumentVO[]>([])
 const docsLoading = ref(false)
 const mcpUpstreams = ref<McpUpstreamVO[]>([])
-const modelProviders = ref<ModelProviderVO[]>([])
+const gatewayModels = ref<GatewayModelVO[]>([])
 
-const modelProviderOptions = computed(() =>
-  modelProviders.value.map((p) => ({
-    id: String(p.id),
-    label: p.isDefault
-      ? `${p.name}（${p.chatModel}·默认）`
-      : `${p.name}（${p.chatModel}）`,
-    disabled: p.status !== 'ENABLED',
+const gatewayModelOptions = computed(() =>
+  gatewayModels.value.map((m) => ({
+    value: m.modelId,
+    label: m.isDefault ? `${m.displayName}（${m.modelId}·默认）` : `${m.displayName}（${m.modelId}）`,
   })),
 )
 
@@ -608,9 +604,9 @@ const capabilityMeta = (code: string) =>
 const capabilityLabel = (code: string) => capabilityMeta(code)?.label || code
 
 const resolveModelLabel = (row: AgentVO): string => {
-  if (!row.modelProviderId) return row.model || ''
-  const provider = modelProviders.value.find((p) => String(p.id) === String(row.modelProviderId))
-  return provider ? `${provider.name}·${provider.chatModel}` : row.model || ''
+  if (!row.model) return '默认模型'
+  const gatewayModel = gatewayModels.value.find((m) => m.modelId === row.model)
+  return gatewayModel ? `${gatewayModel.displayName}·${row.model}` : row.model
 }
 
 const capabilityDesc = (code: string) =>
@@ -713,13 +709,13 @@ const fetchDocuments = async () => {
   }
 }
 
-const fetchModelProviders = async () => {
+const fetchGatewayModels = async () => {
   try {
-    const res = await listModelProviders()
-    modelProviders.value = Array.isArray(res) ? res : []
+    const res = await listAvailableGatewayModelsApi()
+    gatewayModels.value = Array.isArray(res) ? res : []
   } catch (e) {
     console.error(e)
-    modelProviders.value = []
+    gatewayModels.value = []
   }
 }
 
@@ -807,7 +803,7 @@ const generateSystemPromptDraft = async () => {
 const openCreate = () => {
   resetForm()
   formVisible.value = true
-  void fetchModelProviders()
+  void fetchGatewayModels()
 }
 
 const openEdit = async (row: AgentVO) => {
@@ -823,11 +819,11 @@ const openEdit = async (row: AgentVO) => {
   form.workflowType = row.workflowType || 'REACT'
   form.documentIds = [...(row.documentIds || [])]
   form.mcpUpstreamIds = [...(row.mcpUpstreamIds || [])]
-  form.modelProviderId = row.modelProviderId ? String(row.modelProviderId) : null
+  form.modelProviderId = null
   form.enableMemory = !!row.enableMemory
   form.status = row.status || 'ENABLED'
   followGlobalModel.value = !row.model && row.temperature == null && row.maxTokens == null
-  await fetchModelProviders()
+  await fetchGatewayModels()
   void fetchDocuments()
   formVisible.value = true
 }
@@ -858,7 +854,7 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
-        modelProviderId: form.modelProviderId || null,
+        modelProviderId: null,
         enableMemory: form.enableMemory,
         status: form.status,
       })
@@ -874,7 +870,7 @@ const submitForm = async () => {
         workflowType: form.workflowType,
         documentIds: form.documentIds,
         mcpUpstreamIds: form.mcpUpstreamIds,
-        modelProviderId: form.modelProviderId || null,
+        modelProviderId: null,
         enableMemory: form.enableMemory,
         status: form.status,
       })
@@ -1060,7 +1056,7 @@ const handleTrialClosed = () => {
 
 useRouteActivate(() => {
   void fetchList()
-  void fetchModelProviders()
+  void fetchGatewayModels()
 })
 </script>
 

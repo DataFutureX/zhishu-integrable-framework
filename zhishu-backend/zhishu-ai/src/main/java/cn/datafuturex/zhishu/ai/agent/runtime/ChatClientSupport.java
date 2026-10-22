@@ -3,9 +3,8 @@ package cn.datafuturex.zhishu.ai.agent.runtime;
 import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentTimeContext;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
-import cn.datafuturex.zhishu.ai.modelconfig.domain.ModelProviderEntity;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.ModelProviderRegistry;
 import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import lombok.RequiredArgsConstructor;
@@ -31,14 +30,15 @@ import java.util.function.Consumer;
 /**
  * ChatClient 装配与调用工具（供模板引擎与 Graph 执行器复用）。
  * <p>
- * 改造后注入 {@link ModelProviderRegistry}，按 Agent 绑定的 providerId 路由到对应 ChatModel。
+ * 模型统一由 {@link GatewayChatModelRegistry} 提供：默认经模型网关转发，
+ * {@code zhishu.gateway.internal.enabled=false} 时回退直连上游。
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ChatClientSupport {
 
-    private final ModelProviderRegistry modelProviderRegistry;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final ChatMemory chatMemory;
     private final ToolCapabilityRegistry toolCapabilityRegistry;
     private final ModelConfigPort aiModelConfigService;
@@ -96,32 +96,15 @@ public class ChatClientSupport {
     }
 
     /**
-     * 按 Agent 配置构建 ChatOptions（含 providerId 路由）。
+     * 按 Agent 配置构建 ChatOptions（模型统一取网关 model_id）。
      *
      * @param entity 智能体实体
      * @return OpenAI ChatOptions
      */
     public OpenAiChatOptions buildOptions(AiAgentEntity entity) {
-        Long providerId = entity.getModelProviderId();
-        String model = StringUtils.hasText(entity.getModel())
-                ? entity.getModel().trim()
-                : modelProviderRegistry.resolveChatModelName(providerId);
+        String model = gatewayChatModelRegistry.resolveModelId(entity.getModel());
         Integer maxTokens = entity.getMaxTokens();
         Double temperature = toDouble(entity.getTemperature());
-
-        // 若 Agent 未覆盖参数，从模型设置取默认
-        if (maxTokens == null || temperature == null) {
-            ChatModel providerModel = modelProviderRegistry.resolve(providerId);
-            var defaults = providerModel.getOptions();
-            if (defaults instanceof OpenAiChatOptions opts) {
-                if (maxTokens == null) {
-                    maxTokens = opts.getMaxTokens();
-                }
-                if (temperature == null) {
-                    temperature = opts.getTemperature();
-                }
-            }
-        }
 
         var builder = OpenAiChatOptions.builder().model(model);
         if (maxTokens != null) {
@@ -147,27 +130,29 @@ public class ChatClientSupport {
             List<ToolCallback> tools,
             OpenAiChatOptions options,
             boolean enableMemory) {
-        return buildClient(null, systemPrompt, tools, options, enableMemory);
+        return buildClient(null, null, systemPrompt, tools, options, enableMemory);
     }
 
     /**
-     * 构建 ChatClient（按 providerId 路由到对应 ChatModel）。
+     * 构建 ChatClient（按网关 model_id 路由；回退模式用 providerId）。
      *
-     * @param providerId   模型设置 ID，null 表示默认
-     * @param systemPrompt 系统提示词
-     * @param tools        工具列表
-     * @param options      ChatOptions
-     * @param enableMemory 是否启用记忆
+     * @param gatewayModelId 网关模型 id，空=网关默认模型
+     * @param providerId     旧 provider id（仅回退模式使用）
+     * @param systemPrompt   系统提示词
+     * @param tools          工具列表
+     * @param options        ChatOptions
+     * @param enableMemory   是否启用记忆
      * @return ChatClient
      */
     public ChatClient buildClient(
+            String gatewayModelId,
             Long providerId,
             String systemPrompt,
             List<ToolCallback> tools,
             OpenAiChatOptions options,
             boolean enableMemory) {
-        ChatModel chatModel = modelProviderRegistry.resolve(providerId);
-        ChatModel loggingModel = new LoggingChatModel(chatModel, providerId);
+        ChatModel chatModel = gatewayChatModelRegistry.resolve(gatewayModelId, providerId);
+        ChatModel loggingModel = new LoggingChatModel(chatModel, gatewayModelId);
         String effectivePrompt = AgentTimeContext.appendBlock(systemPrompt);
         var builder = ChatClient.builder(loggingModel)
                 .defaultSystem(effectivePrompt)
@@ -245,16 +230,13 @@ public class ChatClientSupport {
     }
 
     /**
-     * 解析模型名（兼容旧调用）。
+     * 解析本 Agent 实际使用的模型名（日志/监控用）。
      *
      * @param entity 智能体实体
      * @return 模型名
      */
     public String resolveModelName(AiAgentEntity entity) {
-        if (StringUtils.hasText(entity.getModel())) {
-            return entity.getModel();
-        }
-        return modelProviderRegistry.resolveChatModelName(entity.getModelProviderId());
+        return gatewayChatModelRegistry.describeModel(entity.getModel(), entity.getModelProviderId());
     }
 
     private static OpenAiChatOptions.Builder toOptionsBuilder(OpenAiChatOptions options) {
@@ -274,11 +256,11 @@ public class ChatClientSupport {
     private final class LoggingChatModel implements ChatModel {
 
         private final ChatModel delegate;
-        private final Long providerId;
+        private final String gatewayModelId;
 
-        LoggingChatModel(ChatModel delegate, Long providerId) {
+        LoggingChatModel(ChatModel delegate, String gatewayModelId) {
             this.delegate = delegate;
-            this.providerId = providerId;
+            this.gatewayModelId = gatewayModelId;
         }
 
         @Override
@@ -351,9 +333,8 @@ public class ChatClientSupport {
         }
 
         private void logPrompt(Prompt prompt) {
-            String endpoint = modelProviderRegistry.resolveBaseUrl(providerId)
-                    .replaceAll("/+$", "") + "/chat/completions";
-            ModelProviderEntity provider = modelProviderRegistry.getProvider(providerId);
+            String endpoint = gatewayChatModelRegistry.completionsEndpoint();
+            String modelLabel = gatewayChatModelRegistry.describeModel(gatewayModelId, null);
             String step = STEP_LABEL.get();
             String stepPrefix = step != null ? "[" + step + "] " : "";
 
@@ -365,16 +346,16 @@ public class ChatClientSupport {
 
             var opts = prompt.getOptions();
             if (opts instanceof OpenAiChatOptions o) {
-                log.warn("[LLM请求] {}url={}, provider={}, messages={}条 {}, model={}, temperature={}, maxTokens={}, topP={}",
+                log.warn("[LLM请求] {}url={}, model={}, messages={}条 {}, temperature={}, maxTokens={}, topP={}",
                         stepPrefix,
                         endpoint,
-                        provider != null ? provider.getName() : "(默认)",
+                        modelLabel,
                         msgCount, msgSummary,
-                        o.getModel(), o.getTemperature(), o.getMaxTokens(), o.getTopP());
+                        o.getTemperature(), o.getMaxTokens(), o.getTopP());
             } else {
-                log.warn("[LLM请求] {}url={}, provider={}, messages={}条 {}", 
+                log.warn("[LLM请求] {}url={}, model={}, messages={}条 {}",
                         stepPrefix,
-                        endpoint, provider != null ? provider.getName() : "(默认)", msgCount, msgSummary);
+                        endpoint, modelLabel, msgCount, msgSummary);
             }
         }
     }

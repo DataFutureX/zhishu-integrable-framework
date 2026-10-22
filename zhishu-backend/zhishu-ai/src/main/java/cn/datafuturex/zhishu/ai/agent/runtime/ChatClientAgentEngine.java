@@ -104,8 +104,8 @@ public class ChatClientAgentEngine implements AgentEngine {
                     NAME,
                     null);
         } catch (AiException e) {
-            log.error("[LLM错误] agentId={}, agentName={}, modelProviderId={}, model={}, 错误: {}",
-                    agent.getId(), agent.getName(), agent.getModelProviderId(),
+            log.error("[LLM错误] agentId={}, agentName={}, model={}, 错误: {}",
+                    agent.getId(), agent.getName(),
                     chatClientSupport.resolveModelName(agent), e.getMessage());
             throw new AiException(rewriteLlmError(e.getMessage()));
         } catch (Exception e) {
@@ -116,25 +116,20 @@ public class ChatClientAgentEngine implements AgentEngine {
                         chatClientSupport.resolveModelName(agent), e.getMessage(), e);
                 throw new AiException("模型调用被中断（可能因请求超时或客户端断开连接）");
             }
-            log.error("[LLM错误] agentId={}, agentName={}, modelProviderId={}, model={}, 错误: {}",
-                    agent.getId(), agent.getName(), agent.getModelProviderId(),
+            log.error("[LLM错误] agentId={}, agentName={}, model={}, 错误: {}",
+                    agent.getId(), agent.getName(),
                     chatClientSupport.resolveModelName(agent), e.getMessage(), e);
             throw new AiException("智能体执行失败: " + rewriteLlmError(e.getMessage()));
         }
     }
 
     /**
-     * 打印模型调用详细信息（agent、provider、baseUrl、model）。
+     * 打印模型调用详细信息（agent、workflow、model）。
      */
     private void logModelCallInfo(AiAgentEntity agent) {
-        Long providerId = agent.getModelProviderId();
         String modelName = chatClientSupport.resolveModelName(agent);
-        ModelProviderEntity provider = modelProviderRegistry.getProvider(providerId);
-        String baseUrl = modelProviderRegistry.resolveBaseUrl(providerId);
-        log.warn("[LLM调用] agentId={}, agentName={}, workflow={}, providerName={}, baseUrl={}, model={}",
-                agent.getId(), agent.getName(), agent.getWorkflowType(),
-                provider != null ? provider.getName() : "(默认)",
-                baseUrl, modelName);
+        log.warn("[LLM调用] agentId={}, agentName={}, workflow={}, model={}",
+                agent.getId(), agent.getName(), agent.getWorkflowType(), modelName);
     }
 
     private boolean shouldForceGraph(AiAgentEntity agent) {
@@ -166,7 +161,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         List<ToolCallback> tools = chatClientSupport.resolveTools(
                 capabilities, traces, request.onProgress(), agent.getId());
         ChatClient client = chatClientSupport.buildClient(
-                agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
         // 无 Tools 时可真流式；有 Tools 必须同步 call
         Consumer<String> tokenCb = tools.isEmpty() && request.streamingTokens() ? request::emitToken : null;
         String content = chatClientSupport.callOrStream(
@@ -190,7 +185,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         ChatClientSupport.setStepLabel("意图澄清");
         long t1 = System.currentTimeMillis();
         ChatClient clarify = chatClientSupport.buildClient(
-                agent.getModelProviderId(),
+                agent.getModel(), agent.getModelProviderId(),
                 """
                 你是意图澄清助手。用中文重述用户监测或巡检相关需求要点。
                 硬性要求：
@@ -224,7 +219,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         List<ToolCallback> tools = chatClientSupport.resolveTools(
                 capabilities, traces, request.onProgress(), agent.getId());
         ChatClient main = chatClientSupport.buildClient(
-                agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
         String worked = chatClientSupport.call(main, workInput, conversationId, enableMemory);
         trace(traces, request, AgentTraceEvent.of("NODE_END", "工具执行", truncate(worked, 200),
                 System.currentTimeMillis() - t2));
@@ -247,7 +242,7 @@ public class ChatClientAgentEngine implements AgentEngine {
                 5. 综合总结，避免简单罗列工具返回的原始 JSON 或表格。
                 """.formatted(userText, worked == null ? "" : worked);
         ChatClient polish = chatClientSupport.buildClient(
-                agent.getModelProviderId(),
+                agent.getModel(), agent.getModelProviderId(),
                 "你是结果润色助手。将上一阶段结果整理为清晰专业的中文 Markdown 报告，保留关键数据、表格与正确的报告周期，不要编造日期或数据。",
                 List.of(), options, false);
         Consumer<String> tokenCb = request.streamingTokens() ? request::emitToken : null;
@@ -273,7 +268,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         long t1 = System.currentTimeMillis();
         String routerPrompt = RoutingCapabilitySupport.buildRouterPrompt(capabilities);
         ChatClient router = chatClientSupport.buildClient(
-                agent.getModelProviderId(), routerPrompt, List.of(), options, false);
+                agent.getModel(), agent.getModelProviderId(), routerPrompt, List.of(), options, false);
         String routeRaw = chatClientSupport.call(router, userText, null, false);
         String route = RoutingCapabilitySupport.resolveRoute(routeRaw, capabilities);
         AgentTraceEvent routeEv = AgentTraceEvent.of("ROUTE", "路由", "route=" + route,
@@ -291,7 +286,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         Consumer<String> tokenCb = null;
         if (knowledge) {
             target = chatClientSupport.buildClient(
-                    agent.getModelProviderId(),
+                    agent.getModel(), agent.getModelProviderId(),
                     """
                             你是知识问答子智能体。请基于用户消息及其中【知识库检索片段】严谨作答。
                             若片段不足请明确说明，不要编造监测数据。使用中文。
@@ -303,7 +298,7 @@ public class ChatClientAgentEngine implements AgentEngine {
             List<ToolCallback> tools = chatClientSupport.resolveTools(
                     routeCaps, traces, request.onProgress(), agent.getId());
             target = chatClientSupport.buildClient(
-                    agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
+                    agent.getModel(), agent.getModelProviderId(), agent.getSystemPrompt(), tools, options, enableMemory);
         }
         String content = chatClientSupport.callOrStream(
                 target, userText, conversationId, enableMemory, tokenCb);

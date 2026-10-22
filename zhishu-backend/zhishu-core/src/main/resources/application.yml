@@ -199,6 +199,37 @@ zhishu:
       enabled: ${ZHISHU_BRIEFING_WEBHOOK_ENABLED:false}
       url: ${ZHISHU_BRIEFING_WEBHOOK_URL:http://127.0.0.1:8180/api/v1/internal/briefings/notify}
       api-key: ${ZHISHU_BRIEFING_WEBHOOK_KEY:dev-briefing-webhook-key}
+  gateway:
+    # 统一模型网关（OpenAI 兼容 /v1），桌面端与平台内部共用
+    enabled: ${ZHISHU_GATEWAY_ENABLED:true}
+    chat-path: /v1/chat/completions
+    models-path: /v1/models
+    quota-path: /v1/quota
+    auth:
+      mode: jwt                             # jwt | static（无门禁部署）
+      static-token: ${ZHISHU_GATEWAY_TOKEN:}
+      static-username: gateway-service
+    upstream:
+      connect-timeout-ms: 5000
+      request-timeout-ms: 120000            # 非流式整体超时
+      stream-idle-timeout-ms: 60000         # 流式两帧间最大空闲
+      max-request-bytes: 8388608
+    quota:
+      enabled: true
+      default-monthly-tokens: ${ZHISHU_GATEWAY_DEFAULT_TOKENS:5000000}
+      estimate-chars-per-token: 2.0
+      reserve-max-output-tokens: 4096
+    catalog:
+      cache-ttl-seconds: 60
+    log:
+      prompt-bodies: false                  # 默认不落 prompt 正文
+    internal:
+      enabled: ${ZHISHU_GATEWAY_INTERNAL_ENABLED:true}
+      base-url: http://127.0.0.1:${server.port:8180}
+      service-username: gateway-service
+      quota-subject: caller                 # caller | platform
+      token-renew-seconds: 3600
+      channel: CONSOLE
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

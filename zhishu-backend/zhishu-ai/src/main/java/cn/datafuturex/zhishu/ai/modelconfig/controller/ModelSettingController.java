@@ -22,13 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * 模型设置管理（替代原 /api/v1/model-config）
+ * 供应商管理（旧接口，已弃用）。
+ * <p>
+ * v2 将供应商与模型设置拆分：新接口为 {@code /api/v1/model-gateway/providers} 与
+ * {@code /api/v1/model-gateway/models}；本控制器保留一个版本供旧客户端过渡。
  */
+@Deprecated(since = "v2", forRemoval = false)
 @RestController
 @RequestMapping("/api/v1/model-settings")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "模型设置", description = "多模型供应商管理：连接参数 + 生成参数，Agent 按设置路由")
+@Tag(name = "供应商管理（已弃用）", description = "已由 /api/v1/model-gateway/providers 替代")
 public class ModelSettingController {
 
     private final ModelProviderPort modelProviderPort;

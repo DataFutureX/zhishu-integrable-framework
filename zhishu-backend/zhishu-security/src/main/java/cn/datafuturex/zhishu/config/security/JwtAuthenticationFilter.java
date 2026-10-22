@@ -41,7 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(contextPath) && path != null && path.startsWith(contextPath)) {
             path = path.substring(contextPath.length());
         }
-        return path != null && (path.startsWith("/open/") || path.equals("/mcp") || path.startsWith("/mcp/"));
+        // /open 与 /mcp 另有鉴权链；/v1 由模型网关的 GatewayAuthFilter 自行校验（不查权限表）
+        return path != null && (path.startsWith("/open/")
+                || path.startsWith("/v1/")
+                || path.equals("/mcp") || path.startsWith("/mcp/"));
     }
 
     @Override

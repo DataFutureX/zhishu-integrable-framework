@@ -57,6 +57,8 @@ public class SecurityConfig {
                     .requestMatchers("/open/v1/**").permitAll()
                     .requestMatchers("/mcp", "/mcp/**").permitAll()
                     .requestMatchers("/desktop/v1/**").permitAll()
+                    // 模型网关：鉴权由 GatewayAuthFilter 承担，这里只放行以免 401 被包成 Result 形状
+                    .requestMatchers("/v1/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll();
                 permitApiDocsIfEnabled(auth);
                 auth.anyRequest().authenticated();

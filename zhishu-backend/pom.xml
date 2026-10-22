@@ -35,6 +35,7 @@
         <module>zhishu-ai</module>
         <module>zhishu-mcp</module>
         <module>zhishu-desktop</module>
+        <module>zhishu-model-gateway</module>
         <module>zhishu-core</module>
     </modules>
 
@@ -82,6 +83,11 @@
             <dependency>
                 <groupId>cn.datafuturex.zhishu</groupId>
                 <artifactId>zhishu-desktop</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.datafuturex.zhishu</groupId>
+                <artifactId>zhishu-model-gateway</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -287,7 +287,7 @@ INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, me
 (101, 10, 'Agents', '/ai/agents', 'AIAgentManage', NULL, 'Cpu', 'MENU', 1, 1, 4, 'views/ai/AgentManage.vue', '{"title":"Agents 管理"}', 1),
 (102, 10, '知识库', '/ai/knowledges', 'AIDocumentManage', NULL, 'FolderOpened', 'MENU', 1, 1, 5, 'views/ai/DocumentManage.vue', '{"title":"知识库"}', 1),
 (104, 10, 'MCP Hub', '/ai/mcp', 'AIMcpHub', NULL, 'Link', 'MENU', 1, 1, 6, 'views/ai/McpHub.vue', '{"title":"MCP Hub"}', 1),
-(105, 10, '模型设置', '/ai/model-settings', 'AIModelSettings', NULL, 'SetUp', 'MENU', 1, 1, 7, 'views/ai/ModelSettings.vue', '{"title":"模型设置"}', 1),
+(105, 10, '供应商管理', '/gateway/providers', 'GatewayProviders', NULL, 'Connection', 'MENU', 1, 1, 7, 'views/gateway/GatewayProviderList.vue', '{"title":"供应商管理"}', 1),
 (110, 10, 'Agent 监控', '/ai/agent-monitor', 'AIAgentMonitor', NULL, 'Odometer', 'MENU', 1, 1, 8, 'views/ai/AgentMonitor.vue', '{"title":"Agent 监控"}', 1),
 (108, 10, '工作流编排', '/ai/agents/:id/graph', 'AIAgentGraphEditor', NULL, NULL, 'PAGE', 0, 1, 9, 'views/ai/AgentGraphEditor.vue', NULL, 1)
 ON CONFLICT (id) DO UPDATE SET

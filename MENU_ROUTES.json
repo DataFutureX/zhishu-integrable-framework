@@ -235,8 +235,8 @@
           "visible": true,
           "requiresAuth": true,
           "sort": 7,
-          "component": "views/ai/ModelSettings.vue",
-          "meta": { "title": "模型设置" }
+          "component": "views/gateway/GatewayProviderList.vue",
+          "meta": { "title": "供应商管理" }
         },
         {
           "id": 110,

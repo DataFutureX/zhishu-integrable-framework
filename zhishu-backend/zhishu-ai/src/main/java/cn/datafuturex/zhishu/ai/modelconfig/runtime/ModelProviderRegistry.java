@@ -1,5 +1,6 @@
 package cn.datafuturex.zhishu.ai.modelconfig.runtime;
 
+import cn.datafuturex.zhishu.ai.modelconfig.api.AiEmbeddingTargetPort;
 import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.ai.modelconfig.domain.ModelProviderEntity;
 import cn.datafuturex.zhishu.ai.modelconfig.mapper.ModelProviderMapper;
@@ -14,6 +15,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -32,6 +34,7 @@ public class ModelProviderRegistry {
 
     private final ModelProviderMapper modelProviderMapper;
     private final ModelConfigProperties modelConfigProperties;
+    private final ObjectProvider<AiEmbeddingTargetPort> embeddingTargetPort;
 
     @Value("${spring.ai.openai.api-key:}")
     private String envApiKey;
@@ -43,9 +46,11 @@ public class ModelProviderRegistry {
     private volatile EmbeddingSnapshot embeddingCache;
 
     public ModelProviderRegistry(ModelProviderMapper modelProviderMapper,
-                                 ModelConfigProperties modelConfigProperties) {
+                                 ModelConfigProperties modelConfigProperties,
+                                 ObjectProvider<AiEmbeddingTargetPort> embeddingTargetPort) {
         this.modelProviderMapper = modelProviderMapper;
         this.modelConfigProperties = modelConfigProperties;
+        this.embeddingTargetPort = embeddingTargetPort;
     }
 
     /**
@@ -87,11 +92,45 @@ public class ModelProviderRegistry {
     }
 
     /**
-     * 始终从默认模型设置构建 EmbeddingModel（全局唯一实例）。
+     * 解析全局唯一的 EmbeddingModel。
+     * <p>
+     * v2：优先取 {@code model_type=EMBEDDING} 的默认模型行（由模型网关侧实现端口）；
+     * 未启用或未配置时回退「默认供应商 + 旧 embedding_model 列」。
      *
      * @return EmbeddingModel 实例
      */
     public EmbeddingModel resolveEmbeddingModel() {
+        AiEmbeddingTargetPort port = embeddingTargetPort.getIfAvailable();
+        if (port != null && port.enabled()) {
+            var target = port.currentEmbedding();
+            if (target.isPresent()) {
+                return embeddingModelFor(target.get());
+            }
+        }
+        return legacyEmbeddingModel();
+    }
+
+    private EmbeddingModel embeddingModelFor(AiEmbeddingTargetPort.Target target) {
+        String fp = "gw|" + target.modelId() + "|" + target.baseUrl()
+                + "|" + (target.apiKey() == null ? "nokey" : target.apiKey().hashCode());
+        EmbeddingSnapshot snap = embeddingCache;
+        if (snap != null && fp.equals(snap.fingerprint)) {
+            return snap.embeddingModel;
+        }
+        synchronized (this) {
+            snap = embeddingCache;
+            if (snap != null && fp.equals(snap.fingerprint)) {
+                return snap.embeddingModel;
+            }
+            EmbeddingModel model = RefreshableOpenAiModels.embeddingModel(
+                    target.baseUrl(), target.apiKey(), target.upstreamModel());
+            embeddingCache = new EmbeddingSnapshot(fp, model);
+            log.info("已按网关向量模型构建 EmbeddingModel model={}", target.upstreamModel());
+            return model;
+        }
+    }
+
+    private EmbeddingModel legacyEmbeddingModel() {
         ModelProviderEntity def = loadDefaultProvider();
         String fp = embeddingFingerprint(def);
         EmbeddingSnapshot snap = embeddingCache;
@@ -156,7 +195,15 @@ public class ModelProviderRegistry {
                 temperature, entity.getMaxTokens(), topP);
     }
 
-    private String resolveApiKey(ModelProviderEntity entity) {
+    /**
+     * 解析供应商的明文 API Key（入库值优先，其次环境变量）。
+     * <p>
+     * 供模型网关（{@code ModelUpstreamPort}）与内部 ChatModel 构建复用，避免解密逻辑分叉。
+     *
+     * @param entity 模型设置实体
+     * @return 明文 Key，未配置返回 null
+     */
+    public String resolveApiKey(ModelProviderEntity entity) {
         if (StringUtils.hasText(entity.getApiKeyEnc())) {
             return decryptApiKey(entity.getApiKeyEnc());
         }
@@ -195,6 +242,14 @@ public class ModelProviderRegistry {
         }
         String url = entity.getBaseUrl();
         return (url != null && !url.isBlank()) ? url.trim() : "https://dashscope.aliyuncs.com/compatible-mode/v1";
+    }
+
+    /**
+     * 模型/供应商变更后清除 embedding 缓存。
+     */
+    public void evictEmbedding() {
+        embeddingCache = null;
+        log.info("已清除 EmbeddingModel 缓存");
     }
 
     private ModelProviderEntity loadProvider(Long providerId) {

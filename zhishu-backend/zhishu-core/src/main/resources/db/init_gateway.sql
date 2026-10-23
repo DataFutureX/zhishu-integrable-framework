@@ -225,7 +225,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_ai_gateway_model_default_embedding ON publi
 CREATE UNIQUE INDEX IF NOT EXISTS uk_ai_gateway_model_provider_upstream ON public.ai_gateway_model USING btree (provider_id, model_type, upstream_model);
 
 -- ---------- 种子数据（结构/配置类，幂等）----------
-SELECT pg_catalog.set_config('search_path', '', false);
 INSERT INTO public.ai_gateway_quota (id, subject_type, subject_key, period_kind, token_limit, used_tokens, period_start, period_end, status, remark, create_time, update_time) VALUES (1, 'DEFAULT', '*', 'MONTHLY', 5000000, 0, '2026-10-01 00:00:00', '2026-11-01 00:00:00', 'ENABLED', '缺省月额度', '2026-10-22 06:24:34.959529', '2026-10-22 06:24:34.959529') ON CONFLICT DO NOTHING;
 INSERT INTO public.ai_gateway_quota (id, subject_type, subject_key, period_kind, token_limit, used_tokens, period_start, period_end, status, remark, create_time, update_time) VALUES (13, 'USER', 'admin', 'MONTHLY', 5000000, 3475, '2026-10-01 00:00:00', '2026-11-01 00:00:00', 'ENABLED', '首次调用自动创建', '2026-10-23 10:01:43.591703', '2026-10-23 10:54:32.435722') ON CONFLICT DO NOTHING;
 SELECT pg_catalog.setval('public.ai_gateway_quota_id_seq', 82, true);

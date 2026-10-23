@@ -1,5 +1,6 @@
 package cn.datafuturex.zhishu.gateway.controller;
 
+import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
 import cn.datafuturex.zhishu.gateway.auth.GatewayAuthFilter;
 import cn.datafuturex.zhishu.gateway.auth.GatewayPrincipal;
 import cn.datafuturex.zhishu.gateway.chat.GatewayChatService;
@@ -30,11 +31,12 @@ import java.io.IOException;
 @Tag(name = "模型网关 · 推理", description = "OpenAI 兼容的 Chat Completions 转发端点")
 public class GatewayChatController {
 
-    private static final String CHANNEL_HEADER = "X-Zhishu-Channel";
+    /** 通道声明头与已知通道值跟 ai 侧保持单一来源（内部转发由 GatewayChannels 写入） */
+    private static final String CHANNEL_HEADER = GatewayChannels.HEADER;
     private static final String CLIENT_NAME_HEADER = "X-Client-Name";
     private static final String CLIENT_VERSION_HEADER = "X-Client-Version";
-    private static final String DEFAULT_CHANNEL = "DESKTOP";
-    private static final String CONSOLE_CHANNEL = "CONSOLE";
+    private static final String DEFAULT_CHANNEL = GatewayChannels.DESKTOP;
+    private static final String CONSOLE_CHANNEL = GatewayChannels.CONSOLE;
 
     private final GatewayChatService gatewayChatService;
 

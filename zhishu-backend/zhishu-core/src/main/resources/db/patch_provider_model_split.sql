@@ -163,6 +163,7 @@ WHERE chat_model IS NOT NULL OR embedding_model IS NOT NULL
 -- 查重（同一供应商+类型+上游模型名只应一行）：
 -- SELECT provider_id, model_type, upstream_model, count(*) FROM ai_gateway_model
 --  GROUP BY 1, 2, 3 HAVING count(*) > 1;
--- 确无重复后，可手工建唯一约束彻底防重（服务层已同步拦截）：
--- CREATE UNIQUE INDEX uk_ai_gateway_model_provider_upstream
+-- 确无重复后建唯一约束彻底防重（服务层已同步拦截；开发库已启用）：
+-- 注：放入本脚本而非启动期自动执行，因为存量重复行会使索引创建失败而阻断启动
+-- CREATE UNIQUE INDEX IF NOT EXISTS uk_ai_gateway_model_provider_upstream
 --     ON ai_gateway_model (provider_id, model_type, upstream_model);

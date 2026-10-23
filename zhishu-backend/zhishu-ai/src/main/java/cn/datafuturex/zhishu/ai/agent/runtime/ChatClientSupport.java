@@ -4,6 +4,7 @@ import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentTimeContext;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
+import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
 import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import lombok.RequiredArgsConstructor;
@@ -147,7 +148,8 @@ public class ChatClientSupport {
             List<ToolCallback> tools,
             OpenAiChatOptions options,
             boolean enableMemory) {
-        ChatModel chatModel = gatewayChatModelRegistry.resolve(gatewayModelId);
+        // Agent 推理经网关回环，声明 AGENT 通道以便台账区分
+        ChatModel chatModel = gatewayChatModelRegistry.resolve(gatewayModelId, GatewayChannels.AGENT);
         ChatModel loggingModel = new LoggingChatModel(chatModel, gatewayModelId);
         String effectivePrompt = AgentTimeContext.appendBlock(systemPrompt);
         var builder = ChatClient.builder(loggingModel)

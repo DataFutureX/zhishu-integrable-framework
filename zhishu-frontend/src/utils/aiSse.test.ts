@@ -237,29 +237,37 @@ describe('postAiSse 超时守护', () => {
   })
 
   it('持续收到数据时会续期，不误判超时', async () => {
-    const ctx: StreamContext = {}
-    stubFetch(ctx)
-    const messages: string[] = []
+    // 用虚拟时间驱动：真实时钟下推送间隔偶发超过 25ms 阈值会使本例飘红
+    vi.useFakeTimers()
+    try {
+      const ctx: StreamContext = {}
+      stubFetch(ctx)
+      const messages: string[] = []
 
-    // 总耗时（约 50ms）远超单次阈值 25ms，验证每次到达都会重置计时
-    const feeder = (async () => {
-      while (!ctx.stream) await sleep(1)
+      const settled = settlePromise(
+        postAiSse(
+          '/chat/stream',
+          {},
+          { onMessage: (chunk) => messages.push(chunk) },
+          { firstByteTimeoutMs: 25, idleTimeoutMs: 25 },
+        ),
+      )
+      // 让 fetch 桩完成建流
+      await vi.advanceTimersByTimeAsync(0)
+
+      // 每 20ms 推一段（均小于 25ms 阈值），总跨度 100ms 远超单次阈值：验证每次到达都会重置计时
       for (let i = 0; i < 5; i++) {
-        await sleep(10)
         ctx.stream?.push(`data: chunk-${i}\n\n`)
+        await vi.advanceTimersByTimeAsync(20)
       }
       ctx.stream?.end()
-    })()
+      await vi.advanceTimersByTimeAsync(0)
 
-    await postAiSse(
-      '/chat/stream',
-      {},
-      { onMessage: (chunk) => messages.push(chunk) },
-      { firstByteTimeoutMs: 25, idleTimeoutMs: 25 },
-    )
-    await feeder
-
-    expect(messages).toEqual(['chunk-0', 'chunk-1', 'chunk-2', 'chunk-3', 'chunk-4'])
+      expect(await settled).toBeNull()
+      expect(messages).toEqual(['chunk-0', 'chunk-1', 'chunk-2', 'chunk-3', 'chunk-4'])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('阈值传 0 表示不限制超时', async () => {

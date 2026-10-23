@@ -330,6 +330,7 @@ CREATE INDEX IF NOT EXISTS idx_ai_gateway_usage_time   ON ai_gateway_usage (crea
 | `TIMEOUT` | 空闲超时 | 按已累计正文估算结算 |
 
 `channel` 由请求头 `X-Zhishu-Channel` 决定（`DESKTOP` / `CONSOLE` / `AGENT` / `BRIEFING` / `OPENAPI` / `TEST`）；无请求头时，来源为本机回环地址（127.0.0.1 / ::1）判为 `CONSOLE`（平台内部调用），其余判为 `DESKTOP`。
+`X-Zhishu-Channel` 优先于上述启发式：平台内部经 gatewayclient 回环时主动声明通道（Agent 运行为 `AGENT`，其余默认取 `zhishu.gateway.internal.channel`，现为 `CONSOLE`）。
 
 #### ~~`ai_gateway_internal`~~ —— 内部调用主体（本期不建表）
 
@@ -1112,7 +1113,7 @@ WHERE b.id = p.id;
 | **DDL 顺序风险** | `GatewaySchemaInitializer` 先跑 `init_gateway.sql`，检测缺 `model_type` 且默认供应商唯一时**自动执行** `patch_provider_model_split.sql`；仍缺列则标记网关不可用 |
 | **就绪闸门** | 新增 `GatewayReadiness` + `GatewayReadyFilter`：结构未就绪时 `/v1/*` 返回 503 `gateway_not_ready`（带可操作原因），不抛 SQL 异常 |
 | **迁移失败可读** | `GatewayExceptionAdvice` 新增 `BadSqlGrammarException` 处理，返回「请执行 patch_provider_model_split.sql」而不是 500 |
-| **channel 判定** | 先看 `X-Forwarded-For`/`X-Real-IP`（反代转发 → `DESKTOP`）；无转发头且源为回环才判 `CONSOLE` |
+| **channel 判定** | 先看 `X-Forwarded-For`/`X-Real-IP`（反代转发 → `DESKTOP`）；无转发头且源为回环才判 `CONSOLE`；头部 `X-Zhishu-Channel` 优先（内部调用主动声明） |
 | **限流接线** | `GatewayRateLimiter`：`quota.rate-limit.enabled/qps` 按「用户×模型」计，超限 429 `rate_limit_exceeded`（进程内单实例语义） |
 | **prompt 日志开关** | `log.prompt-bodies=true` 时记录截断正文（2000 字），否则仅记长度；默认关闭 |
 | **显式失败** | 供应商未配对话模型 / 无默认向量模型时抛明确的 `AiException`，不再静默回退到错误模型 |
@@ -1138,6 +1139,7 @@ WHERE b.id = p.id;
 | **废弃表与列清理** | 新增 `db/patch_drop_model_legacy.sql` 并已在开发库执行：删除 `ai_model_provider` 的 5 个历史列、`ai_agent.model_provider_id`、`ai_model_provider_legacy_backup`、`ai_model_config(_retired)`；代码侧删除 `ModelProviderRegistry`（改用 `provider/runtime/ModelRuntimeCache` 按指纹缓存 + 懒代理）、`ModelProviderEntity` 与 `AiAgentEntity` 的废弃字段；`V_add_model_provider.sql` 不再建历史列与 `model_provider_id`；`init_postgresql.sql` 同步删除 `ai_model_config` 建表块；`ProviderSchemaInitializer` 只保留从 `spring.ai.openai.*` 引导默认供应商 |
 | **模型配置包瘦身（契约下沉）** | 引用统计发现 `ModelProviderPort`/`ModelUpstreamPort`/`ModelProviderVO`/`ModelProviderCreateDTO`/`ModelProviderUpdateDTO`/`UpstreamModelInfo` 的消费者 100% 在网关侧（ai 为 0）→ 已全部移入 `zhishu-model-gateway/provider/{api,dto,vo}`；同时删除已无消费者的死端口 `GatewayDefaultModelPort`（`GatewayModelCatalogClient` 去掉 implements）、将 `AiEmbeddingTargetPort` 收缩为单方法 `defaultEmbeddingModel()`（`enabled()`/`currentEmbedding()`/`Target` 下沉为实现内部）、把 `DynamicOpenAiConfig` 移到 `ai.gatewayclient`以消除 `modelconfig ↔ gatewayclient` 模块环、给 `modelconfig.runtime` 补 `@NamedInterface("api")`。结果：`modelconfig` 只剩两个推理目标端口 + `ModelConfigProperties` + `RefreshableOpenAiModels`，其 `@ApplicationModule(allowedDependencies={"shared"})` 声明变为真实 |
 | **导入带元数据 + 开发库校正** | `listUpstreamModels` 改为返回 `UpstreamModelInfo`（兼容 OpenAI `{"data":[]}` 与 Ollama `{"models":[]}` 两种形状，容错解析 `context_window`/`max_output_tokens`/`input_modalities`/`effort.supported_levels`/`default_level`/`system_prompt_update`）；`models/batch` 新增 `models[]` 条目入参（保留 `upstreamModels[]` 兼容），导入时直接写入容量与推理档位。同时根据 DeepSeek 官方文档核实：现行模型名为 **`deepseek-flash`**（实为 DeepSeek-V4.1-Flash-1017）与 `deepseek-v4-pro`，旧名 `deepseek-chat`/`deepseek-reasoner` 已于 2026-07-24 停用 —— 因此 `gw-deepseek` 的上游名无需修正，已按官方元数据补齐（ctx 1048576 / out 393216 / text,image / low,high,max / high / in-history），并把绑定 DISABLED 模型的 3 个 Agent 改绑 `gw-deepseek` |
+| **台账通道标注与回归测试** | 新增 `modelconfig.api.GatewayChannels`（单一来源：`X-Zhishu-Channel` + `DESKTOP/CONSOLE/AGENT/OPENAPI`），`RefreshableOpenAiModels` 的 `chatModel(...)` 增加 headers 重载（走 `OpenAiSetup.setupSyncClient/setupAsyncClient` 的默认头位），`GatewayChatModelRegistry.resolve(modelId, channel)` 把通道参入缓存键，`ChatClientSupport`（Agent 运行时）传 `AGENT`，网关侧 `GatewayChatController` 改用同一常量。验证：Agent 对话台账由 `CONSOLE` 变 `AGENT`（成功行 `id=11`，SUCCESS/569 tokens/estimated=false/ttft=162ms；上游不可达时亦记 AGENT + 503 ERROR）。同时新增 `zhishu-model-gateway` 首个单测 `GatewayChatUsageSettlementTest`（6 例：整帧归约、无 usage 不覆盖、误传内层对象必须落到估算、非流式入账、total 缺失补齐、全估算分支），并为该模块补 `spring-boot-starter-webmvc-test`；结算辅助改为包内静态方法（`captureUsage` / `extractUsage` / `UsageNumbers`）以便测试。另：唯一索引 `uk_ai_gateway_model_provider_upstream` 已在开发库启用（无重复行），建索引语句保留在手工脚本而非启动期自动执行，以免存量重复库因索引创建失败而阻断启动 |
 
 #### 17.2 待办
 

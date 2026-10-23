@@ -2,6 +2,7 @@ package cn.datafuturex.zhishu.ai.gatewayclient;
 
 import cn.datafuturex.zhishu.ai.gatewayclient.config.GatewayInternalProperties;
 import cn.datafuturex.zhishu.ai.modelconfig.api.AiChatTargetPort;
+import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
 import cn.datafuturex.zhishu.ai.modelconfig.runtime.RefreshableOpenAiModels;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -48,20 +50,37 @@ public class GatewayChatModelRegistry {
     }
 
     /**
-     * 解析 ChatModel。
+     * 解析 ChatModel（使用配置的默认内部通道）。
      *
      * @param gatewayModelId Agent 绑定的网关模型 id，空=用网关默认模型
      * @return ChatModel
      */
     public ChatModel resolve(String gatewayModelId) {
+        return resolve(gatewayModelId, properties.getChannel());
+    }
+
+    /**
+     * 解析 ChatModel 并声明台账通道。
+     * <p>
+     * 通道写入 {@code X-Zhishu-Channel} 请求头，使台账能区分 Agent 推理与控制台/桌面直连；
+     * 回退直连上游时不注入该头（属于平台内部协议）。
+     *
+     * @param gatewayModelId 网关模型 id，空=用网关默认模型
+     * @param channel        内部调用通道（如 AGENT / CONSOLE）
+     * @return ChatModel
+     */
+    public ChatModel resolve(String gatewayModelId, String channel) {
         if (!enabled()) {
             return fallbackChatModel(gatewayModelId);
         }
         String modelId = resolveModelId(gatewayModelId);
         String bearer = bearer();
-        String cacheKey = Integer.toHexString(bearer.hashCode()) + '|' + modelId;
+        String effectiveChannel = StringUtils.hasText(channel)
+                ? channel.trim().toUpperCase() : GatewayChannels.CONSOLE;
+        String cacheKey = Integer.toHexString(bearer.hashCode()) + '|' + modelId + '|' + effectiveChannel;
         return cache.get(cacheKey, key -> RefreshableOpenAiModels.chatModel(
-                baseUrl(), bearer, modelId, null, null, null));
+                baseUrl(), bearer, modelId, null, null, null,
+                Map.of(GatewayChannels.HEADER, effectiveChannel)));
     }
 
     /**

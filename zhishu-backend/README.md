@@ -946,9 +946,9 @@ yunqi:
 | 协议面 | `GET /v1/models`（仅下发言模型，含能力元数据）、`POST /v1/chat/completions`（非流式 + SSE 透传）、`GET /v1/quota` |
 | 鉴权 | 复用知枢 JWT（`/desktop/v1/auth` 或控制台登录得到的同一个 token）；登出/改密立即失效；可选静态 token 兼容模式 |
 | 额度 | 按用户月度 token；`USER → ROLE → DEFAULT` 解析；预留→结算，不足返回 `429 insufficient_quota` |
-| 台账 | 每次调用记录用户/模型/提示与补全 token/缓存命中/推理 token/通道/耗时/状态 |
+| 台账 | 每次调用记录用户/模型/提示与补全 token/缓存命中/推理 token/通道/耗时/状态；通道取 `X-Zhishu-Channel`（平台内部 Agent 调用主动声明 `AGENT`），无声明时按转发头与回环地址判定 `DESKTOP`/`CONSOLE` |
 | 管理面 | 供应商（CRUD + 测试连接 + 拉取上游模型）、模型（按类型/供应商 + 批量导入 + 设默认）、额度策略、调用用量；方法级 `@PreAuthorize` 鉴权 |
-| 内部统一 | Agent / 知识问答 / 项目简报经本机 `/v1` 调用，额度计入当前登录用户 |
+| 内部统一 | Agent / 知识问答经本机 `/v1` 调用（台账分别记 `AGENT` / `CONSOLE`），额度计入当前登录用户 |
 
 开启与配置见下文 [配置速查](#配置速查)；对端（LetsWork 桌面）接入见 [`../docs/模型网关接入指南.md`](../docs/模型网关接入指南.md)。
 

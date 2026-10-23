@@ -191,8 +191,7 @@ public class GatewayChatServiceImpl implements GatewayChatService {
                 if (ttftMs == null) {
                     ttftMs = elapsedMs(startNanos);
                 }
-                // 保存整个帧（extractUsage 需要从帧里取 usage，非流式路径同样传整个响应）
-                usageNode = frame.hasNonNull("usage") ? frame : usageNode;
+                usageNode = captureUsage(usageNode, frame);
                 appendContent(frame, completion);
                 writeSse(out, MAPPER.writeValueAsString(rewriteModel(frame, modelId)));
             }
@@ -328,7 +327,30 @@ public class GatewayChatServiceImpl implements GatewayChatService {
         return tokenEstimator.estimateText(content.isTextual() ? content.asText() : "");
     }
 
-    private UsageNumbers extractUsage(JsonNode node, long promptEstimate, long completionEstimate) {
+    /**
+     * 流式帧归约：仅当帧带 {@code usage} 时替换已累计的帧。
+     * <p>
+     * 必须保留<b>整帧</b>：{@link #extractUsage} 按「信封」读取 {@code node.usage}。
+     * 若在此处先剥一层（存 {@code frame.get("usage")}）则结算永远落空，
+     * 流式台账会静默降级为估算。
+     *
+     * @param current 已累计的帧，可为 null
+     * @param frame   当前 SSE 帧
+     * @return 含 usage 的帧（无则保持 current）
+     */
+    static JsonNode captureUsage(JsonNode current, JsonNode frame) {
+        return frame != null && frame.hasNonNull("usage") ? frame : current;
+    }
+
+    /**
+     * 结算 token 用量。
+     *
+     * @param node               整个响应体或非流式末帧（内含 {@code usage} 对象）
+     * @param promptEstimate     输入估算值（无 usage 时使用）
+     * @param completionEstimate 输出估算值（无 usage 时使用）
+     * @return 用量数字；{@code estimated=true} 表示来自估算而非上游
+     */
+    static UsageNumbers extractUsage(JsonNode node, long promptEstimate, long completionEstimate) {
         if (node != null && node.hasNonNull("usage") && node.get("usage").isObject()) {
             JsonNode usage = node.get("usage");
             Integer prompt = intOrNull(usage, "prompt_tokens");
@@ -457,7 +479,7 @@ public class GatewayChatServiceImpl implements GatewayChatService {
      * @param reasoning   推理 token
      * @param estimated   是否估算
      */
-    private record UsageNumbers(Integer prompt, Integer completion, Integer total,
-                                Integer cached, Integer reasoning, boolean estimated) {
+    record UsageNumbers(Integer prompt, Integer completion, Integer total,
+                        Integer cached, Integer reasoning, boolean estimated) {
     }
 }

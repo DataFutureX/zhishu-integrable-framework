@@ -47,11 +47,32 @@ public final class RefreshableOpenAiModels {
     public static ChatModel chatModel(
             String baseUrl, String apiKey, String chatModel,
             Double temperature, Integer maxTokens, Double topP) {
+        return chatModel(baseUrl, apiKey, chatModel, temperature, maxTokens, topP, null);
+    }
+
+    /**
+     * 构建 ChatModel，可附加默认请求头。
+     * <p>
+     * 平台内部回环调用用它声明台账通道（{@code X-Zhishu-Channel}）；直接上游调用不传。
+     *
+     * @param baseUrl     OpenAI 兼容 Base URL
+     * @param apiKey      解密后的 API Key（或内部调用的 bearer）
+     * @param chatModel   对话模型名
+     * @param temperature 温度
+     * @param maxTokens   最大 Token
+     * @param topP        Top P
+     * @param headers     额外请求头，可为 null
+     * @return 构建好的 ChatModel
+     */
+    public static ChatModel chatModel(
+            String baseUrl, String apiKey, String chatModel,
+            Double temperature, Integer maxTokens, Double topP, Map<String, String> headers) {
         requireApiKey(apiKey);
         String effectiveUrl = effectiveBaseUrl(baseUrl);
-        log.info("构建 ChatModel baseUrl={}, model={}", effectiveUrl, chatModel);
-        OpenAIClient sync = buildSyncClient(effectiveUrl, apiKey);
-        OpenAIClientAsync async = buildAsyncClient(effectiveUrl, apiKey);
+        log.info("构建 ChatModel baseUrl={}, model={}, 额外请求头={}", effectiveUrl, chatModel,
+                headers == null ? "[]" : headers.keySet());
+        OpenAIClient sync = buildSyncClient(effectiveUrl, apiKey, headers);
+        OpenAIClientAsync async = buildAsyncClient(effectiveUrl, apiKey, headers);
         var optBuilder = OpenAiChatOptions.builder().model(chatModel);
         if (temperature != null) {
             optBuilder.temperature(temperature);
@@ -81,7 +102,7 @@ public final class RefreshableOpenAiModels {
         requireApiKey(apiKey);
         String effectiveUrl = effectiveBaseUrl(baseUrl);
         log.info("构建 EmbeddingModel baseUrl={}, model={}", effectiveUrl, embeddingModel);
-        OpenAIClient sync = buildSyncClient(effectiveUrl, apiKey);
+        OpenAIClient sync = buildSyncClient(effectiveUrl, apiKey, null);
         return OpenAiEmbeddingModel.builder()
                 .openAiClient(sync)
                 .options(OpenAiEmbeddingOptions.builder()
@@ -102,19 +123,19 @@ public final class RefreshableOpenAiModels {
                 : "https://dashscope.aliyuncs.com/compatible-mode/v1";
     }
 
-    private static OpenAIClient buildSyncClient(String baseUrl, String apiKey) {
+    private static OpenAIClient buildSyncClient(String baseUrl, String apiKey, Map<String, String> headers) {
         return OpenAiSetup.setupSyncClient(
                 baseUrl, apiKey, BearerTokenCredential.create(apiKey),
                 null, null, null, false, false, null,
-                Duration.ofMinutes(5), 2, null, Map.of(),
+                Duration.ofMinutes(5), 2, null, headers == null ? Map.of() : Map.copyOf(headers),
                 ObservationRegistry.NOOP, null, List.of());
     }
 
-    private static OpenAIClientAsync buildAsyncClient(String baseUrl, String apiKey) {
+    private static OpenAIClientAsync buildAsyncClient(String baseUrl, String apiKey, Map<String, String> headers) {
         return OpenAiSetup.setupAsyncClient(
                 baseUrl, apiKey, BearerTokenCredential.create(apiKey),
                 null, null, null, false, false, null,
-                Duration.ofMinutes(5), 2, null, Map.of(),
+                Duration.ofMinutes(5), 2, null, headers == null ? Map.of() : Map.copyOf(headers),
                 ObservationRegistry.NOOP, null, List.of());
     }
 

@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.gateway.admin.controller;
 
 import cn.datafuturex.zhishu.common.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayQuotaUpsertDTO;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayQuotaAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayQuotaVO;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -40,6 +42,7 @@ public class GatewayQuotaAdminController {
      * @return 额度列表
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_QUOTA_LIST + "')")
     @Operation(summary = "额度策略列表")
     public Result<List<GatewayQuotaVO>> list(@RequestParam(required = false) String subjectType) {
         return Result.success(gatewayQuotaAdminService.list(subjectType));
@@ -52,6 +55,7 @@ public class GatewayQuotaAdminController {
      * @return 新建后的策略
      */
     @PostMapping
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_QUOTA_UPDATE + "')")
     @Operation(summary = "新建额度策略")
     public Result<GatewayQuotaVO> create(@Valid @RequestBody GatewayQuotaUpsertDTO dto) {
         log.info("[网关管理] 新建额度策略 {}:{}", dto.subjectType(), dto.normalizedSubjectKey());
@@ -66,6 +70,7 @@ public class GatewayQuotaAdminController {
      * @return 修改后的策略
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_QUOTA_UPDATE + "')")
     @Operation(summary = "修改额度策略", description = "主体不可变更")
     public Result<GatewayQuotaVO> update(@PathVariable Long id,
                                          @Valid @RequestBody GatewayQuotaUpsertDTO dto) {
@@ -79,6 +84,7 @@ public class GatewayQuotaAdminController {
      * @return 空结果
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_QUOTA_UPDATE + "')")
     @Operation(summary = "删除额度策略", description = "DEFAULT 主体不可删除")
     public Result<Void> delete(@PathVariable Long id) {
         gatewayQuotaAdminService.delete(id);
@@ -92,6 +98,7 @@ public class GatewayQuotaAdminController {
      * @return 修改后的策略
      */
     @PostMapping("/{id}/reset")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_QUOTA_UPDATE + "')")
     @Operation(summary = "清零已用量", description = "运维/测试用，不影响周期窗口")
     public Result<GatewayQuotaVO> reset(@PathVariable Long id) {
         return Result.success(gatewayQuotaAdminService.reset(id));

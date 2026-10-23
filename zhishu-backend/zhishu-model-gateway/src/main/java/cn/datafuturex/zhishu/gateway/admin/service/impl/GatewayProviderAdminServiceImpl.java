@@ -1,9 +1,10 @@
 package cn.datafuturex.zhishu.gateway.admin.service.impl;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelProviderPort;
-import cn.datafuturex.zhishu.ai.modelconfig.dto.ModelProviderCreateDTO;
-import cn.datafuturex.zhishu.ai.modelconfig.dto.ModelProviderUpdateDTO;
-import cn.datafuturex.zhishu.ai.modelconfig.vo.ModelProviderVO;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelProviderPort;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
+import cn.datafuturex.zhishu.gateway.provider.vo.ModelProviderVO;
+import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayProviderAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayProviderAdminVO;
@@ -98,7 +99,7 @@ public class GatewayProviderAdminServiceImpl implements GatewayProviderAdminServ
      * {@inheritDoc}
      */
     @Override
-    public List<String> upstreamModels(Long id) {
+    public List<UpstreamModelInfo> upstreamModels(Long id) {
         return modelProviderPort.listUpstreamModels(id);
     }
 

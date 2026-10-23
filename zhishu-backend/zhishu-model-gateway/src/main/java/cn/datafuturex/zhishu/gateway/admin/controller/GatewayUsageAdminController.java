@@ -2,6 +2,7 @@ package cn.datafuturex.zhishu.gateway.admin.controller;
 
 import cn.datafuturex.zhishu.common.PageResult;
 import cn.datafuturex.zhishu.common.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayUsageAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayUsageSummaryVO;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayUsageVO;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,6 +46,7 @@ public class GatewayUsageAdminController {
      * @return 分页结果
      */
     @GetMapping
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_USAGE_QUERY + "')")
     @Operation(summary = "调用台账分页")
     public Result<PageResult<GatewayUsageVO>> page(
             @RequestParam(required = false) String username,
@@ -66,6 +69,7 @@ public class GatewayUsageAdminController {
      * @return 汇总
      */
     @GetMapping("/summary")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_USAGE_QUERY + "')")
     @Operation(summary = "调用汇总", description = "总量 + 按模型/用户/天聚合")
     public Result<GatewayUsageSummaryVO> summary(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,

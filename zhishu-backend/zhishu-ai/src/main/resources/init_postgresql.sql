@@ -145,33 +145,11 @@ COMMENT ON COLUMN chat_session.title IS '会话标题（可编辑）';
 
 
 -- ---------------------------------------------------------------------------
--- 5. AI 模型运行时配置（单例 id=1）
+-- 5. （已退役）AI 模型运行时配置单例 ai_model_config
+--    模型与生成参数统一由模型网关承担：连接在 ai_model_provider，
+--    模型与参数在 ai_gateway_model；「对话默认开启 RAG」已迁至 sys_config.chat_enable_rag_default。
+--    历史库的清理与迁移见 db/patch_retire_ai_model_config.sql。
 -- ---------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS ai_model_config (
-    id                  BIGINT PRIMARY KEY DEFAULT 1,
-    chat_model          VARCHAR(64)  NOT NULL DEFAULT 'qwen-plus',
-    embedding_model     VARCHAR(64)  NOT NULL DEFAULT 'qwen3.7-text-embedding',
-    temperature         NUMERIC(4,2) NOT NULL DEFAULT 0.70,
-    max_tokens          INTEGER      NOT NULL DEFAULT 2000,
-    top_p               NUMERIC(4,2) NOT NULL DEFAULT 0.90,
-    enable_rag_default  BOOLEAN      NOT NULL DEFAULT FALSE,
-    memory_window_size  INTEGER      NOT NULL DEFAULT 20,
-    base_url            VARCHAR(512),
-    api_key_masked      VARCHAR(128),
-    api_key_enc         TEXT,
-    remark              VARCHAR(500),
-    update_time         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT ai_model_config_singleton CHECK (id = 1)
-);
-
-INSERT INTO ai_model_config (id, chat_model, embedding_model, temperature, max_tokens, top_p, enable_rag_default, memory_window_size, remark)
-VALUES (1, 'qwen-plus', 'qwen3.7-text-embedding', 0.70, 2000, 0.90, FALSE, 20, '默认通义兼容配置')
-ON CONFLICT (id) DO NOTHING;
-
-COMMENT ON TABLE ai_model_config IS 'AI 助手模型运行时配置（单例）';
-COMMENT ON COLUMN ai_model_config.chat_model IS '对话模型名';
-COMMENT ON COLUMN ai_model_config.embedding_model IS '向量模型名（改后需重新向量化文档）';
 
 
 -- ---------------------------------------------------------------------------

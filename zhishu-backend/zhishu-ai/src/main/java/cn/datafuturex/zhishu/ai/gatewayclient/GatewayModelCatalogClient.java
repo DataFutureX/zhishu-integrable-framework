@@ -1,7 +1,6 @@
 package cn.datafuturex.zhishu.ai.gatewayclient;
 
 import cn.datafuturex.zhishu.ai.gatewayclient.config.GatewayInternalProperties;
-import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayDefaultModelPort;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -26,7 +25,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Component
-public class GatewayModelCatalogClient implements GatewayDefaultModelPort {
+public class GatewayModelCatalogClient {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String CACHE_KEY = "catalog";
@@ -59,7 +58,6 @@ public class GatewayModelCatalogClient implements GatewayDefaultModelPort {
      *
      * @return true=经网关
      */
-    @Override
     public boolean enabled() {
         return properties.isEnabled();
     }
@@ -69,7 +67,6 @@ public class GatewayModelCatalogClient implements GatewayDefaultModelPort {
      *
      * @return 默认模型，未配置或拉取失败返回空
      */
-    @Override
     public Optional<String> defaultModelId() {
         return Optional.ofNullable(catalog().defaultModel());
     }

@@ -1,7 +1,8 @@
 package cn.datafuturex.zhishu.gateway.admin.service;
 
-import cn.datafuturex.zhishu.ai.modelconfig.dto.ModelProviderCreateDTO;
-import cn.datafuturex.zhishu.ai.modelconfig.dto.ModelProviderUpdateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
+import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayProviderAdminVO;
 
 import java.util.List;
@@ -59,10 +60,10 @@ public interface GatewayProviderAdminService {
     String test(Long id);
 
     /**
-     * 拉取上游模型 id 列表。
+     * 拉取上游模型列表（含 {@code GET /models} 元数据）。
      *
      * @param id 主键
-     * @return 模型 id 列表
+     * @return 上游模型元数据列表
      */
-    List<String> upstreamModels(Long id);
+    List<UpstreamModelInfo> upstreamModels(Long id);
 }

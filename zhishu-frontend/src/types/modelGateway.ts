@@ -30,6 +30,30 @@ export interface GatewayProviderUpsertDTO {
 
 export type GatewayModelType = 'CHAT' | 'EMBEDDING'
 
+/** 上游模型元数据（GET /model-gateway/providers/{id}/upstream-models） */
+export interface GatewayUpstreamModel {
+  id: string
+  name?: string | null
+  contextWindow?: number | null
+  maxOutputTokens?: number | null
+  inputModalities?: string[] | null
+  reasoningEfforts?: string[] | null
+  defaultReasoningEffort?: string | null
+  systemPromptUpdate?: string | null
+}
+
+/** 批量导入条目（POST /model-gateway/models/batch） */
+export interface GatewayModelImportItem {
+  upstreamModel: string
+  displayName?: string | null
+  contextWindow?: number | null
+  maxOutputTokens?: number | null
+  inputModalities?: string[] | null
+  reasoningEfforts?: string[] | null
+  defaultReasoningEffort?: string | null
+  systemPromptUpdate?: string | null
+}
+
 export interface GatewayModelVO {
   id: number
   modelId: string

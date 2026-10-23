@@ -145,3 +145,21 @@ COMMENT ON COLUMN ai_gateway_usage.status          IS 'RESERVED / SUCCESS / ERRO
 COMMENT ON COLUMN ai_gateway_usage.reserved_tokens IS '请求前预留量';
 COMMENT ON COLUMN ai_gateway_usage.estimated       IS 'usage 是否由网关估算（上游未回 usage）';
 COMMENT ON COLUMN ai_gateway_usage.http_status     IS '返回给客户端的 HTTP 状态';
+
+-- ---------------------------------------------------------------------------
+-- 种子数据（幂等）：服务账号 + 缺省额度兜底
+-- 原位于 patch_agent_model_to_gateway.sql，该脚本退役后移到此处，由启动器幂等执行。
+-- ---------------------------------------------------------------------------
+
+INSERT INTO sys_user (id, username, real_name, password, role, status, create_time, update_time)
+VALUES (9000000000000000001, 'gateway-service', '模型网关服务账号', 'disabled', 'SERVICE', 1,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO ai_gateway_quota (subject_type, subject_key, period_kind, token_limit, used_tokens,
+                              period_start, period_end, status, remark)
+VALUES ('DEFAULT', '*', 'MONTHLY', 5000000, 0,
+        date_trunc('month', CURRENT_TIMESTAMP),
+        date_trunc('month', CURRENT_TIMESTAMP) + INTERVAL '1 month',
+        'ENABLED', '缺省月额度')
+ON CONFLICT (subject_type, subject_key) DO NOTHING;

@@ -11,7 +11,7 @@ import cn.datafuturex.zhishu.ai.shared.vo.structured.StationCompareResult;
 import cn.datafuturex.zhishu.ai.shared.vo.structured.TrendAnalysisResult;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.ai.chat.service.AiChatService;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.biztools.api.TerminalOverviewPort;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.sse.ChatSseSupport;
@@ -52,7 +52,7 @@ public class AiChatServiceImpl implements AiChatService {
 
     private final ChatClient chatClient;
     private final TerminalOverviewPort terminalOverviewPort;
-    private final ModelConfigPort aiModelConfigService;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final AgentChatPort agentChatPort;
     private final ChatClientSupport chatClientSupport;
 
@@ -245,7 +245,7 @@ public class AiChatServiceImpl implements AiChatService {
 
         structured = trimStructured(structured, maxItems);
         String content = summaryOf(request.type(), structured);
-        return ChatResponseVO.of(content, aiModelConfigService.currentChatModel(), conversationId, structured);
+        return ChatResponseVO.of(content, gatewayChatModelRegistry.defaultModelLabel(), conversationId, structured);
     }
 
     private ChatResponseVO fallbackTextStructured(
@@ -271,7 +271,7 @@ public class AiChatServiceImpl implements AiChatService {
                     .content();
             return ChatResponseVO.of(
                     content == null ? "结构化解析失败，已降级为文本回复。" : content,
-                    aiModelConfigService.currentChatModel(),
+                    gatewayChatModelRegistry.defaultModelLabel(),
                     conversationId,
                     null);
         } catch (Exception e) {
@@ -287,7 +287,7 @@ public class AiChatServiceImpl implements AiChatService {
             long agentId, String systemHint, int maxTokens, Double temperature) {
         List<String> capabilities = agentChatPort.resolveCapabilities(agentId);
         List<ToolCallback> tools = chatClientSupport.resolveTools(capabilities, null, null, agentId);
-        var builder = OpenAiChatOptions.builder().model(aiModelConfigService.currentChatModel());
+        var builder = OpenAiChatOptions.builder().model(gatewayChatModelRegistry.resolveModelId(null));
         builder.maxTokens(maxTokens);
         if (temperature != null) {
             builder.temperature(temperature);
@@ -304,7 +304,7 @@ public class AiChatServiceImpl implements AiChatService {
         log.info("在线概览直出 total={}, items={}", overview.total(), overview.items().size());
         return ChatResponseVO.of(
                 body == null ? "" : body,
-                aiModelConfigService.currentChatModel(),
+                gatewayChatModelRegistry.defaultModelLabel(),
                 conversationId,
                 overview.structured());
     }

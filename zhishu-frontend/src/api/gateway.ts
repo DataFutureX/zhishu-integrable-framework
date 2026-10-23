@@ -7,6 +7,8 @@ import type {
   GatewayProviderVO,
   GatewayQuotaUpsertDTO,
   GatewayQuotaVO,
+  GatewayModelImportItem,
+  GatewayUpstreamModel,
   GatewayUsageSummaryVO,
   GatewayUsageVO,
 } from '@/types/modelGateway'
@@ -41,9 +43,9 @@ export const testGatewayProviderApi = (id: number) => {
   return post<string>(`/model-gateway/providers/${id}/test`)
 }
 
-/** 拉取上游模型列表 GET /api/v1/model-gateway/providers/{id}/upstream-models */
-export const listUpstreamModelsApi = (id: number) => {
-  return get<string[]>(`/model-gateway/providers/${id}/upstream-models`)
+/** 拉取上游模型列表（含元数据） GET /api/v1/model-gateway/providers/{id}/upstream-models */
+export const listUpstreamModelsApi = (id: number | string) => {
+  return get<GatewayUpstreamModel[]>(`/model-gateway/providers/${id}/upstream-models`)
 }
 
 /** 模型列表 GET /api/v1/model-gateway/models */
@@ -95,7 +97,7 @@ export const testGatewayModelApi = (id: number) => {
 export const batchImportGatewayModelsApi = (data: {
   providerId: number
   modelType?: string
-  upstreamModels: string[]
+  models: GatewayModelImportItem[]
 }) => {
   return post<GatewayModelVO[]>('/model-gateway/models/batch', data)
 }

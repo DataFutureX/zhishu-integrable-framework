@@ -5,7 +5,7 @@ import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentQueryDTO;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentQaService;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
 import cn.datafuturex.zhishu.ai.shared.port.QaHistoryPort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +39,7 @@ public class DocumentQaController {
 
     private final DocumentQaService documentQaService;
     private final QaHistoryPort qaHistoryService;
-    private final ModelConfigPort aiModelConfigService;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
 
     @PostMapping
     @Operation(summary = "文档智能问答", description = "基于已上传的文档进行智能问答（RAG）")
@@ -48,7 +48,7 @@ public class DocumentQaController {
         String[] pair = documentQaService.answerQuestion(queryDTO);
         String response = pair[0];
         String conversationId = pair[1];
-        ChatResponseVO vo = ChatResponseVO.of(response, aiModelConfigService.currentChatModel() + " + RAG", conversationId);
+        ChatResponseVO vo = ChatResponseVO.of(response, gatewayChatModelRegistry.defaultModelLabel() + " + RAG", conversationId);
         qaHistoryService.save(
                 ChatScenes.DOCUMENT_QA,
                 queryDTO.question(),
@@ -65,7 +65,7 @@ public class DocumentQaController {
             @Parameter(description = "用户问题", required = true) @RequestParam String question,
             @Parameter(description = "返回最相关的片段数量") @RequestParam(defaultValue = "5") Integer topK) {
         String response = documentQaService.answerFromAllDocuments(question, topK);
-        ChatResponseVO vo = ChatResponseVO.of(response, aiModelConfigService.currentChatModel() + " + RAG", null);
+        ChatResponseVO vo = ChatResponseVO.of(response, gatewayChatModelRegistry.defaultModelLabel() + " + RAG", null);
         qaHistoryService.save(ChatScenes.DOCUMENT_QA, question, response, vo.model(), null);
         return Result.success(vo);
     }
@@ -77,7 +77,7 @@ public class DocumentQaController {
             @RequestParam String question,
             @RequestParam(defaultValue = "5") Integer topK) {
         String response = documentQaService.answerFromDocument(question, documentId, topK);
-        ChatResponseVO vo = ChatResponseVO.of(response, aiModelConfigService.currentChatModel() + " + RAG", null);
+        ChatResponseVO vo = ChatResponseVO.of(response, gatewayChatModelRegistry.defaultModelLabel() + " + RAG", null);
         qaHistoryService.save(ChatScenes.DOCUMENT_QA, question, response, vo.model(), documentId);
         return Result.success(vo);
     }
@@ -107,7 +107,7 @@ public class DocumentQaController {
                                         ChatScenes.DOCUMENT_QA,
                                         question,
                                         answer.toString(),
-                                        aiModelConfigService.currentChatModel() + " + RAG",
+                                        gatewayChatModelRegistry.defaultModelLabel() + " + RAG",
                                         documentId,
                                         conversationIdHolder[0]);
                             } catch (Exception e) {

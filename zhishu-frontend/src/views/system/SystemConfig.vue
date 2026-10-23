@@ -206,6 +206,32 @@
               </el-form-item>
             </div>
           </div>
+
+          <!-- AI 对话 -->
+          <div id="setting-section-chat" class="settings-section">
+            <div class="settings-section__head">
+              <div class="settings-section__icon settings-section__icon--security">
+                <el-icon :size="18"><ChatDotRound /></el-icon>
+              </div>
+              <div>
+                <div class="settings-section__title">AI 对话</div>
+                <div class="settings-section__desc">控制 Agent 会话是否默认携带知识库检索（仍受 Agent 自身能力约束）</div>
+              </div>
+            </div>
+
+            <div class="settings-section__body">
+              <el-form-item label="默认 RAG" prop="chatEnableRagDefault">
+                <div class="security-switch-row">
+                  <el-switch
+                    v-model="formData.chatEnableRagDefault"
+                    active-text="开启"
+                    inactive-text="关闭"
+                  />
+                  <span class="field-tip">会话页的“知识库”开关会以该默认值初始化</span>
+                </div>
+              </el-form-item>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -245,6 +271,7 @@ import {
   OfficeBuilding,
   Document,
   Lock,
+  ChatDotRound,
 } from '@element-plus/icons-vue'
 import {
   getSystemConfigApi,
@@ -273,6 +300,7 @@ const settingSections: SettingSection[] = [
   { id: 'brand', title: '品牌标识', hint: '名称与图标', icon: OfficeBuilding },
   { id: 'content', title: '展示文案', hint: '版权与介绍', icon: Document },
   { id: 'security', title: '安全配置', hint: '登录策略', icon: Lock },
+  { id: 'chat', title: 'AI 对话', hint: '默认 RAG', icon: ChatDotRound },
 ]
 
 const loading = ref(false)
@@ -304,6 +332,7 @@ const formData = reactive<SystemConfigUpdateDTO>({
   loginRetryLimitEnabled: DEFAULT_LOGIN_RETRY_LIMIT_ENABLED,
   loginMaxRetryAttempts: DEFAULT_LOGIN_MAX_RETRY_ATTEMPTS,
   loginLockMinutes: DEFAULT_LOGIN_LOCK_MINUTES,
+  chatEnableRagDefault: false,
 })
 
 const formRules: FormRules = {
@@ -342,6 +371,7 @@ const applyConfigToForm = (config: SystemConfigVO) => {
   formData.loginRetryLimitEnabled = config.loginRetryLimitEnabled ?? DEFAULT_LOGIN_RETRY_LIMIT_ENABLED
   formData.loginMaxRetryAttempts = config.loginMaxRetryAttempts ?? DEFAULT_LOGIN_MAX_RETRY_ATTEMPTS
   formData.loginLockMinutes = config.loginLockMinutes ?? DEFAULT_LOGIN_LOCK_MINUTES
+  formData.chatEnableRagDefault = !!config.chatEnableRagDefault
 }
 
 const fetchConfig = async () => {
@@ -397,6 +427,7 @@ const handleSubmit = async () => {
         loginRetryLimitEnabled: formData.loginRetryLimitEnabled,
         loginMaxRetryAttempts: formData.loginMaxRetryAttempts,
         loginLockMinutes: formData.loginLockMinutes,
+        chatEnableRagDefault: formData.chatEnableRagDefault,
       }
       const config = await updateSystemConfigApi(payload)
       applyConfigToForm(config)

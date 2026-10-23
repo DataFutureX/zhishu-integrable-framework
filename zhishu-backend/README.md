@@ -37,9 +37,11 @@
 | `zhishu-backend/zhishu-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、伙伴 SSO |
 | `zhishu-backend/zhishu-biz/`                                | 公告、操作日志、系统配置、系统监控（Spring Modulith） |
 | `zhishu-backend/zhishu-ai/`                                 | Agent / RAG / 图谱 / MCP Hub / 开放 API（同进程） |
+| `zhishu-backend/zhishu-model-gateway/`                        | **模型网关**：OpenAI 兼容 `/v1`、额度计量、供应商与模型业务实现（`ai_model_provider` + `ai_gateway_model`） |
 | `zhishu-backend/zhishu-core/`                               | 启动壳、配置文件、数据库初始化脚本            |
 | `zhishu-backend/zhishu-core/src/main/resources/db/init.sql` | 系统库初始化（用户/角色/菜单） |
 | `zhishu-backend/zhishu-core/src/main/resources/db/init_ai.sql` | AI 表初始化（pgvector / Agent / MCP / 开放应用） |
+| `zhishu-backend/zhishu-core/src/main/resources/db/init_gateway.sql` | 模型网关表初始化（模型 / 额度 / 调用台账） |
 | [`../LICENSE`](../LICENSE)（仓库根目录） | MIT 开源许可证 |
 | `zhishu-backend/README.md`                                       | 本说明文档                         |
 
@@ -57,6 +59,7 @@
      - [AI 内核](#ai-内核)
      - [Agent 智能体](#agent-智能体)
      - [开放双平面](#开放双平面)
+     - [模型网关](#模型网关)
      - [数据与存储](#数据与存储)
    - [项目结构](#项目结构)
 4. [快速开始](#快速开始)
@@ -81,6 +84,7 @@
 - **操作日志**：拦截器异步记录，支持按月分表
 - **系统监控**：JVM / OS / DB / Web / 业务 / 分表 / 存储综合指标
 - **智能中心**：Agent 编排（REACT / SEQUENTIAL / ROUTING / GRAPH）、RAG 知识库、Neo4j 图谱、MCP Hub
+- **模型网关**：OpenAI 兼容 `/v1` 对端暴露，供应商密钥集中在服务端，按用户月度 token 额度强制计量；平台内部 AI 能力也统一经网关
 - **开放双平面**：控制台 JWT、开放 REST（AK/SK + `X-On-Behalf-Of`）、MCP Streamable HTTP（`wxmcp_*`）
 - **OpenAPI**：SpringDoc Swagger UI（开发环境可用）
 
@@ -130,6 +134,7 @@ flowchart TB
 | `/api/v1/**` | 知枢 JWT（控制台登录或 SSO 换票） | 本仓 Vue 前端 | 全量管理与 AI 工作台 |
 | `/open/v1/**` | AK/SK 签名 Token + `X-On-Behalf-Of` | 伙伴后端 BFF | 对话流、知识问答、Agent 目录、图谱写入 |
 | `/mcp` | `wxmcp_*` API Key | 外部 MCP Client | 标准 MCP Tool 调用（对外目录由 Hub 配置） |
+| `/v1/**` | 知枢 JWT（同控制台登录态） | LetsWork 桌面端、外部 OpenAI 兼容客户端、平台内部 AI 调用 | 模型目录、对话补全（含流式）、额度查询 |
 | `POST /api/v1/auth/sso/exchange` | 伙伴 Ticket（RSA / SM2） | 伙伴门户跳转 | 换发知枢 JWT |
 
 ### 技术栈
@@ -171,6 +176,7 @@ flowchart TB
     direction LR
     AIMod["zhishu-ai"]
     Biz["zhishu-biz"]
+    GW["zhishu-model-gateway"]
   end
 
   Sec["zhishu-security"]
@@ -187,13 +193,14 @@ flowchart TB
 | **zhishu-api** | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），切断 security ↔ biz 循环依赖 |
 | **zhishu-security** | 认证鉴权、用户/角色/菜单/单位、JWT、滑动验证码、登录 RSA 加密、伙伴 SSO、公共 `Result` |
 | **zhishu-biz** | 公告（含 SSE）、操作日志、系统配置、系统监控；Spring Modulith 应用模块 |
-| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API、模型配置；与 core **同进程** |
+| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API；与 core **同进程**（`modelconfig` 只留跨模块契约：推理目标端口与共享构建器） |
+| **zhishu-model-gateway** | 模型网关：`/v1` 协议面（目录/补全/额度）、额度计量与台账、**供应商与模型的业务实现**（`provider/` 包：`ModelProviderEntity`/Mapper/Registry/CRUD/上游解析 + 建表引导）、管理面 REST；依赖 security（JWT/用户）与 ai 的端口 |
 | **zhishu-core** | `YqapApplication` 启动壳：数据源、MyBatis-Plus、OpenAPI UI、异步/调度、静态资源、配置 |
 | **zhishu-test-support** | 集成测试夹具（不进入运行时类路径） |
 
 #### 请求处理链路
 
-三条入口各自一条链路，互不交叉。匿名放行：`/api/v1/auth/**`、`GET /api/v1/system-config`、`/api/v1/system/health`、`/open/v1/**`、`/mcp/**`、`/uploads/**`；dev 另放行 Swagger。`/open/v1` 与 `/mcp` 在 Security 层 `permitAll`，由专用 Filter 完成真实鉴权。
+三条入口各自一条链路，互不交叉。匿名放行：`/api/v1/auth/**`、`GET /api/v1/system-config`、`/api/v1/system/health`、`/open/v1/**`、`/mcp/**`、`/v1/**`、`/uploads/**`；dev 另放行 Swagger。`/open/v1` 与 `/mcp` 在 Security 层 `permitAll`，由专用 Filter 完成真实鉴权；`/v1` 同样在 Security 层放行，由 `GatewayAuthFilter` 校验知枢 JWT。
 
 **控制台 `/api/v1`**
 
@@ -270,7 +277,7 @@ flowchart TB
     Know["Knowledge RAG"]
     KG["KG Neo4j"]
     MCP["MCP Hub"]
-    Model["ModelConfig"]
+    Model["ModelConfig 端口"]
   end
 
   Entry --> Runtime
@@ -286,7 +293,7 @@ flowchart TB
 | Knowledge | `ai.knowledge` | 文档入库、向量化、Hybrid 检索、文档问答 |
 | KnowledgeGraph | `ai.kg` | Neo4j 同步 / 查询 / 可视化；开放写入 `/open/v1/kg` |
 | Mcp | `ai.mcp` | 对外 Streamable HTTP Server + 上游 Client + Hub 管理与审计 |
-| ModelConfig | `ai.modelconfig` | 运行时模型与密钥（入库加密） |
+| ModelConfig | `ai.modelconfig` | 跨模块契约：`AiChatTargetPort` / `AiEmbeddingTargetPort` 端口、`ModelConfigProperties`（`zhishu.ai.*`）与 `RefreshableOpenAiModels` 构建器；供应商与模型契约已下沉到 `zhishu-model-gateway` |
 | OpenAPI | `ai.openapi` | `/open/v1` 控制器、AK/SK 鉴权、开放应用管理 |
 | BizTools | `ai.biztools` | 监测 Tool 端口，当前空实现 |
 | Platform / Shared | `ai.platform` / `ai.shared` | OPEN 模块：Web 装配与共享类型 |
@@ -511,6 +518,48 @@ flowchart TB
 
 简报生成/投递 **不走开放 API**；外部系统自行调度后调用 `/open/v1/chat`。开放 REST 使用 **AK/SK HMAC-SHA256** 签名 Token（`zsak_` 前缀），请求头另需 `X-On-Behalf-Of`。MCP 上游协议仅允许 Streamable HTTP / SSE，生产禁止 STDIO / COMMAND。
 
+#### 模型网关
+
+模型网关（模块 `zhishu-model-gateway`）把**多供应商**收敛为**一套 OpenAI 兼容协议 + 一个登录态凭据**，并在服务端做权威额度计量。控制台只管配置，不碰密钥。
+
+```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 70, "curve": "linear"}}}%%
+flowchart TB
+  subgraph Callers["调用方"]
+    direction LR
+    Desk["LetsWork 桌面端"]
+    Inner["平台内部：Agent / RAG / 简报"]
+    Console["控制台管理面"]
+  end
+
+  subgraph GW["zhishu-model-gateway"]
+    direction LR
+    AuthF["JWT 鉴权 + 黑名单"]
+    Cat["模型目录（60s 缓存）"]
+    Chat["chat/completions（含 SSE 透传）"]
+    Quota["额度预留→结算 + 调用台账"]
+  end
+
+  subgraph Up["供应商（Key 加密存储）"]
+    direction LR
+    UpA["OpenAI 兼容上游"]
+    UpB["DeepSeek / 通义 …"]
+  end
+
+  Callers --> GW
+  GW --> Up
+```
+
+要点：
+
+- **两个面**：协议面 `GET /v1/models`、`POST /v1/chat/completions`、`GET /v1/quota`；管理面 `GET/POST/PUT/DELETE /api/v1/model-gateway/**`。
+- **供应商与模型分层**：`ai_model_provider` 只存连接（名称 / `provider_key` / Base URL / 加密 Key / 启用）；`ai_gateway_model` 存模型与生成参数（`model_type` = `CHAT` / `EMBEDDING`，默认参数、上下文窗口、能力元数据）。
+- **额度**：按**用户**月度 token 计数，阀值解析顺序 `USER → ROLE → DEFAULT`；请求前预留、结算按实际（`least(预留, prompt+completion)`）、上游无 `usage` 时按正文估算。
+- **错误体**不套平台 `Result`，而是 OpenAI 形状（`insufficient_quota` / `invalid_api_key` / `model_not_found` / `gateway_not_ready` 等），便于对端直接复用 OpenAI SDK。
+- **内部也走网关**：`zhishu.gateway.internal.enabled=true` 时，Agent / 知识问答 / 项目简报经本机 `/v1` 调用，额度计入当前登录用户（无上下文时用服务账号）；置 `false` 可回退到直连上游。
+
+设计文档：[`docs/model-gateway-design.md`](docs/model-gateway-design.md)；桌面端接入文档：[`../docs/模型网关接入指南.md`](../docs/模型网关接入指南.md)。
+
 #### 数据与存储
 
 进程只连两类存储：PostgreSQL（含向量）与可选 Neo4j。表细节不再从进程拉出多条交叉线。
@@ -534,7 +583,7 @@ flowchart TB
   App --> Neo
 ```
 
-初始化脚本：`zhishu-core/src/main/resources/db/init.sql`（系统库）+ `init_ai.sql`（pgvector / Agent / MCP / 开放应用）。
+初始化脚本：`zhishu-core/src/main/resources/db/init.sql`（系统库）+ `init_ai.sql`（pgvector / Agent / MCP / 开放应用）+ `init_gateway.sql`（模型网关，启动时自动幂等执行）。
 
 ### 项目结构
 
@@ -565,13 +614,22 @@ zhishu-integrable-framework/
     │   └── .../ai/
     │       ├── agent/ · chat/ · knowledge/ · kg/
     │       ├── mcp/ · modelconfig/ · openapi/ · biztools/
+    │       │                             #   modelconfig 仅保留跨模块契约：推理目标端口 + 密钥配置 + OpenAI 构建器
     │       ├── platform/ · shared/
+    │       └── gatewayclient/          # 经网关调用的 ChatModel 客户端 + 运行时 Bean 装配
+    ├── zhishu-model-gateway/            # 模型网关（/v1 协议面 + 管理面）
+    │   └── .../gateway/
+    │       ├── auth/ · compat/ · catalog/
+    │       ├── quota/ · usage/ · upstream/
+    │       ├── chat/ · embedding/ · admin/
+    │       ├── provider/                 # 供应商：api 端口/dto/vo + 实体/Mapper/运行时缓存/CRUD/建表引导
+    │       └── controller/ · config/
     ├── zhishu-core/
     │   └── src/main/
     │       ├── java/.../YqapApplication.java
     │       └── resources/
     │           ├── application.yml · application-{dev|test|prod}.yml
-    │           └── db/init.sql · init_ai.sql
+    │           └── db/init.sql · init_ai.sql · init_gateway.sql · patch_*.sql
     ├── zhishu-test-support/
     ├── pom.xml
     ├── start-dev.bat / start-dev.sh
@@ -602,6 +660,9 @@ cd zhishu-integrable-framework/zhishu-backend
 psql -U postgres -c "CREATE DATABASE zhishu_integrable_framework WITH ENCODING 'UTF8' TEMPLATE template0;"
 psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init.sql
 psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init_ai.sql
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/init_gateway.sql
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/patch_menu_model_gateway.sql
+psql -U postgres -d zhishu_integrable_framework -f zhishu-core/src/main/resources/db/patch_retire_ai_model_config.sql
 ```
 
 默认库名：`zhishu_integrable_framework`  
@@ -673,9 +734,26 @@ Swagger文档: http://localhost:8180/swagger-ui.html
 | [http://localhost:8180/swagger-ui.html](http://localhost:8180/swagger-ui.html)           | API 文档（dev 放行） |
 | [http://localhost:8180/api/v1/system/health](http://localhost:8180/api/v1/system/health) | 健康检查（无需登录）     |
 
+> 模型网关表（`init_gateway.sql`）与结构对齐（`gateway_schema.sql`）在应用启动时**幂等自动执行**（仅建表/建列/建索引与种子数据，不做破坏性变更）。`patch_menu_model_gateway.sql` 挂菜单需手工一次；历史库的数据下沉与旧列清理也需手工执行（见下文升级脚本清单）。
+
+
+### 6. 模型网关首次配置
+
+接入 `/v1` 前需先配好供应商与模型（均为控制台操作，入口：左侧「模型网关」）：
+
+1. **供应商管理** → 新建供应商：填名称、`provider_key`、Base URL（含 `/v1` 后缀）、API Key → 保存后点「测试连接」（等价于 `GET {baseUrl}/models`）。
+2. **模型设置** → 先选供应商 → 新建模型：填 `model_id`（对外唯一，如 `gw-dashscope-qwen-plus`）、上游真实模型名、类型 CHAT；可设默认与启用。
+   也可点「从上游导入」：列表直接展示上游 `/models` 返回的上下文窗口、输出上限、模态与推理档位，导入时自动写入模型行（无需手工补）；向量模型需选类型 EMBEDDING 并设为默认（知识库入库使用）。
+3. **额度策略** → 按需设置用户/角色额度（不设则用 `zhishu.gateway.quota.default-monthly-tokens`）。
+4. 验证（用登录后的 JWT）：
+
+```bash
+curl -H "Authorization: Bearer $ZSHU_TOKEN" http://localhost:8180/v1/models
+```
+
+能返回模型列表即接入就绪；桌面端对接见 [`../docs/模型网关接入指南.md`](../docs/模型网关接入指南.md)。
 
 ### 环境切换
-
 
 | Profile   | 激活方式                          | 要点                                        |
 | --------- | ----------------------------- | ----------------------------------------- |
@@ -859,6 +937,21 @@ yunqi:
 
 运行时物理表形如 `sys_operation_log_202607`。
 
+### 7. 模型网关（OpenAI 兼容 `/v1`）
+
+把一个登录态变成可用模型集，供应商密钥永不下发。
+
+| 能力 | 说明 |
+| ---- | ---- |
+| 协议面 | `GET /v1/models`（仅下发言模型，含能力元数据）、`POST /v1/chat/completions`（非流式 + SSE 透传）、`GET /v1/quota` |
+| 鉴权 | 复用知枢 JWT（`/desktop/v1/auth` 或控制台登录得到的同一个 token）；登出/改密立即失效；可选静态 token 兼容模式 |
+| 额度 | 按用户月度 token；`USER → ROLE → DEFAULT` 解析；预留→结算，不足返回 `429 insufficient_quota` |
+| 台账 | 每次调用记录用户/模型/提示与补全 token/缓存命中/推理 token/通道/耗时/状态 |
+| 管理面 | 供应商（CRUD + 测试连接 + 拉取上游模型）、模型（按类型/供应商 + 批量导入 + 设默认）、额度策略、调用用量；方法级 `@PreAuthorize` 鉴权 |
+| 内部统一 | Agent / 知识问答 / 项目简报经本机 `/v1` 调用，额度计入当前登录用户 |
+
+开启与配置见下文 [配置速查](#配置速查)；对端（LetsWork 桌面）接入见 [`../docs/模型网关接入指南.md`](../docs/模型网关接入指南.md)。
+
 ## API 接口概览
 
 统一响应：`Result<T>`（`code` / `message` / `data`）；分页：`PageResult<T>`。  
@@ -984,11 +1077,39 @@ yunqi:
 
 对外 Client、上游登记、Tool 目录、调用审计（`ai:mcp:edit`）。MCP 协议入口：`/mcp`（`wxmcp_*`）。
 
-### 模型配置 — `/api/v1/model-config`
+### 模型配置 — `/api/v1/model-config`（已下线）
+
+旧单例模型配置已退役：模型与参数统一由模型网关的**供应商管理 / 模型设置**维护；原「对话默认开启 RAG」开关移到「参数配置 · AI 对话」（`sys_config.chat_enable_rag_default`）；会话记忆窗口改为配置项 `zhishu.ai.chat.memory-window`。
+
+### 模型网关协议面 — `/v1`（OpenAI 兼容）
+
+鉴权：`Authorization: Bearer <知枢 JWT>`；响应为 OpenAI 形状（不包 `Result`）。
 
 | 方法 | 路径 | 说明 |
 | ---- | ---- | ---- |
-| GET/PUT | `/` | 运行时对话/向量模型（密钥入库加密） |
+| GET | `/v1/models` | 仅下发言模型（CHAT），附能力元数据与默认模型（路径可配 `zhishu.gateway.models-path`） |
+| POST | `/v1/chat/completions` | 对话补全；`stream=true` 时 SSE 透传（末帧带 `usage`） |
+| GET | `/v1/quota` | 当前用户本周期额度（`limit` / `used` / `remaining` / `reset_at`） |
+
+### 模型网关管理 — `/api/v1/model-gateway`
+
+| 方法 | 路径 | 说明 |
+| ---- | ---- | ---- |
+| GET | `/providers` | 供应商列表（含模型数、Key 配置状态、默认标记） |
+| POST/PUT/DELETE | `/providers`、`/providers/{id}` | 新建 / 修改 / 删除（名下有模型时拒绝删除） |
+| POST | `/providers/{id}/default`、`/providers/{id}/test` | 设为默认 / 测试连接（`GET {baseUrl}/models`） |
+| GET | `/providers/{id}/upstream-models` | 拉取上游模型列表（含上下文窗口/输出上限/模态/推理档位元数据） |
+| GET | `/models`、`/models/{id}`、`/models/available` | 模型列表（`type`、`providerId` 过滤）/ 详情 / 可导入列表 |
+| POST/PUT/DELETE | `/models`、`/models/{id}` | 新建 / 修改 / 删除模型 |
+| POST | `/models/batch` | 从上游批量导入（入参 `models[]` 条目，自动带入元数据；兼容旧的 `upstreamModels[]` 名字列表），`model_id` 自动生成 `gw-<provider>-<model>` |
+| POST | `/models/{id}/default`、`/enable`、`/disable`、`/test` | 按类型设默认 / 启停 / 端到端连通性测试 |
+| GET/POST/PUT/DELETE | `/quotas`、`/quotas/{id}` | 额度策略（`USER` / `ROLE` / `DEFAULT`） |
+| POST | `/quotas/{id}/reset` | 清零已用量 |
+| GET | `/usages`、`/usages/summary` | 调用台账 / 按用户或模型汇总 |
+
+> 管理面接口均带**方法级权限注解**（`@PreAuthorize`）：读接口需 `gateway:provider:list` / `gateway:model:list` / `gateway:quota:list` / `gateway:usage:query`，写接口需对应的 `gateway:*:update`；`/models/available` 额外允许 `ai:agent:query`（保证 Agent 编辑器下拉可用）。
+>
+> **前提**：先执行 `db/patch_menu_model_gateway.sql`（或全新库跑 `init.sql`）以建立 BUTTON 权限行；ADMIN 角色自动获得全部按钮权限，但若权限行不存在，ADMIN 调用也会 403。
 
 ### 开放应用 — `/api/v1/open-apps`
 
@@ -1020,12 +1141,28 @@ yunqi:
 | ----------------------- | ---------------------------------------- |
 | `knowledges` / `knowledges_category` | 知识库文档与分类 |
 | `qa_history` / `chat_session` | 问答历史与多轮会话 |
-| `ai_model_config`       | 运行时模型与密钥 |
 | `ai_agent` / `ai_agent_run` | 智能体定义与运行记录 |
 | `ai_kg_sync_watermark`  | 图谱同步水位 |
 | `ai_mcp_client` / `ai_mcp_upstream` / `ai_mcp_upstream_tool` | MCP 对外 Client 与上游 |
 | `ai_mcp_call_log`       | MCP 调用审计 |
 | `open_app`              | 开放应用（含 AK/SK、Scope） |
+
+
+### 模型网关相关表
+
+
+| 表名 | 来源 | 说明 |
+| ---- | ---- | ---- |
+| `ai_model_provider` | `V_add_model_provider.sql`（模型网关模块） | 供应商连接（名称 / `provider_key` / Base URL / 加密 Key / 默认与启用）；**已无任何模型或参数列** |
+| `ai_gateway_model` | `init_gateway.sql` | 网关模型（`model_id` 对外唯一、`model_type`、上游模型名、默认生成参数、上下文窗口与能力元数据） |
+| `ai_gateway_quota` | `init_gateway.sql` | 额度策略（`USER` / `ROLE` / `DEFAULT` + 周期重置 + 已用量） |
+| `ai_gateway_usage` | `init_gateway.sql` | 调用台账（用户/模型/token/通道/耗时/状态/是否估算） |
+
+> `ai_gateway_model.model_id` 唯一；默认模型按类型各自唯一（partial unique index）。`ai_gateway_usage` **不存提示词与回复正文**，只存用量元数据。
+>
+> **单一事实来源**：模型名与生成参数只住在 `ai_gateway_model`。迁移期的历史列与备份表（`ai_model_provider.chat_model` 等、`ai_model_provider_legacy_backup`、`ai_model_config`、`ai_agent.model_provider_id`）已**全部清除**；历史库执行 `db/patch_drop_model_legacy.sql` 即可对齐。
+>
+> 升级已有库时需执行的脚本（按顺序）：`db/patch_menu_model_gateway.sql`（菜单）、`db/patch_retire_ai_model_config.sql`（退役旧单例配置表，RAG 默认开关迁入 `sys_config`）；若 `ai_model_provider` 仍持有历史列，先跑 `db/patch_provider_model_split.sql`（下沉为模型行并快照），最后跑 `db/patch_drop_model_legacy.sql`（删除历史列与备份表，**不可回滚**）。`db/patch_agent_model_to_gateway.sql` 已退役（服务账号与缺省额度种子已并入 `init_gateway.sql`）。
 
 
 ### 主键与逻辑删除
@@ -1046,6 +1183,7 @@ yunqi:
 - `/api/v1/system/health`
 - `/open/v1/**`（Security 层放行，由 `OpenApiAuthFilter` 做 AK/SK 鉴权）
 - `/mcp`、`/mcp/**`（Security 层放行，由 MCP Auth Filter 校验 `wxmcp_*`）
+- `/v1/**`（Security 层放行，由 `GatewayAuthFilter` 校验知枢 JWT；`zhishu.gateway.enabled=false` 时网关整体不可用）
 - `/uploads/**`
 - `/error`
 - 当 `yunqi.security.api-docs-permit-all=true` 时：Swagger / OpenAPI 相关路径
@@ -1127,7 +1265,19 @@ jwt:
 - 确认月分表已创建（监控页或库中查看 `sys_operation_log_yyyyMM`）
 - 检查 `yunqi.table-sharding.enabled` 与策略配置
 
-### 6. 多模块编译找不到类
+### 6. `/v1` 返回 503 `gateway_not_ready`
+
+- 表示模型网关表结构未完成迁移（缺 `ai_gateway_model.model_type` 等列）
+- 结构对齐由启动器幂等执行 `db/gateway_schema.sql`（仅建列/建索引）；若仍缺列，查启动日志中该脚本的执行结果；若日志提示存在多条默认供应商，先手工收敛为一条再重启
+- 验证：`SELECT count(*) FROM ai_model_provider WHERE is_default = TRUE;` 应 ≤ 1
+
+### 7. `/v1/models` 为空或推理返回 `404 model_not_found`
+
+- 「模型网关 · 模型设置」中需存在**启用状态**的 CHAT 模型（向量模型不会下发）
+- 模型所属供应商必须已配 API Key 且启用；供应商被停用，其下模型会立即从目录消失
+- 日志中 `[网关]` 前缀可定位是目录、鉴权还是额度环节失败
+
+### 8. 多模块编译找不到类
 
 始终从 `zhishu-backend/` 目录（Maven 父工程根）构建，并对启动模块加 `-am`：
 
@@ -1151,6 +1301,15 @@ mvn -pl zhishu-core -am clean compile -DskipTests
 | `yunqi.table-sharding.*`                 | 操作日志月分表                                   |
 | `yunqi.sso.*`                            | 伙伴 SSO；prod 默认关闭，由 `YUNQI_SSO_ENABLED` 开启 |
 | `zhishu.ai.crypto-key`                   | 模型 Key / AK/SK 入库加密密钥（`ZHISHU_AI_CRYPTO_KEY`） |
+| `zhishu.ai.chat.memory-window`           | 多轮会话记忆窗口条数，默认 `20`（`ZHISHU_AI_MEMORY_WINDOW`） |
+| `zhishu.gateway.enabled`                 | `true`；关闭后 `/v1` 与管理面均不可用（`ZHISHU_GATEWAY_ENABLED`） |
+| `zhishu.gateway.auth.mode`               | `jwt`（默认）或 `static`；静态模式配 `ZHISHU_GATEWAY_TOKEN` |
+| `zhishu.gateway.quota.*`                 | 额度开关、`default-monthly-tokens`、估算系数、预留封顶、`rate-limit.*`（默认关闭） |
+| `zhishu.gateway.upstream.*`              | 连接 5s / 非流式 120s / 流式空闲 60s 超时，请求体上限 8MB |
+| `zhishu.gateway.internal.enabled`        | `true`：平台内部 AI 调用经网关；`false` 回退直连上游（灰度/回滚开关） |
+| `zhishu.gateway.internal.base-url`       | 内部自调地址，默认 `http://127.0.0.1:${server.port}` |
+| `zhishu.gateway.internal.service-username` | 无登录上下文时的服务账号（默认 `gateway-service`，额度归到该账号） |
+| `zhishu.gateway.internal.quota-subject`  | `caller`（额度计入发起用户）或 `platform`（计入服务账号） |
 | `WANXIANG_KG_ENABLED` / `NEO4J_*`        | 知识图谱开关与 Neo4j 连接                         |
 | `spring.servlet.multipart.max-file-size` | `10MB`                                    |
 | `springdoc.swagger-ui.path`              | `/swagger-ui.html`                        |

@@ -858,7 +858,7 @@ zhishu:
 1. 桌面插件按 `dsh-plugin-model-gateway` 契约发 `Authorization: Bearer <知枢 JWT>`，`baseUrl` 直连后端 `:8180` 根；若改用前端 Nginx 域名，需补 `/v1/` 反向代理并关闭缓冲（`proxy_buffering off`）。
 2. 上游连接由「供应商管理」（`ai_model_provider`）维护，模型（含生成参数与能力元数据）由「模型设置」（`ai_gateway_model`）维护，网关不新建第二套凭据表。
 3. 部署为单实例：token 黑名单、额度缓存、限流均为进程内实现；多实例需引入共享存储。
-4. 管理端鉴权沿用「登录 + 菜单/按钮可见性」，不引入方法级权限注解。
+4. 管理面采用**登录 + 方法级权限注解**：`/api/v1/model-gateway/**` 各接口标 `@PreAuthorize("hasAuthority('gateway:…')")`，权限码与 `sys_menu` 的 BUTTON 行一致（ADMIN 自动获得全部按钮权限）。
 5. 额度单位统一为 token，不做金额/积分换算。
 6. `/v1/models` 对已认证用户全量可见；按角色/用户的模型白名单列为后续扩展点，本期不建表。
 7. 内部调用与网关同进程、同端口（`127.0.0.1:${server.port}`），不做跨实例内部调用。
@@ -907,9 +907,11 @@ CREATE INDEX IF NOT EXISTS idx_ai_gateway_model_type
 ```
 
 `ai_model_provider` 目标字段：`id`、`name`、`provider_key`、`base_url`、`api_key_enc`、`api_key_masked`、`is_default`、`status`、`sort_order`、`remark`、时间戳。
-`chat_model`、`embedding_model`、`temperature`、`max_tokens`、`top_p` **保留列但标 DEPRECATED**，下个版本再 `DROP COLUMN`，保证可回滚。
+`chat_model`、`embedding_model`、`temperature`、`max_tokens`、`top_p`：**保留列但可为 NULL、标 DEPRECATED、不再作为配置源**。
+迁移时先把它们下沉为 `ai_gateway_model` 的 CHAT/EMBEDDING 模型行（含默认行），原值快照到 `ai_model_provider_legacy_backup`，然后**置 NULL**：
+保证「模型与参数的单一事实来源是模型行」，避免供应商行上的历史值被误读（回退链路与 API 均不再暴露它们）。下个版本可 `DROP COLUMN`。
 
-新库直接由更新后的 `init_gateway.sql` 建全量结构；已有库走 16.3 的补丁脚本。
+新库直接由更新后的 `init_gateway.sql` + `V_add_model_provider.sql`（已改为可空）建结构；已有库走 16.3 的补丁脚本。
 
 ### 16.3 迁移脚本（`patch_provider_model_split.sql`）
 
@@ -997,7 +999,7 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 | 文件 | 变更 |
 |---|---|
 | `views/gateway/GatewayProviderList.vue` | 新建：供应商表格（名称/标识/BaseURL/Key 状态/默认/状态）+ 新建编辑抽屉 +「测试连接」+「拉取上游模型」 |
-| `views/gateway/GatewayModelList.vue` | 改造：顶部供应商选择（过滤）+ 类型 Tab（对话/向量）+ **新建模型弹窗首字段为必选的供应商** + 生成参数表单 +「从上游导入」（弹窗内先选供应商再拉列表）|
+| `views/gateway/GatewayModelList.vue` | 改造：**默认展示全部供应商的模型**（顶部供应商可选「全部」，类型可选「全部/对话/向量」），表列含供应商与类型；**新建模型弹窗首字段为必选的供应商** + 生成参数表单 +「从上游导入」（弹窗内先选供应商再拉列表）|
 | `views/ai/ModelSettings.vue` | 删除（其职责已由上述两页接管） |
 | `api/gateway.ts`、`types/modelGateway.ts` | 增加供应商 CRUD / 上游模型列表 / 批量导入；模型类型增加 `model_type`、`temperature`、`top_p`、`max_tokens` |
 
@@ -1011,11 +1013,11 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 | POST / PUT / DELETE | `/api/v1/model-gateway/providers[/{id}]` | 增删改（被模型引用时拒删） |
 | POST | `/api/v1/model-gateway/providers/{id}/default` | 设为默认供应商 |
 | POST | `/api/v1/model-gateway/providers/{id}/test` | 连通性：`GET {baseUrl}/models`，返回可用模型数与耗时 |
-| GET | `/api/v1/model-gateway/providers/{id}/upstream-models` | 拉上游模型 id 列表，供「导入模型」 |
+| GET | `/api/v1/model-gateway/providers/{id}/upstream-models` | 拉上游模型列表，返回 `UpstreamModelInfo[]`（id/展示名/上下文窗口/输出上限/模态/推理档位/system 更新方式），供「导入模型」 |
 | GET | `/api/v1/model-gateway/models?type=CHAT\|EMBEDDING&providerId=` | 按类型/供应商过滤 |
-| POST | `/api/v1/model-gateway/models/batch` | 批量导入（入参：providerId + 上游模型名列表 + 类型），model_id 自动生成 `gw-<provider>-<model>` |
+| POST | `/api/v1/model-gateway/models/batch` | 批量导入（入参：providerId + 类型 + `models[]` 条目，每个条目可带上游元数据；兼容旧的 `upstreamModels[]` 名字列表），model_id 自动生成 `gw-<provider>-<model>` |
 
-旧接口 `/api/v1/model-settings/**` 标 `@Deprecated`，保留一个版本；前端不再调用后删除。
+旧接口 `/api/v1/model-settings/**` 已随 v2 收尾**移除**；前端旧封装（`src/api/ai.ts` 的 model-settings 函数与 mock 数据）及 `types/modelProvider.ts` 一并删除。
 
 ### 16.7 网关行为补充
 
@@ -1028,7 +1030,7 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 
 | 模块 | 文件 | 变更 |
 |---|---|---|
-| zhishu-ai | `modelconfig/domain/ModelProviderEntity` | 删除 chat 相关 5 字段 |
+| zhishu-ai | `modelconfig/domain/ModelProviderEntity` | 删除 chat 相关 5 字段（v2）；类本体已迁至 gateway（见 17.1） |
 | zhishu-ai | `modelconfig/dto/ModelProviderCreateDTO`、`ModelProviderUpdateDTO`、`vo/ModelProviderVO` | 字段裁剪 |
 | zhishu-ai | `modelconfig/service/impl/ModelProviderServiceImpl` | CRUD 瘦身；`testConnection` 改为 `GET /models` |
 | zhishu-ai | `modelconfig/runtime/ModelProviderRegistry` | chat 构建按模型行；embedding 走新端口 |
@@ -1067,11 +1069,27 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 
 | 风险 | 说明 | 应对 |
 |---|---|---|
-| 旧列仍有写入方 | 旧 `/model-settings` 接口或前端缓存版本会写 `chat_model` | 保留列 + 服务层忽略；旧接口弃用后清理 |
+| 旧列仍有写入方 | 无 | 历史列与备份表已由 `db/patch_drop_model_legacy.sql` 统一清除 |
 | 默认供应商多条 | 迁移时 partial unique 冲突 | 前置检查 SQL，先人工收敛 |
-| embedding 断档 | 迁移未生成 EMBEDDING 行 | 第 3 步自动兜底；`resolveEmbeddingModel` 保留旧列回退 |
+| embedding 断档 | 迁移未生成 EMBEDDING 行 | 第 5/6 步自动兜底；旧列已置 NULL，确实缺失时 `resolveEmbeddingModel` 明确报错提示补建向量模型 |
 | 菜单路径变化 | 书签 `/gateway/model-settings` 失效 | 保留一条隐藏 PAGE 路由指向新页一个版本 |
-| 回滚 | 新列/新索引引入 | 旧列未删、旧代码可从模型行读回退值；严重时回退 `internal.enabled=false` |
+| 回滚 | 新列/新索引引入 | 旧列未删（值已清空+快照）；一般情况只需 `internal.enabled=false`；彻底回滚见下方恢复 SQL |
+
+彻底回滚（恢复 v1 「供应商行即模型设置」的读取路径；**仅适用于尚未执行 `db/patch_drop_model_legacy.sql` 的库**，已清理的环境需在「模型设置」重建模型行）：
+
+```sql
+-- 从备份表把历史列写回（只回填当前为 NULL 的列，不覆盖人工修改）
+UPDATE ai_model_provider p
+SET chat_model      = COALESCE(p.chat_model, b.chat_model),
+    embedding_model = COALESCE(p.embedding_model, b.embedding_model),
+    temperature     = COALESCE(p.temperature, b.temperature),
+    max_tokens      = COALESCE(p.max_tokens, b.max_tokens),
+    top_p           = COALESCE(p.top_p, b.top_p)
+FROM ai_model_provider_legacy_backup b
+WHERE b.id = p.id;
+```
+
+配合 `zhishu.gateway.internal.enabled=false`（回退直连）或 `zhishu.gateway.enabled=false`（整体关网关）。
 
 ### 16.11 实施落地记录（与本节设计的差异）
 
@@ -1082,10 +1100,9 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 2. **`ModelProviderPort` 扩展**：新增 `setDefault(id)`、`listUpstreamModels(id)`；`testConnection` 改为 `GET {baseUrl}/models`（不再需要 chat 模型名）。
 3. **供应商 REST 委托**：网关侧 `GatewayProviderAdminController` 直接复用 `ModelProviderPort`，不复制实体/Mapper；
    删除前额外校验该供应商下的模型数量（>0 拒绝）。
-4. **旧接口兼容**：`/api/v1/model-settings/**` 仍可访问但已标 `@Deprecated`；其请求/响应体已瘦身为纯供应商字段，
-   旧客户端若仍传 `chatModel`/`temperature` 等字段会被忽略（后端不再写入旧列）。
+4. **旧接口已移除**：`/api/v1/model-settings/**`（`ModelSettingController`）已删除；供应商与模型统一走 `/api/v1/model-gateway/providers|models`。
 5. **菜单 id**：105 复用为「供应商管理」、1201 更名为「模型设置」；`AgentManage.vue` 仍绑定网关 `model_id`，无需改动。
-6. **前端旧页**：`views/ai/ModelSettings.vue` 已删除；`src/api/ai.ts` 中的旧 `model-settings` 封装保留一版供回滚。
+6. **前端旧页与旧接口封装**：`views/ai/ModelSettings.vue`、`src/api/ai.ts` 中的 model-settings 函数与 mock 数据、`types/modelProvider.ts` 均已删除。
 7. **验证**：后端 `mvn -DskipTests compile` 全量通过；前端 `vue-tsc --noEmit` 与 `eslint` 通过。
 
 ### 16.12 加固项（第二轮）
@@ -1111,22 +1128,31 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 | **基线收敛** | `init.sql` 直接建 id=12「模型网关」目录 + 105 供应商管理 + 1201~1204 + 按钮权限；一级目录 sort 顺延（5→4、6→5）；ADMIN 授权由 `SELECT ... FROM sys_menu` 自动覆盖 |
 | **Agent 字段清理** | `AgentCreateDTO` / `AgentUpdateDTO` / `AgentVO` 移除 `modelProviderId`；`AiAgentEntity#modelProviderId` 保留列但标 `@Deprecated`；`GatewayChatModelRegistry.resolve/describeModel` 去掉 `legacyProvider` 参数，回退模式改用 `AiChatTargetPort` + 默认供应商 |
 | **前端清理** | `types/aiAgent.ts` 三个接口去掉 `modelProviderId`；`AgentManage.vue` 表单与提交不再携带 |
+| **旧接口移除（P3）** | 删除 `ModelSettingController`（`/api/v1/model-settings`）；删除 `api/ai.ts` 的 model-settings 函数、`demoModelProviders` 与 `types/modelProvider.ts`；`AiModelConfigController` 的 `{@link}` 指向同步修正 |
+| **供应商不再残留模型字段** | `V_add_model_provider.sql` 不再建历史列；split 脚本负责把旧列下沉为模型行并快照；后续已由 `patch_drop_model_legacy.sql` 彻底删除列与备份表。`GatewaySchemaInitializer` 不再自动跑破坏性迁移，改为只执行非破坏的 `db/gateway_schema.sql` |
+| **客户端接入文档** | 新增 `docs/模型网关接入指南.md`：三个端点、错误码与重试矩阵、TS/curl 流式示例、反代注意项、联调自测清单 |
+| **管理面方法级鉴权** | 4 个 admin controller 全部加 `@PreAuthorize`：读接口 `gateway:*.list` / `gateway:usage:query`，写接口 `gateway:*.update`；`PermissionConstants` 新增 7 个常量；`/models/available` 额外允许 `ai:agent:query`（保障 Agent 编辑器下拉）；前端 `constants/permissions.ts` 同步并用 `v-permission` 隐写操作按钮。**前提**：必须先执行 `patch_menu_model_gateway.sql`（建 BUTTON 权限行），否则 ADMIN 也会 403 |
+| **模型行防重** | 迁移脚本第 5 步改为按「供应商 + 类型 + 上游模型名」去重（`provider_key` 改名会让 `ON CONFLICT (model_id)` 失效）；服务层 `create`/`update` 拒绝重复三元组，`batchImport` 跳过已存在并记录跳过数；脚本尾部提供查重 SQL 与可选唯一索引 `uk_ai_gateway_model_provider_upstream` |
+| **供应商业务代码归属迁移** | `ai_model_provider` 的实现从 `zhishu-ai/modelconfig` 整体迁入 `zhishu-model-gateway/provider`（git mv 保留历史）：`provider/domain/ModelProviderEntity`、`provider/mapper/ModelProviderMapper`、`provider/runtime/ModelProviderRegistry`、`provider/service/impl/ModelProviderServiceImpl`、`provider/service/impl/ModelUpstreamServiceImpl`（原 `ModelUpstreamService`）、`provider/config/ProviderSchemaInitializer`（原 `ModelConfigSchemaInitializer`，@Order(16)）+ `zhishu-model-gateway/src/main/resources/db/V_add_model_provider.sql`。ai 侧只保留真正跨模块的契约：`AiChatTargetPort` / `AiEmbeddingTargetPort` 与共享构建器（方向保持 gateway → ai） |
+| **退役 `ai_model_config` 单例配置** | 删除 `ModelConfigPort`、`ModelConfigServiceImpl`、`AiModelConfigEntity/Mapper/VO/UpdateDTO`、`AiModelConfigController`（`/api/v1/model-config` 下线），`init_ai.sql` 不再建该表；新增 `db/patch_retire_ai_model_config.sql`：`sys_config` 加 `chat_enable_rag_default` + 迁移旧值 + 将旧表重命名为 `ai_model_config_retired`。新端口 `zhishu-api` 的 `ChatSettingsApi`（由 `zhishu-biz/systemconfig/spi/ChatSettingsApiImpl` 实现）供 ai 读默认 RAG 开关；`ChatClientAgentEngine` 改用该端口。会话记忆窗口改为配置项 `zhishu.ai.chat.memory-window`（默认 20，由 `AiConfig.chatMemory` 读 `Environment`）。展示/审计与 options 构造均改走 `GatewayChatModelRegistry`（`defaultModelLabel()` / `resolveModelId(null)`），修掉了一类**用旧单例模型名覆盖网关 model_id 导致 `404 model_not_found`** 的隐患（QA/RAG 链路） |
+| **废弃表与列清理** | 新增 `db/patch_drop_model_legacy.sql` 并已在开发库执行：删除 `ai_model_provider` 的 5 个历史列、`ai_agent.model_provider_id`、`ai_model_provider_legacy_backup`、`ai_model_config(_retired)`；代码侧删除 `ModelProviderRegistry`（改用 `provider/runtime/ModelRuntimeCache` 按指纹缓存 + 懒代理）、`ModelProviderEntity` 与 `AiAgentEntity` 的废弃字段；`V_add_model_provider.sql` 不再建历史列与 `model_provider_id`；`init_postgresql.sql` 同步删除 `ai_model_config` 建表块；`ProviderSchemaInitializer` 只保留从 `spring.ai.openai.*` 引导默认供应商 |
+| **模型配置包瘦身（契约下沉）** | 引用统计发现 `ModelProviderPort`/`ModelUpstreamPort`/`ModelProviderVO`/`ModelProviderCreateDTO`/`ModelProviderUpdateDTO`/`UpstreamModelInfo` 的消费者 100% 在网关侧（ai 为 0）→ 已全部移入 `zhishu-model-gateway/provider/{api,dto,vo}`；同时删除已无消费者的死端口 `GatewayDefaultModelPort`（`GatewayModelCatalogClient` 去掉 implements）、将 `AiEmbeddingTargetPort` 收缩为单方法 `defaultEmbeddingModel()`（`enabled()`/`currentEmbedding()`/`Target` 下沉为实现内部）、把 `DynamicOpenAiConfig` 移到 `ai.gatewayclient`以消除 `modelconfig ↔ gatewayclient` 模块环、给 `modelconfig.runtime` 补 `@NamedInterface("api")`。结果：`modelconfig` 只剩两个推理目标端口 + `ModelConfigProperties` + `RefreshableOpenAiModels`，其 `@ApplicationModule(allowedDependencies={"shared"})` 声明变为真实 |
+| **导入带元数据 + 开发库校正** | `listUpstreamModels` 改为返回 `UpstreamModelInfo`（兼容 OpenAI `{"data":[]}` 与 Ollama `{"models":[]}` 两种形状，容错解析 `context_window`/`max_output_tokens`/`input_modalities`/`effort.supported_levels`/`default_level`/`system_prompt_update`）；`models/batch` 新增 `models[]` 条目入参（保留 `upstreamModels[]` 兼容），导入时直接写入容量与推理档位。同时根据 DeepSeek 官方文档核实：现行模型名为 **`deepseek-flash`**（实为 DeepSeek-V4.1-Flash-1017）与 `deepseek-v4-pro`，旧名 `deepseek-chat`/`deepseek-reasoner` 已于 2026-07-24 停用 —— 因此 `gw-deepseek` 的上游名无需修正，已按官方元数据补齐（ctx 1048576 / out 393216 / text,image / low,high,max / high / in-history），并把绑定 DISABLED 模型的 3 个 Agent 改绑 `gw-deepseek` |
 
 #### 17.2 待办
 
 | 优先级 | 项 | 说明 |
 |---|---|---|
 | P1 | **测试补齐** | 单测（`TokenEstimator`、SSE 切帧、额度滚动、错误映射）与集成测试（假上游、流式、429、双用户隔离、迁移幂等）；项目约定默认不产出测试代码，建议单独立任务 |
-| P1 | **桌面插件联调 + 客户端接入文档** | 按 `dsh-plugin-model-gateway` 契约在 `docs/` 补 `/v1` 接入说明（curl/示例/错误码/渠道头） |
+| P1 | **桌面插件联调** | 按 `dsh-plugin-model-gateway` 契约在真实客户端跑通「目录→流式推理→429 额度」全链路（接入文档已完成，见 17.1） |
 | P2 | **模型可见性白名单** | 按角色/用户控制 `/v1/models`；`ai_gateway_model_acl` 未建 |
 | P2 | **供应商页连贯流程** | 拉取上游模型后一键跳「模型设置」并带上 providerId 与预选模型 |
-| P3 | **旧接口彻底移除** | `/api/v1/model-settings`、`src/api/ai.ts` 的 model-settings 封装、`types/modelProvider.ts`；建议保留一个大版本后再删 |
 
 #### 17.3 已知限制
 
 1. **单实例语义**：token 黑名单、限流计数、额度/目录缓存均为进程内；多实例需共享存储。
-2. **保留列**：`ai_agent.model_provider_id` 不再读写，下个版本可 `DROP COLUMN`；`ai_model_provider` 的 `chat_model`/`embedding_model`/参数列保留（DEPRECATED），仅回滚期依赖。
+2. **已清理的列与表**：`ai_model_provider` 的 `chat_model`/`embedding_model`/`temperature`/`max_tokens`/`top_p`、`ai_agent.model_provider_id`、`ai_model_provider_legacy_backup`、`ai_model_config` 均已删除（`db/patch_drop_model_legacy.sql`）；供应商表现在只含连接与凭据字段，模型与参数的唯一存身处是 `ai_gateway_model`。
 3. **流式线程模型**：`/v1` 流式为阻塞式响应，一条流占一个请求线程；生产建议开启 `spring.threads.virtual.enabled=true`。
-4. **自动迁移前提**：只有「默认供应商唯一」时才自动执行 `patch_provider_model_split.sql`；多默认需人工收敛。
-5. **结构未就绪时的表现**：`/v1/*` 返回 503 `gateway_not_ready`，管理面返回「请执行 db/patch_provider_model_split.sql」提示，应用本身可正常启动。
+4. **自动与手工迁移的分界**：启动器只自动执行非破坏脚本（`init_gateway.sql`、`gateway_schema.sql`、`V_add_model_provider.sql`）；历史库的数据下沉（`patch_provider_model_split.sql`）与旧列/备份表清理（`patch_retire_ai_model_config.sql`、`patch_drop_model_legacy.sql`）必须手工按顺序执行。
+5. **结构未就绪时的表现**：`/v1/*` 返回 503 `gateway_not_ready`，管理面返回「请确认 db/gateway_schema.sql 执行成功」提示，应用本身可正常启动。
 

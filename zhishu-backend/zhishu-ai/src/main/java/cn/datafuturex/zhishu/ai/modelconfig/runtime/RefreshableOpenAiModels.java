@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * per-provider OpenAI 兼容 Chat / Embedding 客户端构建器。
  * <p>
- * 每个供应商独立构建一组 ChatModel + EmbeddingModel，由 ModelProviderRegistry 管理缓存。
+ * 每个供应商独立构建一组 ChatModel + EmbeddingModel，由模型网关侧的 {@code ModelRuntimeCache} 管理缓存。
  */
 @Slf4j
 public final class RefreshableOpenAiModels {

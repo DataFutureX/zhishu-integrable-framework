@@ -66,4 +66,13 @@ public final class PermissionConstants {
     public static final String AI_MCP_EDIT = "ai:mcp:edit";
     public static final String AI_KG_SYNC = "ai:kg:sync";
     public static final String AI_QA_QUERY = "ai:qa:query";
+
+    // 模型网关
+    public static final String GATEWAY_PROVIDER_LIST = "gateway:provider:list";
+    public static final String GATEWAY_PROVIDER_UPDATE = "gateway:provider:update";
+    public static final String GATEWAY_MODEL_LIST = "gateway:model:list";
+    public static final String GATEWAY_MODEL_UPDATE = "gateway:model:update";
+    public static final String GATEWAY_QUOTA_LIST = "gateway:quota:list";
+    public static final String GATEWAY_QUOTA_UPDATE = "gateway:quota:update";
+    public static final String GATEWAY_USAGE_QUERY = "gateway:usage:query";
 }

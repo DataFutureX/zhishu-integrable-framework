@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.ai.platform.ai;
 
 import cn.datafuturex.zhishu.ai.biztools.api.BizToolProviderPort;
+import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -12,9 +13,11 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -26,21 +29,30 @@ import javax.sql.DataSource;
  * （通义等 OpenAI 兼容端常见）。因此拆成：带 Tools 的主客户端 + 无 Tools 的流式客户端。
  */
 @Configuration
+@EnableConfigurationProperties(ModelConfigProperties.class)
 @RequiredArgsConstructor
 public class AiConfig {
 
     public static final String DEFAULT_MODEL = "qwen-plus";
-    public static final int MEMORY_WINDOW_SIZE = 20;
+
+    /** 会话记忆窗口配置项（可在 application.yml 或环境变量里覆盖） */
+    public static final String PROPERTY_MEMORY_WINDOW = "zhishu.ai.chat.memory-window";
+
+    /** 未配置时的会话记忆窗口默认值 */
+    public static final int DEFAULT_MEMORY_WINDOW_SIZE = 20;
+
     public static final String STREAM_CHAT_CLIENT = "streamChatClient";
 
     private final EmbeddingModel embeddingModel;
     private final BizToolProviderPort bizToolProviderPort;
 
     @Bean
-    public ChatMemory chatMemory(JdbcChatMemoryRepository chatMemoryRepository) {
+    public ChatMemory chatMemory(JdbcChatMemoryRepository chatMemoryRepository, Environment environment) {
+        int memoryWindow = environment.getProperty(
+                PROPERTY_MEMORY_WINDOW, Integer.class, DEFAULT_MEMORY_WINDOW_SIZE);
         return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
-                .maxMessages(MEMORY_WINDOW_SIZE)
+                .maxMessages(Math.max(2, memoryWindow))
                 .build();
     }
 

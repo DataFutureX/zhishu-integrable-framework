@@ -3,7 +3,7 @@ package cn.datafuturex.zhishu.ai.openapi.controller;
 import cn.datafuturex.zhishu.ai.agent.api.AgentChatPort;
 import cn.datafuturex.zhishu.ai.chat.service.AiChatService;
 import cn.datafuturex.zhishu.ai.chat.service.QaHistoryService;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.shared.Result;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
@@ -35,7 +35,7 @@ public class OpenChatController {
 
     private final AiChatService aiChatService;
     private final QaHistoryService qaHistoryService;
-    private final ModelConfigPort aiModelConfigService;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final AgentChatPort agentChatPort;
 
     @PostMapping
@@ -95,7 +95,7 @@ public class OpenChatController {
                                         ChatScenes.CHAT,
                                         question,
                                         answer.toString(),
-                                        aiModelConfigService.currentChatModel(),
+                                        gatewayChatModelRegistry.defaultModelLabel(),
                                         null,
                                         conversationIdHolder[0],
                                         agentId);

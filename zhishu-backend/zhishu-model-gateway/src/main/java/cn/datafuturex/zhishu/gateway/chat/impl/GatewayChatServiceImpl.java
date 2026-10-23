@@ -191,7 +191,8 @@ public class GatewayChatServiceImpl implements GatewayChatService {
                 if (ttftMs == null) {
                     ttftMs = elapsedMs(startNanos);
                 }
-                usageNode = frame.hasNonNull("usage") ? frame.get("usage") : usageNode;
+                // 保存整个帧（extractUsage 需要从帧里取 usage，非流式路径同样传整个响应）
+                usageNode = frame.hasNonNull("usage") ? frame : usageNode;
                 appendContent(frame, completion);
                 writeSse(out, MAPPER.writeValueAsString(rewriteModel(frame, modelId)));
             }

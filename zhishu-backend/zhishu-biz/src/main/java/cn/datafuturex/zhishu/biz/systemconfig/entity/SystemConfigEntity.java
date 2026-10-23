@@ -30,6 +30,8 @@ public class SystemConfigEntity {
     private Integer loginMaxRetryAttempts;
     /** 超过失败次数后锁定分钟数 */
     private Integer loginLockMinutes;
+    /** 对话默认开启知识库 RAG（供 AI 模块读取） */
+    private Boolean chatEnableRagDefault;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

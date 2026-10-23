@@ -43,6 +43,14 @@ export const PERMISSIONS = {
   AI_MCP_EDIT: 'ai:mcp:edit',
   AI_KG_SYNC: 'ai:kg:sync',
   AI_QA_QUERY: 'ai:qa:query',
+
+  GATEWAY_PROVIDER_LIST: 'gateway:provider:list',
+  GATEWAY_PROVIDER_UPDATE: 'gateway:provider:update',
+  GATEWAY_MODEL_LIST: 'gateway:model:list',
+  GATEWAY_MODEL_UPDATE: 'gateway:model:update',
+  GATEWAY_QUOTA_LIST: 'gateway:quota:list',
+  GATEWAY_QUOTA_UPDATE: 'gateway:quota:update',
+  GATEWAY_USAGE_QUERY: 'gateway:usage:query',
 } as const
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS]

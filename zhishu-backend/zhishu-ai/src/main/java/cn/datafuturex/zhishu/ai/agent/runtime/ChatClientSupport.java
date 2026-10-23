@@ -4,7 +4,6 @@ import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentTimeContext;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
 import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,6 @@ public class ChatClientSupport {
     private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final ChatMemory chatMemory;
     private final ToolCapabilityRegistry toolCapabilityRegistry;
-    private final ModelConfigPort aiModelConfigService;
     private final ExternalToolPort externalToolPort;
 
     /** 当前执行步骤标签（供日志输出），由引擎层设置 */

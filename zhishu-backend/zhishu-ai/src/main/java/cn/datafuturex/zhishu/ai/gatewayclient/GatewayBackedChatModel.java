@@ -61,7 +61,7 @@ public class GatewayBackedChatModel implements ChatModel {
 
     private ChatModel delegate() {
         try {
-            return registry.resolve(null, null);
+            return registry.resolve(null);
         } catch (AiException e) {
             throw e;
         } catch (Exception e) {

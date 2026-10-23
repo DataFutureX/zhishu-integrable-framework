@@ -407,7 +407,6 @@ import {
   chatStream,
   chatStructured,
   chatEval,
-  getAiModelConfig,
   healthCheck,
   listAgents,
   listChatSessions,
@@ -940,12 +939,8 @@ const loadHistory = async () => {
   sessionsLoading.value = true
   try {
     await Promise.all([ensureUserReady(), systemConfigStore.ensureConfigLoaded(), loadAgents()])
-    try {
-      const modelConfig = await getAiModelConfig()
-      enableRag.value = !!modelConfig.enableRagDefault && agentSupportsRag.value
-    } catch {
-      /* 配置拉取失败时保持默认关闭 */
-    }
+    // 默认 RAG 开关来自系统配置（参数配置 · AI 对话）
+    enableRag.value = systemConfigStore.chatEnableRagDefault && agentSupportsRag.value
 
     await refreshSessionList()
 

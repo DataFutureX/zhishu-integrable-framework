@@ -13,6 +13,8 @@ export interface SystemConfigVO {
   loginMaxRetryAttempts?: number
   /** 登录锁定时长（分钟） */
   loginLockMinutes?: number
+  /** 对话默认开启知识库 RAG */
+  chatEnableRagDefault?: boolean
   createTime?: string
   updateTime?: string
 }
@@ -27,4 +29,6 @@ export interface SystemConfigUpdateDTO {
   loginRetryLimitEnabled: boolean
   loginMaxRetryAttempts: number
   loginLockMinutes: number
+  /** 对话默认开启知识库 RAG */
+  chatEnableRagDefault: boolean
 }

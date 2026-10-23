@@ -37,11 +37,15 @@ ON CONFLICT (id) DO UPDATE SET
     update_time = CURRENT_TIMESTAMP;
 
 -- 2) 「模型设置」就地改造为「供应商管理」（保留 id 与已有授权），模型目录页更名为「模型设置」
+--    同时修正历史遗留的 route_name / icon / meta（早期为 AIModelSetings）
 UPDATE sys_menu
 SET title = '供应商管理',
     parent_id = 12,
     path = '/gateway/providers',
+    route_name = 'GatewayProviders',
+    icon = 'Connection',
     component = 'views/gateway/GatewayProviderList.vue',
+    meta = '{"title":"供应商管理"}',
     sort = 1,
     update_time = CURRENT_TIMESTAMP
 WHERE id = 105;

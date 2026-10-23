@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.gateway.catalog.impl;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelUpstreamPort;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;

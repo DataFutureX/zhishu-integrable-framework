@@ -27,6 +27,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
     loginRetryLimitEnabled: DEFAULT_LOGIN_RETRY_LIMIT_ENABLED,
     loginMaxRetryAttempts: DEFAULT_LOGIN_MAX_RETRY_ATTEMPTS,
     loginLockMinutes: DEFAULT_LOGIN_LOCK_MINUTES,
+    /** 对话默认开启知识库 RAG（由后端下发，默认关） */
+    chatEnableRagDefault: false,
     loaded: false,
   }),
 
@@ -63,6 +65,9 @@ export const useSystemConfigStore = defineStore('systemConfig', {
       }
       if (config.loginLockMinutes !== undefined) {
         this.loginLockMinutes = config.loginLockMinutes
+      }
+      if (config.chatEnableRagDefault !== undefined) {
+        this.chatEnableRagDefault = config.chatEnableRagDefault
       }
       updateBrowserFavicon(this.iconUrl)
       this.loaded = true

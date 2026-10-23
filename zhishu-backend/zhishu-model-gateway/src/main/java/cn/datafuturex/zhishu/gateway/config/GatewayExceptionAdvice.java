@@ -50,12 +50,12 @@ public class GatewayExceptionAdvice {
      */
     @ExceptionHandler(BadSqlGrammarException.class)
     public ResponseEntity<String> handleBadSqlGrammar(BadSqlGrammarException e, HttpServletResponse response) {
-        log.error("[网关] 数据库结构不匹配，请执行 db/patch_provider_model_split.sql", e);
+        log.error("[网关] 数据库结构不匹配，请确认 db/gateway_schema.sql 执行成功", e);
         if (response.isCommitted()) {
             return null;
         }
         GatewayException wrapped = GatewayException.notReady(
-                "模型网关数据库结构未完成迁移，请执行 db/patch_provider_model_split.sql 后重启");
+                "模型网关数据库结构未完成对齐，请确认 db/gateway_schema.sql 执行成功后重启");
         return ResponseEntity.status(wrapped.getStatus())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(OpenAiErrors.body(wrapped));

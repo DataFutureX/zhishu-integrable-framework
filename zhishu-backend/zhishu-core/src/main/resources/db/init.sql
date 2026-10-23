@@ -147,10 +147,12 @@ CREATE TABLE IF NOT EXISTS sys_config (
     login_retry_limit_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     login_max_retry_attempts INT NOT NULL DEFAULT 5,
     login_lock_minutes INT NOT NULL DEFAULT 3,
+    chat_enable_rag_default BOOLEAN NOT NULL DEFAULT FALSE,
     create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 COMMENT ON TABLE sys_config IS '系统配置表';
+COMMENT ON COLUMN sys_config.chat_enable_rag_default IS '对话默认开启知识库 RAG（由 AI 模块读取）';
 
 DROP TRIGGER IF EXISTS trg_sys_config_update_time ON sys_config;
 CREATE TRIGGER trg_sys_config_update_time

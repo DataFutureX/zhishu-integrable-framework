@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.knowledge.service.impl;
 
 import cn.datafuturex.zhishu.ai.platform.ai.AiConfig;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.knowledge.service.EmbeddingService;
 import cn.datafuturex.zhishu.ai.knowledge.service.QuestionAnsweringService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,15 +31,15 @@ public class QuestionAnsweringServiceImpl implements QuestionAnsweringService {
 
     private final ChatClient streamChatClient;
     private final EmbeddingService embeddingService;
-    private final ModelConfigPort aiModelConfigService;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
 
     public QuestionAnsweringServiceImpl(
             @Qualifier(AiConfig.STREAM_CHAT_CLIENT) ChatClient streamChatClient,
             EmbeddingService embeddingService,
-            ModelConfigPort aiModelConfigService) {
+            GatewayChatModelRegistry gatewayChatModelRegistry) {
         this.streamChatClient = streamChatClient;
         this.embeddingService = embeddingService;
-        this.aiModelConfigService = aiModelConfigService;
+        this.gatewayChatModelRegistry = gatewayChatModelRegistry;
     }
 
     @Override
@@ -210,10 +210,9 @@ public class QuestionAnsweringServiceImpl implements QuestionAnsweringService {
     }
 
     private OpenAiChatOptions.Builder runtimeOptions() {
+        // 模型与默认生成参数均由网关按默认模型行注入，避免用旧单例的模型名覆盖网关目录
         return OpenAiChatOptions.builder()
-                .model(aiModelConfigService.currentChatModel())
-                .temperature(aiModelConfigService.currentTemperature())
-                .maxTokens(aiModelConfigService.currentMaxTokens());
+                .model(gatewayChatModelRegistry.resolveModelId(null));
     }
 
     private static String systemPrompt(String context) {

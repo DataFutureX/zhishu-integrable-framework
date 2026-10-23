@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.openapi.controller;
 
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentQueryDTO;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentQaService;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
 import cn.datafuturex.zhishu.ai.shared.port.QaHistoryPort;
@@ -30,7 +30,7 @@ public class OpenKnowledgeQaController {
 
     private final DocumentQaService documentQaService;
     private final QaHistoryPort qaHistoryService;
-    private final ModelConfigPort aiModelConfigService;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "文档智能问答（SSE）")
@@ -56,7 +56,7 @@ public class OpenKnowledgeQaController {
                                         ChatScenes.DOCUMENT_QA,
                                         question,
                                         answer.toString(),
-                                        aiModelConfigService.currentChatModel() + " + RAG",
+                                        gatewayChatModelRegistry.defaultModelLabel() + " + RAG",
                                         documentId,
                                         conversationIdHolder[0]);
                             } catch (Exception e) {

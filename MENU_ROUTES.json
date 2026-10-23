@@ -664,6 +664,7 @@
     { "from": "/home/chat", "to": "/ai/chat" },
     { "from": "/home/dashboard", "to": "/ai/chat" },
     { "from": "/ai/document-qa", "to": "/ai/qa" },
-    { "from": "/ai/model-config", "to": "/ai/model-settings" }
+    { "from": "/ai/model-config", "to": "/gateway/providers" },
+    { "from": "/ai/model-settings", "to": "/gateway/providers" }
   ]
 }

@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.admin.service.impl;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelUpstreamPort.UpstreamEndpoint;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.ModelProviderRegistry;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort.UpstreamEndpoint;
+import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelBatchImportDTO;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelUpsertDTO;
@@ -51,7 +51,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     private final GatewayCatalogService catalogService;
     private final AgentModelRefMapper agentModelRefMapper;
     private final UpstreamHttpClient upstreamHttpClient;
-    private final ModelProviderRegistry modelProviderRegistry;
+    private final ModelRuntimeCache modelRuntimeCache;
 
     /**
      * {@inheritDoc}
@@ -119,6 +119,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
 
         GatewayModelEntity entity = new GatewayModelEntity();
         apply(entity, dto, modelId);
+        requireUpstreamUnique(entity.getProviderId(), entity.getModelType(), entity.getUpstreamModel(), null);
         entity.setCreateTime(LocalDateTime.now());
         entity.setUpdateTime(LocalDateTime.now());
         if (Boolean.TRUE.equals(dto.isDefault())) {
@@ -149,6 +150,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
             throw new BusinessException(400, "模型类型创建后不可修改");
         }
         apply(entity, dto, entity.getModelId());
+        requireUpstreamUnique(entity.getProviderId(), entity.getModelType(), entity.getUpstreamModel(), id);
         entity.setUpdateTime(LocalDateTime.now());
         if (Boolean.TRUE.equals(dto.isDefault())) {
             clearDefault(normalizeType(entity.getModelType()), id);
@@ -256,22 +258,36 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
         }
         String modelType = StringUtils.hasText(dto.modelType())
                 ? dto.modelType().trim().toUpperCase() : TYPE_CHAT;
+        List<GatewayModelBatchImportDTO.Item> items = dto.resolvedItems();
+        if (items.isEmpty()) {
+            throw new BusinessException(400, "未选择要导入的上游模型");
+        }
         String prefix = "gw-" + slug(upstream.get().providerKey()) + "-";
         List<GatewayModelAdminVO> created = new ArrayList<>();
-        for (String upstreamModel : dto.upstreamModels()) {
-            if (!StringUtils.hasText(upstreamModel)) {
+        int skipped = 0;
+        for (GatewayModelBatchImportDTO.Item item : items) {
+            String model = item.upstreamModel().trim();
+            if (existsUpstream(dto.providerId(), modelType, model)) {
+                // 同一供应商下已有该上游模型，不重复建行
+                skipped++;
                 continue;
             }
-            String model = upstreamModel.trim();
             String modelId = uniqueModelId(prefix + slug(model));
             GatewayModelEntity entity = new GatewayModelEntity();
             entity.setModelId(modelId);
-            entity.setDisplayName(model);
+            entity.setDisplayName(StringUtils.hasText(item.displayName()) ? item.displayName().trim() : model);
             entity.setProviderId(dto.providerId());
             entity.setUpstreamModel(model);
             entity.setModelType(modelType);
-            entity.setInputModalities("text");
-            entity.setSystemPromptUpdate("in-history");
+            // 优先用上游 /models 返回的元数据，缺失时按保守默认值
+            entity.setInputModalities(StringUtils.hasText(joinCsv(item.inputModalities()))
+                    ? joinCsv(item.inputModalities()) : "text");
+            entity.setSystemPromptUpdate(StringUtils.hasText(item.systemPromptUpdate())
+                    ? item.systemPromptUpdate().trim() : "in-history");
+            entity.setContextWindow(item.contextWindow());
+            entity.setMaxOutputTokens(item.maxOutputTokens());
+            entity.setReasoningEfforts(trimLength(joinCsv(item.reasoningEfforts()), 64));
+            entity.setDefaultReasoningEffort(trimLength(item.defaultReasoningEffort(), 16));
             entity.setIsDefault(Boolean.FALSE);
             entity.setStatus(STATUS_ENABLED);
             entity.setSortOrder(0);
@@ -282,9 +298,43 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
             created.add(toVO(entity));
         }
         catalogService.invalidate();
-        log.info("[网关] 批量导入模型 provider#{} type={} 新增 {} 条",
-                dto.providerId(), modelType, created.size());
+        log.info("[网关] 批量导入模型 provider#{} type={} 新增 {} 条，已存在跳过 {} 条",
+                dto.providerId(), modelType, created.size(), skipped);
         return created;
+    }
+
+    /**
+     * 将字符串列表拼为逗号分隔值（空集合返回 null）。
+     *
+     * @param values 列表
+     * @return 逗号分隔串或 null
+     */
+    private static String joinCsv(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        List<String> cleaned = new ArrayList<>();
+        for (String value : values) {
+            if (StringUtils.hasText(value)) {
+                cleaned.add(value.trim());
+            }
+        }
+        return cleaned.isEmpty() ? null : String.join(",", cleaned);
+    }
+
+    /**
+     * 按列宽限制长度，避免上游元数据超出字典定义。
+     *
+     * @param value   原值
+     * @param maxChars 最大字符数
+     * @return 截断后的值或 null
+     */
+    private static String trimLength(String value, int maxChars) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.length() <= maxChars ? trimmed : trimmed.substring(0, maxChars);
     }
 
     // ---- 内部方法 ----
@@ -318,12 +368,62 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     private void afterChange(GatewayModelEntity entity) {
         catalogService.invalidate();
         if (TYPE_EMBEDDING.equalsIgnoreCase(normalizeType(entity.getModelType()))) {
-            modelProviderRegistry.evictEmbedding();
+            modelRuntimeCache.evictAll();
         }
     }
 
     private static String normalizeType(String modelType) {
         return StringUtils.hasText(modelType) ? modelType.toUpperCase() : TYPE_CHAT;
+    }
+
+    /**
+     * 同一供应商 + 类型 + 上游模型名不得重复（避免同一模型多行导致默认/额度统计歧义）。
+     *
+     * @param providerId    供应商 id
+     * @param modelType     模型类型
+     * @param upstreamModel 上游模型名
+     * @param excludeId     排除的自身 id（修改时传入），新建传 null
+     */
+    private void requireUpstreamUnique(Long providerId, String modelType, String upstreamModel, Long excludeId) {
+        if (existsUpstream(providerId, normalizeType(modelType), upstreamModel, excludeId)) {
+            throw new BusinessException(400, "该供应商下已存在 " + normalizeType(modelType)
+                    + " 模型：" + upstreamModel);
+        }
+    }
+
+    /**
+     * 判断上游模型名是否已在该供应商的指定类型下存在。
+     *
+     * @param providerId    供应商 id
+     * @param modelType     模型类型
+     * @param upstreamModel 上游模型名
+     * @return true=已存在
+     */
+    private boolean existsUpstream(Long providerId, String modelType, String upstreamModel) {
+        return existsUpstream(providerId, modelType, upstreamModel, null);
+    }
+
+    /**
+     * 判断上游模型名是否已在该供应商的指定类型下存在。
+     *
+     * @param providerId    供应商 id
+     * @param modelType     模型类型
+     * @param upstreamModel 上游模型名
+     * @param excludeId     排除的自身 id，无则传 null
+     * @return true=已存在
+     */
+    private boolean existsUpstream(Long providerId, String modelType, String upstreamModel, Long excludeId) {
+        if (providerId == null || !StringUtils.hasText(upstreamModel)) {
+            return false;
+        }
+        LambdaQueryWrapper<GatewayModelEntity> wrapper = new LambdaQueryWrapper<GatewayModelEntity>()
+                .eq(GatewayModelEntity::getProviderId, providerId)
+                .eq(GatewayModelEntity::getModelType, normalizeType(modelType))
+                .eq(GatewayModelEntity::getUpstreamModel, upstreamModel.trim());
+        if (excludeId != null) {
+            wrapper.ne(GatewayModelEntity::getId, excludeId);
+        }
+        return gatewayModelMapper.selectCount(wrapper) > 0;
     }
 
     private GatewayModelEntity requireEntity(Long id) {

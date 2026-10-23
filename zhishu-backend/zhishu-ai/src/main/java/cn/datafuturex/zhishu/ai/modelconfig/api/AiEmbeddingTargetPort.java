@@ -1,36 +1,22 @@
 package cn.datafuturex.zhishu.ai.modelconfig.api;
 
-import java.util.Optional;
+import org.springframework.ai.embedding.EmbeddingModel;
 
 /**
- * 向量（embedding）目标端口 —— 由模型网关侧实现，供给 {@code runtimeEmbeddingModel}。
+ * 向量模型端口 —— 由模型网关实现。
  * <p>
- * embedding 不经网关推理面，但配置来源已从供应商行迁移到 {@code model_type=EMBEDDING} 的模型行。
+ * 向量不经网关推理面（仍直连上游），但配置来源统一为 {@code ai_gateway_model} 的
+ * {@code model_type=EMBEDDING} 默认行；供应商表不再保存向量模型名。
  */
 public interface AiEmbeddingTargetPort {
 
     /**
-     * 端口是否启用（与 {@code zhishu.gateway.internal.enabled} 对齐）。
+     * 默认向量模型客户端。
+     * <p>
+     * 返回懒加载代理：首次调用时才解析，避免 Bean 创建阶段数据库尚未就绪；
+     * 未配置可用向量模型时抛出带操作提示的 {@code AiException}。
      *
-     * @return true=按模型行解析
+     * @return EmbeddingModel
      */
-    boolean enabled();
-
-    /**
-     * 当前默认向量模型目标。
-     *
-     * @return 目标；未配置可用向量模型时返回空
-     */
-    Optional<Target> currentEmbedding();
-
-    /**
-     * 向量目标快照。
-     *
-     * @param modelId       网关模型 id
-     * @param upstreamModel 供应商真实向量模型名
-     * @param baseUrl       供应商 Base URL
-     * @param apiKey        解密后的 Key
-     */
-    record Target(String modelId, String upstreamModel, String baseUrl, String apiKey) {
-    }
+    EmbeddingModel defaultEmbeddingModel();
 }

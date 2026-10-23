@@ -13,6 +13,7 @@
 | [万象接入联调实现步骤.md](万象接入联调实现步骤.md) | 万象侧逐步联调清单 |
 | [他方SSO接入SDK使用说明.md](他方SSO接入SDK使用说明.md) | 伙伴侧 Java SDK：密钥生成、Ticket 签发、回调 URL（源码见 `sdk/yunqi-sso-partner-sdk`） |
 | [Desktop登录模块接入指南.md](Desktop登录模块接入指南.md) | 桌面客户端接入 `/desktop/v1/auth` 登录、退出的RSA 加密方案与多语言代码示例 |
+| [模型网关接入指南.md](模型网关接入指南.md) | LetsWork 桌面端接入 `/v1`：模型目录、流式推理、额度查询与错误处理（含 TS/curl 示例与自测清单） |
 
 ## API 接口测试报告
 

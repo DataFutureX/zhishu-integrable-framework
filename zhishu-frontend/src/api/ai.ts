@@ -23,7 +23,6 @@ import type {
   ChatResponseVO,
   ChatStructuredRequestDTO,
 } from '@/types/aiChat'
-import type { AiModelConfigUpdateDTO, AiModelConfigVO } from '@/types/aiModelConfig'
 import type {
   AgentCreateDTO,
   AgentPromptDraftDTO,
@@ -37,7 +36,6 @@ import type {
   WorkflowGraphDTO,
   WorkflowTemplateVO,
 } from '@/types/aiAgent'
-import type { ModelProviderCreateDTO, ModelProviderUpdateDTO, ModelProviderVO } from '@/types/modelProvider'
 import type {
   KnowledgesCategoryCreateDTO,
   KnowledgesCategoryUpdateDTO,
@@ -435,45 +433,6 @@ export function listPortalQaDemo(limit = 2, scene: QaHistoryScene = 'CHAT'): Pro
   return aiService.get('/qa-history/portal-demo', { params: { scene, limit } })
 }
 
-/** 获取 AI 模型配置 */
-export function getAiModelConfig(): Promise<AiModelConfigVO> {
-  if (isDemoMode) {
-    return Promise.resolve({
-      chatModel: 'qwen-plus',
-      embeddingModel: 'qwen3.7-text-embedding',
-      temperature: 0.7,
-      maxTokens: 2000,
-      topP: 0.9,
-      enableRagDefault: false,
-      memoryWindowSize: 20,
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-      apiKeyMasked: 'sk-****demo',
-      apiKeyConfigured: true,
-      remark: '演示模式配置',
-      chatModelOptions: ['qwen-plus', 'qwen-turbo', 'qwen-max'],
-      embeddingModelOptions: ['qwen3.7-text-embedding', 'text-embedding-v3'],
-      updateTime: new Date().toISOString(),
-    })
-  }
-  return aiService.get('/model-config')
-}
-
-/** 更新 AI 模型配置 */
-export function updateAiModelConfig(data: AiModelConfigUpdateDTO): Promise<AiModelConfigVO> {
-  if (isDemoMode) {
-    return Promise.resolve({
-      ...data,
-      baseUrl: data.baseUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-      apiKeyMasked: data.apiKey ? 'sk-****demo' : 'sk-****demo',
-      apiKeyConfigured: true,
-      chatModelOptions: ['qwen-plus', 'qwen-turbo', 'qwen-max'],
-      embeddingModelOptions: ['qwen3.7-text-embedding', 'text-embedding-v3'],
-      updateTime: new Date().toISOString(),
-    })
-  }
-  return aiService.put('/model-config', data)
-}
-
 const demoAgents: AgentVO[] = [
   {
     id: 1,
@@ -561,45 +520,6 @@ const demoChatSessions: DemoChatSession[] = [
     agentId: undefined,
     updateTime: new Date().toISOString(),
     createTime: new Date().toISOString(),
-  },
-]
-
-const demoModelProviders: ModelProviderVO[] = [
-  {
-    id: 1,
-    name: 'OpenAI',
-    providerKey: 'openai',
-    baseUrl: 'https://api.openai.com/v1',
-    apiKeyMasked: 'sk-****abcd',
-    apiKeyConfigured: true,
-    chatModel: 'gpt-4o',
-    embeddingModel: 'text-embedding-3-small',
-    temperature: 0.7,
-    maxTokens: 4096,
-    topP: 0.9,
-    isDefault: true,
-    status: 'ENABLED',
-    sortOrder: 1,
-    remark: '演示默认 OpenAI 配置',
-    updateTime: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    name: 'Ollama 本地',
-    providerKey: 'ollama',
-    baseUrl: 'http://localhost:11434',
-    apiKeyMasked: null,
-    apiKeyConfigured: false,
-    chatModel: 'qwen2.5:7b',
-    embeddingModel: 'nomic-embed-text',
-    temperature: 0.7,
-    maxTokens: 4096,
-    topP: 0.9,
-    isDefault: false,
-    status: 'ENABLED',
-    sortOrder: 2,
-    remark: '本地 Ollama 部署',
-    updateTime: new Date().toISOString(),
   },
 ]
 
@@ -1021,85 +941,6 @@ export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLog
     return import('@/mock/mcp').then((m) => m.mockListMcpCalls(direction, limit))
   }
   return aiService.get('/mcp/calls', { params: { direction, limit } })
-}
-
-
-// ============ 模型设置 API（@deprecated 改用 @/api/gateway 的供应商/模型接口） ============
-
-/** 获取模型设置列表 */
-export function listModelProviders(): Promise<ModelProviderVO[]> {
-  if (isDemoMode) {
-    return Promise.resolve([...demoModelProviders])
-  }
-  return aiService.get('/model-settings')
-}
-
-/** 获取单个模型设置详情 */
-export function getModelProvider(id: number): Promise<ModelProviderVO> {
-  if (isDemoMode) {
-    const found = demoModelProviders.find((p) => p.id === id)
-    if (!found) return Promise.reject(new Error('模型设置不存在'))
-    return Promise.resolve({ ...found })
-  }
-  return aiService.get(`/model-settings/${id}`)
-}
-
-/** 新建模型设置 */
-export function createModelProvider(data: ModelProviderCreateDTO): Promise<ModelProviderVO> {
-  if (isDemoMode) {
-    const newId = Math.max(...demoModelProviders.map((p) => p.id), 0) + 1
-    const newItem: ModelProviderVO = {
-      id: newId,
-      name: data.name,
-      providerKey: data.providerKey,
-      baseUrl: data.baseUrl,
-      apiKeyMasked: data.apiKey ? '****' : null,
-      apiKeyConfigured: !!data.apiKey,
-      chatModel: data.chatModel,
-      embeddingModel: data.embeddingModel || null,
-      temperature: data.temperature,
-      maxTokens: data.maxTokens,
-      topP: data.topP,
-      isDefault: false,
-      status: 'ENABLED',
-      sortOrder: demoModelProviders.length + 1,
-      remark: data.remark || null,
-      updateTime: new Date().toISOString(),
-    }
-    demoModelProviders.push(newItem)
-    return Promise.resolve(newItem)
-  }
-  return aiService.post('/model-settings', data)
-}
-
-/** 更新模型设置 */
-export function updateModelProvider(id: number, data: ModelProviderUpdateDTO): Promise<ModelProviderVO> {
-  if (isDemoMode) {
-    const idx = demoModelProviders.findIndex((p) => p.id === id)
-    if (idx < 0) return Promise.reject(new Error('模型设置不存在'))
-    const item = demoModelProviders[idx]
-    Object.assign(item, data, { updateTime: new Date().toISOString() })
-    return Promise.resolve({ ...item })
-  }
-  return aiService.put(`/model-settings/${id}`, data)
-}
-
-/** 删除模型设置 */
-export function deleteModelProvider(id: number): Promise<void> {
-  if (isDemoMode) {
-    const idx = demoModelProviders.findIndex((p) => p.id === id)
-    if (idx >= 0) demoModelProviders.splice(idx, 1)
-    return Promise.resolve()
-  }
-  return aiService.delete(`/model-settings/${id}`)
-}
-
-/** 测试模型设置连通性 */
-export function testModelProviderConnection(id: number): Promise<string> {
-  if (isDemoMode) {
-    return Promise.resolve('演示模式：连通性测试成功')
-  }
-  return aiService.post(`/model-settings/${id}/test`)
 }
 
 

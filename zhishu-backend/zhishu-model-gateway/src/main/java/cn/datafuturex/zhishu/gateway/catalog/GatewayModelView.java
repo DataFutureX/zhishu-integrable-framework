@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.gateway.catalog;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelUpstreamPort;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 
 /**
  * 目录视图：目录行 + 已解密的上游端点。

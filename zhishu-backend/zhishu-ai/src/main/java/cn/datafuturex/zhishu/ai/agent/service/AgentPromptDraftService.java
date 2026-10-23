@@ -6,7 +6,7 @@ import cn.datafuturex.zhishu.ai.agent.domain.vo.ToolInfoVO;
 import cn.datafuturex.zhishu.ai.agent.enums.AgentCapability;
 import cn.datafuturex.zhishu.ai.agent.enums.WorkflowType;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class AgentPromptDraftService {
 
     private final ToolCapabilityRegistry toolCapabilityRegistry;
     private final ChatModel chatModel;
-    private final ModelConfigPort modelConfigPort;
+    private final GatewayChatModelRegistry gatewayChatModelRegistry;
 
     public AgentPromptDraftVO generate(AgentPromptDraftDTO dto) {
         if (dto == null) {
@@ -65,7 +65,7 @@ public class AgentPromptDraftService {
 
     private String polishWithModel(AgentPromptDraftDTO dto, String template) {
         try {
-            String model = modelConfigPort.currentChatModel();
+            String model = gatewayChatModelRegistry.defaultModelLabel();
             if (!StringUtils.hasText(model)) {
                 return null;
             }

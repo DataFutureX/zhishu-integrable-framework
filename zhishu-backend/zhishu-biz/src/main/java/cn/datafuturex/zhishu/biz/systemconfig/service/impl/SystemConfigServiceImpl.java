@@ -56,6 +56,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         entity.setLoginRetryLimitEnabled(dto.loginRetryLimitEnabled());
         entity.setLoginMaxRetryAttempts(dto.loginMaxRetryAttempts());
         entity.setLoginLockMinutes(dto.loginLockMinutes());
+        entity.setChatEnableRagDefault(Boolean.TRUE.equals(dto.chatEnableRagDefault()));
         entity.setUpdateTime(LocalDateTime.now());
         systemConfigMapper.updateById(entity);
         log.info("更新系统配置成功");
@@ -115,6 +116,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         entity.setLoginRetryLimitEnabled(false);
         entity.setLoginMaxRetryAttempts(5);
         entity.setLoginLockMinutes(3);
+        entity.setChatEnableRagDefault(false);
         entity.setCreateTime(LocalDateTime.now());
         entity.setUpdateTime(LocalDateTime.now());
         systemConfigMapper.insert(entity);
@@ -133,6 +135,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
                 entity.getLoginRetryLimitEnabled() != null ? entity.getLoginRetryLimitEnabled() : false,
                 entity.getLoginMaxRetryAttempts() != null ? entity.getLoginMaxRetryAttempts() : 5,
                 entity.getLoginLockMinutes() != null ? entity.getLoginLockMinutes() : 3,
+                Boolean.TRUE.equals(entity.getChatEnableRagDefault()),
                 entity.getCreateTime(),
                 entity.getUpdateTime()
         );

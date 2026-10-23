@@ -30,8 +30,7 @@ public class WebConfig implements WebMvcConfigurer {
         cacheManager.setCacheNames(java.util.Set.of(
                 "ai-responses",
                 "user-sessions",
-                "system-config",
-                "ai-model-config"
+                "system-config"
         ));
         return cacheManager;
     }

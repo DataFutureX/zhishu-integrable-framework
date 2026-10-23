@@ -40,6 +40,11 @@ public record SystemConfigUpdateDTO(
         @NotNull(message = "登录锁定分钟数不能为空")
         @Min(value = 1, message = "登录锁定分钟数至少为1分钟")
         @Max(value = 1440, message = "登录锁定分钟数不能超过1440分钟")
-        Integer loginLockMinutes
+        Integer loginLockMinutes,
+
+        /**
+         * 对话默认开启知识库 RAG（为空视为 false）
+         */
+        Boolean chatEnableRagDefault
 ) {
 }

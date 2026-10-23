@@ -2,7 +2,6 @@ package cn.datafuturex.zhishu.ai.gatewayclient;
 
 import cn.datafuturex.zhishu.ai.gatewayclient.config.GatewayInternalProperties;
 import cn.datafuturex.zhishu.ai.modelconfig.api.AiChatTargetPort;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.ModelProviderRegistry;
 import cn.datafuturex.zhishu.ai.modelconfig.runtime.RefreshableOpenAiModels;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.Optional;
 
 /**
  * 内部 ChatModel 解析器：按网关 model_id 构建指向 {@code <网关>/v1} 的 OpenAI 兼容客户端。
@@ -30,7 +30,6 @@ public class GatewayChatModelRegistry {
     private final GatewayInternalProperties properties;
     private final GatewayServiceTokenProvider tokenProvider;
     private final GatewayModelCatalogClient catalogClient;
-    private final ModelProviderRegistry modelProviderRegistry;
     private final ObjectProvider<AiChatTargetPort> chatTargetPort;
 
     /** (bearerHash + modelId) -> ChatModel */
@@ -73,8 +72,11 @@ public class GatewayChatModelRegistry {
      */
     private ChatModel fallbackChatModel(String gatewayModelId) {
         AiChatTargetPort port = chatTargetPort.getIfAvailable();
-        if (port != null && port.enabled() && StringUtils.hasText(gatewayModelId)) {
-            var target = port.resolveByModelId(gatewayModelId);
+        if (port == null) {
+            throw new AiException("未装配模型网关模块：无法解析对话模型");
+        }
+        if (port.enabled() && StringUtils.hasText(gatewayModelId)) {
+            Optional<AiChatTargetPort.Target> target = port.resolveByModelId(gatewayModelId);
             if (target.isPresent()) {
                 AiChatTargetPort.Target value = target.get();
                 return cache.get("direct|" + value.modelId(), key -> RefreshableOpenAiModels.chatModel(
@@ -82,7 +84,7 @@ public class GatewayChatModelRegistry {
                         value.temperature(), value.maxTokens(), value.topP()));
             }
         }
-        return modelProviderRegistry.resolveDefault();
+        return port.defaultChatModel();
     }
 
     /**
@@ -113,10 +115,12 @@ public class GatewayChatModelRegistry {
      */
     public String describeModel(String gatewayModelId) {
         if (!enabled()) {
-            cn.datafuturex.zhishu.ai.modelconfig.domain.ModelProviderEntity provider =
-                    modelProviderRegistry.getProvider(null);
-            if (provider != null && StringUtils.hasText(provider.getChatModel())) {
-                return provider.getChatModel();
+            AiChatTargetPort port = chatTargetPort.getIfAvailable();
+            if (port != null) {
+                String name = port.describeDefaultChatModelName();
+                if (StringUtils.hasText(name)) {
+                    return name;
+                }
             }
             return gatewayModelId;
         }
@@ -125,6 +129,20 @@ public class GatewayChatModelRegistry {
         } catch (Exception e) {
             log.debug("[网关客户端] 模型名解析失败，回退原值: {}", e.getMessage());
             return gatewayModelId;
+        }
+    }
+
+    /**
+     * 展示/审计用：当前会实际使用的默认模型名（网关 model_id）。
+     *
+     * @return 模型名；无法解析时返回 null（不抛异常，不影响业务写入）
+     */
+    public String defaultModelLabel() {
+        try {
+            return describeModel(null);
+        } catch (Exception e) {
+            log.debug("[网关客户端] 默认模型名解析失败: {}", e.getMessage());
+            return null;
         }
     }
 

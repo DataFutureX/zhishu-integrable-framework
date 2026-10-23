@@ -16,6 +16,7 @@ public record SystemConfigVO(
         Boolean loginRetryLimitEnabled,
         Integer loginMaxRetryAttempts,
         Integer loginLockMinutes,
+        Boolean chatEnableRagDefault,
         LocalDateTime createTime,
         LocalDateTime updateTime
 ) {

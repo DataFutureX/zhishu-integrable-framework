@@ -6,7 +6,15 @@
           <span class="gateway-page__title">供应商管理</span>
           <div class="gateway-page__actions">
             <el-button size="small" :icon="Refresh" @click="loadProviders">刷新</el-button>
-            <el-button type="primary" size="small" :icon="Plus" @click="openCreate">新建供应商</el-button>
+            <el-button
+              v-permission="PERMISSIONS.GATEWAY_PROVIDER_UPDATE"
+              type="primary"
+              size="small"
+              :icon="Plus"
+              @click="openCreate"
+            >
+              新建供应商
+            </el-button>
           </div>
         </div>
       </template>
@@ -47,7 +55,15 @@
         </el-table-column>
         <el-table-column label="操作" width="290" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEdit(row as GatewayProviderVO)">编辑</el-button>
+            <el-button
+              v-permission="PERMISSIONS.GATEWAY_PROVIDER_UPDATE"
+              link
+              type="primary"
+              size="small"
+              @click="openEdit(row as GatewayProviderVO)"
+            >
+              编辑
+            </el-button>
             <el-button
               link
               type="primary"
@@ -58,6 +74,7 @@
               测试连接
             </el-button>
             <el-button
+              v-permission="PERMISSIONS.GATEWAY_PROVIDER_UPDATE"
               link
               type="primary"
               size="small"
@@ -66,7 +83,15 @@
             >
               设默认
             </el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row as GatewayProviderVO)">删除</el-button>
+            <el-button
+              v-permission="PERMISSIONS.GATEWAY_PROVIDER_UPDATE"
+              link
+              type="danger"
+              size="small"
+              @click="handleDelete(row as GatewayProviderVO)"
+            >
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -118,6 +143,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { Plus, Refresh } from '@element-plus/icons-vue'
+import { PERMISSIONS } from '@/constants/permissions'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   createGatewayProviderApi,

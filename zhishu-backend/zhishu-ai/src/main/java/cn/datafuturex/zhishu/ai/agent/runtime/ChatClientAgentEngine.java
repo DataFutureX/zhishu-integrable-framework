@@ -8,11 +8,9 @@ import cn.datafuturex.zhishu.ai.agent.graph.WorkflowGraphCompiler;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentJsonUtils;
 import cn.datafuturex.zhishu.ai.agent.support.RoutingCapabilitySupport;
-import cn.datafuturex.zhishu.ai.modelconfig.domain.ModelProviderEntity;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.ModelProviderRegistry;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
-import cn.datafuturex.zhishu.ai.modelconfig.api.ModelConfigPort;
+import cn.datafuturex.zhishu.api.spi.ChatSettingsApi;
 import cn.datafuturex.zhishu.ai.knowledge.api.HybridRetrievalPort;
 import cn.datafuturex.zhishu.ai.biztools.api.GraphContextEnrichPort;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +40,7 @@ public class ChatClientAgentEngine implements AgentEngine {
     private final ChatClientSupport chatClientSupport;
     private final ToolCapabilityRegistry toolCapabilityRegistry;
     private final HybridRetrievalPort hybridRetrievalService;
-    private final ModelConfigPort aiModelConfigService;
-    private final ModelProviderRegistry modelProviderRegistry;
+    private final ChatSettingsApi chatSettingsApi;
     private final WorkflowGraphCompiler workflowGraphCompiler;
     private final GraphWorkflowExecutor graphWorkflowExecutor;
     private final GraphContextEnrichPort graphContextEnricher;
@@ -318,7 +315,7 @@ public class ChatClientAgentEngine implements AgentEngine {
         String text = message;
         boolean wantRag = enableRag != null
                 ? enableRag
-                : aiModelConfigService.currentEnableRagDefault();
+                : chatSettingsApi.defaultRagEnabled();
         if (wantRag && toolCapabilityRegistry.supportsRag(capabilities)) {
             text = hybridRetrievalService.enrichUserMessage(text, 5, documentIds);
         }

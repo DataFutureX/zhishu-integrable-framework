@@ -17,8 +17,8 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-button :loading="validating" @click="runValidate">校验</el-button>
-        <el-button type="primary" :loading="saving" @click="runSave">保存</el-button>
+        <el-button v-permission="PERMISSIONS.AI_AGENT_GRAPH" :loading="validating" @click="runValidate">校验</el-button>
+        <el-button v-permission="PERMISSIONS.AI_AGENT_GRAPH" type="primary" :loading="saving" @click="runSave">保存</el-button>
       </div>
     </header>
 
@@ -177,6 +177,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'AIAgentGraphEditor' })
 
+import { PERMISSIONS } from '@/constants/permissions'
 import { computed, markRaw, onMounted, provide, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'

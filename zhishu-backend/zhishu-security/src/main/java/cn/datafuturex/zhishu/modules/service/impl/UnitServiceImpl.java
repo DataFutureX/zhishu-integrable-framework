@@ -242,7 +242,10 @@ public class UnitServiceImpl implements UnitService {
     }
 
     private Map<Long, String> loadUnitNameMap() {
-        return unitMapper.selectList(null).stream()
+        // 只需要 id → 名称 映射，投影两列避免整表宽字段进内存
+        LambdaQueryWrapper<UnitEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(UnitEntity::getId, UnitEntity::getUnitName);
+        return unitMapper.selectList(wrapper).stream()
                 .collect(Collectors.toMap(UnitEntity::getId, UnitEntity::getUnitName));
     }
 

@@ -163,7 +163,7 @@
             </div>
 
             <footer class="agent-persona__foot">
-              <el-button type="primary" size="small" :icon="Promotion" @click="openTrial(row)">
+              <el-button v-permission="PERMISSIONS.AI_AGENT_QUERY" type="primary" size="small" :icon="Promotion" @click="openTrial(row)">
                 试运行
               </el-button>
               <div class="agent-persona__links">

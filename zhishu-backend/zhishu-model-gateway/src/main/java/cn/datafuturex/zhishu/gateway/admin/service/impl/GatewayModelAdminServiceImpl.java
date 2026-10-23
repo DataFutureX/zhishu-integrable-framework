@@ -168,6 +168,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         GatewayModelEntity entity = requireEntity(id);
+        rejectDefaultRemoval(entity, "删除");
         if (TYPE_CHAT.equalsIgnoreCase(entity.getModelType())) {
             int refs = agentModelUsagePort.countAgentsBoundTo(entity.getModelId());
             if (refs > 0) {
@@ -202,6 +203,9 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     @Override
     public GatewayModelAdminVO changeStatus(Long id, boolean enabled) {
         GatewayModelEntity entity = requireEntity(id);
+        if (!enabled) {
+            rejectDefaultRemoval(entity, "停用");
+        }
         entity.setStatus(enabled ? STATUS_ENABLED : STATUS_DISABLED);
         entity.setUpdateTime(LocalDateTime.now());
         gatewayModelMapper.updateById(entity);
@@ -363,6 +367,30 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
         entity.setStatus(StringUtils.hasText(dto.status()) ? dto.status().trim().toUpperCase() : STATUS_ENABLED);
         entity.setSortOrder(dto.sortOrder() == null ? 0 : dto.sortOrder());
         entity.setRemark(trimToNull(dto.remark()));
+    }
+
+    /**
+     * 默认模型不得直接删除或停用。
+     * <p>
+     * 运行时只按「对应类型的默认行」取模型（{@code AiChatTargetPort#defaultChatModel}、
+     * {@code AiEmbeddingTargetPort#defaultEmbeddingModel}）：默认行被删/被停用后，
+     * 对话会报「未配置默认对话模型」，知识库入库与问答会报「未配置默认向量模型」，
+     * 且 {@code /v1/models} 的 {@code default} 字段会消失，故在此前置拦截。
+     *
+     * @param entity 目标模型行
+     * @param action 操作名（删除 / 停用），用于提示文案
+     */
+    private void rejectDefaultRemoval(GatewayModelEntity entity, String action) {
+        if (!Boolean.TRUE.equals(entity.getIsDefault())) {
+            return;
+        }
+        boolean chat = TYPE_CHAT.equalsIgnoreCase(entity.getModelType());
+        String usage = chat
+                ? "平台对话、Agent 未绑定模型时的兜底以及 /v1 默认模型都来自它"
+                : "知识库入库与问答的向量化都依赖它，停用或删除后已入库文档无法再检索";
+        throw new BusinessException(400, "默认" + (chat ? "对话" : "向量") + "模型不可"
+                + action + "（" + entity.getModelId() + "）：" + usage
+                + "。请先将默认切到其他模型再" + action);
     }
 
     private void afterChange(GatewayModelEntity entity) {

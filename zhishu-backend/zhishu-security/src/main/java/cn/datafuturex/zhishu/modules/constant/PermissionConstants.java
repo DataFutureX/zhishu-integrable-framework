@@ -35,6 +35,8 @@ public final class PermissionConstants {
 
     public static final String SYSTEM_CONFIG_QUERY = "system:config:query";
     public static final String SYSTEM_CONFIG_EDIT = "system:config:edit";
+    /** 开放应用（AK/SK、调用范围）维护 */
+    public static final String SYSTEM_OPENAPI_EDIT = "system:openapi:edit";
 
     public static final String SYSTEM_UNIT_QUERY = "system:unit:query";
     public static final String SYSTEM_UNIT_ADD = "system:unit:add";
@@ -64,6 +66,10 @@ public final class PermissionConstants {
     public static final String AI_AGENT_REMOVE = "ai:agent:remove";
     public static final String AI_AGENT_GRAPH = "ai:agent:graph";
     public static final String AI_MCP_EDIT = "ai:mcp:edit";
+    public static final String AI_DOCUMENT_ADD = "ai:document:add";
+    public static final String AI_DOCUMENT_EDIT = "ai:document:edit";
+    public static final String AI_DOCUMENT_REMOVE = "ai:document:remove";
+    public static final String AI_CATEGORY_EDIT = "ai:category:edit";
     public static final String AI_KG_SYNC = "ai:kg:sync";
     public static final String AI_QA_QUERY = "ai:qa:query";
 

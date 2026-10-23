@@ -23,6 +23,7 @@ export const PERMISSIONS = {
 
   SYSTEM_CONFIG_QUERY: 'system:config:query',
   SYSTEM_CONFIG_EDIT: 'system:config:edit',
+  SYSTEM_OPENAPI_EDIT: 'system:openapi:edit',
 
   SYSTEM_MONITOR_QUERY: 'system:monitor:query',
   SYSTEM_OPERLOG_QUERY: 'system:operlog:query',
@@ -41,6 +42,10 @@ export const PERMISSIONS = {
   AI_AGENT_REMOVE: 'ai:agent:remove',
   AI_AGENT_GRAPH: 'ai:agent:graph',
   AI_MCP_EDIT: 'ai:mcp:edit',
+  AI_DOCUMENT_ADD: 'ai:document:add',
+  AI_DOCUMENT_EDIT: 'ai:document:edit',
+  AI_DOCUMENT_REMOVE: 'ai:document:remove',
+  AI_CATEGORY_EDIT: 'ai:category:edit',
   AI_KG_SYNC: 'ai:kg:sync',
   AI_QA_QUERY: 'ai:qa:query',
 

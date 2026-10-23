@@ -135,7 +135,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
           <h2><el-icon><Key /></el-icon> Open API 接入凭证管理</h2>
           <p class="section-header__desc">管理开放应用的 AK/SK 凭证与调用范围</p>
         </div>
-        <el-button type="primary" @click="openCreateDialog">
+        <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="primary" @click="openCreateDialog">
           <el-icon><Plus /></el-icon> 新增应用
         </el-button>
       </header>
@@ -177,7 +177,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
         </el-table-column>
         <el-table-column label="操作" width="380" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="openEditDialog(row as OpenAppVO)">
+            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="primary" link size="small" @click="openEditDialog(row as OpenAppVO)">
               编辑
             </el-button>
             <el-button type="primary" link size="small" @click="handleGenerateAkSk(row as OpenAppVO)">
@@ -185,6 +185,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             </el-button>
             <el-button
               v-if="row.accessKey"
+              v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
               type="warning"
               link
               size="small"
@@ -192,7 +193,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             >
               轮换 SK
             </el-button>
-            <el-button
+            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
               :type="row.status === 'ENABLED' ? 'danger' : 'success'"
               link
               size="small"
@@ -200,7 +201,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             >
               {{ row.status === 'ENABLED' ? '停用' : '启用' }}
             </el-button>
-            <el-button type="danger" link size="small" @click="handleDeleteApp(row as OpenAppVO)">
+            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="danger" link size="small" @click="handleDeleteApp(row as OpenAppVO)">
               移除
             </el-button>
           </template>
@@ -384,6 +385,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { PERMISSIONS } from '@/constants/permissions'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Connection,

@@ -12,6 +12,8 @@ import cn.datafuturex.zhishu.ai.kg.api.dto.KgSyncStatusVO;
 import cn.datafuturex.zhishu.ai.kg.api.dto.KgTopologySummary;
 import cn.datafuturex.zhishu.ai.kg.support.KgProjectAccess;
 import cn.datafuturex.zhishu.ai.shared.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
+import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -139,6 +141,7 @@ public class KgController {
     }
 
     @Operation(summary = "触发同步")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_KG_SYNC + "')")
     @PostMapping("/sync")
     public Result<KgSyncResult> sync(@RequestParam(defaultValue = "false") boolean full) {
         return Result.success(syncPort.sync(full));

@@ -1,6 +1,8 @@
 package cn.datafuturex.zhishu.ai.knowledge.controller;
 
 import cn.datafuturex.zhishu.ai.shared.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
+import org.springframework.security.access.prepost.PreAuthorize;
 import cn.datafuturex.zhishu.ai.knowledge.dto.KnowledgesCategoryCreateDTO;
 import cn.datafuturex.zhishu.ai.knowledge.dto.KnowledgesCategoryUpdateDTO;
 import cn.datafuturex.zhishu.ai.knowledge.vo.KnowledgesCategoryVO;
@@ -38,12 +40,14 @@ public class KnowledgesCategoryController {
         return Result.success(knowledgesCategoryService.getById(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_CATEGORY_EDIT + "')")
     @PostMapping
     @Operation(summary = "创建知识库分类")
     public Result<KnowledgesCategoryVO> create(@Valid @RequestBody KnowledgesCategoryCreateDTO dto) {
         return Result.success(knowledgesCategoryService.create(dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_CATEGORY_EDIT + "')")
     @PutMapping("/{id}")
     @Operation(summary = "更新知识库分类")
     public Result<KnowledgesCategoryVO> update(@PathVariable Long id,
@@ -51,6 +55,7 @@ public class KnowledgesCategoryController {
         return Result.success(knowledgesCategoryService.update(id, dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_CATEGORY_EDIT + "')")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除知识库分类")
     public Result<Void> delete(@PathVariable Long id) {

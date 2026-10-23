@@ -21,13 +21,13 @@
     <template #heroActions>
       <template v-if="inDocsView">
         <el-button size="small" :icon="ArrowLeft" @click="backToCatalog">返回知识库</el-button>
-        <el-button type="primary" size="small" :icon="Upload" @click="openUploadDialog">
+        <el-button v-permission="PERMISSIONS.AI_DOCUMENT_ADD" type="primary" size="small" :icon="Upload" @click="openUploadDialog">
           上传文档
         </el-button>
         <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
       </template>
       <template v-else>
-        <el-button type="primary" size="small" :icon="Plus" @click="openCreateCategory">新建知识库</el-button>
+        <el-button v-permission="PERMISSIONS.AI_CATEGORY_EDIT" type="primary" size="small" :icon="Plus" @click="openCreateCategory">新建知识库</el-button>
         <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
       </template>
     </template>
@@ -85,7 +85,7 @@
         :description="catalogKeyword || catalogStatus !== 'ALL' ? '没有匹配的知识库' : '暂无知识库，请先新建'"
         :image-size="88"
       >
-        <el-button v-if="!catalogKeyword && catalogStatus === 'ALL'" type="primary" :icon="Plus" @click="openCreateCategory">
+        <el-button v-if="!catalogKeyword && catalogStatus === 'ALL'" v-permission="PERMISSIONS.AI_CATEGORY_EDIT" type="primary" :icon="Plus" @click="openCreateCategory">
           新建知识库
         </el-button>
       </el-empty>
@@ -187,7 +187,7 @@
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" link size="small" @click="openDetail(row as DocumentVO)">查看</el-button>
-          <el-button
+          <el-button v-permission="PERMISSIONS.AI_DOCUMENT_EDIT"
             type="warning"
             link
             size="small"
@@ -196,7 +196,7 @@
           >
             重新处理
           </el-button>
-          <el-button type="danger" link size="small" @click="handleDelete(row as DocumentVO)">删除</el-button>
+          <el-button v-permission="PERMISSIONS.AI_DOCUMENT_REMOVE" type="danger" link size="small" @click="handleDelete(row as DocumentVO)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -412,6 +412,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'AIDocumentManage' })
 
+import { PERMISSIONS } from '@/constants/permissions'
 import { computed, reactive, ref } from 'vue'
 import {
   ElMessage,

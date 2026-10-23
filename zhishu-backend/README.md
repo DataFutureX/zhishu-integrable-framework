@@ -782,6 +782,10 @@ mvn clean compile -DskipTests
 # Windows: test-unit.bat  |  Linux/macOS: ./test-unit.sh
 mvn test
 
+# 只跑单个模块时必须带 -am，否则兄弟模块会取本地仓库里的旧包，
+# 出现「编译失败却被当成测试通过」的误判（已踩到过一次）：
+#   mvn -pl zhishu-ai -am test -Dtest=XxxTest -Dsurefire.failIfNoSpecifiedTests=false
+
 # 全量接口真实 HTTP 集成测试（需 PostgreSQL 测试库，见下文）
 # Windows: verify-api.bat
 mvn -pl zhishu-core -am verify

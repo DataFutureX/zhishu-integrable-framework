@@ -21,6 +21,8 @@ import cn.datafuturex.zhishu.ai.agent.service.AgentPromptDraftService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRunService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRuntimeService;
 import cn.datafuturex.zhishu.ai.shared.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
+import org.springframework.security.access.prepost.PreAuthorize;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.shared.sse.ChatSseSupport;
@@ -79,6 +81,7 @@ public class AgentController {
         return Result.success(agentDefinitionService.listWorkflowTemplates());
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_EDIT + "')")
     @PostMapping("/workflow-templates/{type}/compile")
     @Operation(summary = "将预设模板编译为 Graph JSON")
     public Result<WorkflowGraph> compileTemplate(
@@ -93,6 +96,7 @@ public class AgentController {
         return Result.success(agentEngineSelector.health());
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_EDIT + "')")
     @PostMapping("/system-prompt-draft")
     @Operation(summary = "根据表单字段生成系统提示词初稿")
     public Result<AgentPromptDraftVO> systemPromptDraft(@Valid @RequestBody AgentPromptDraftDTO dto) {
@@ -105,18 +109,21 @@ public class AgentController {
         return Result.success(agentDefinitionService.get(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_ADD + "')")
     @PostMapping
     @Operation(summary = "创建智能体")
     public Result<AgentVO> create(@Valid @RequestBody AgentCreateDTO dto) {
         return Result.success(agentDefinitionService.create(dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_EDIT + "')")
     @PutMapping("/{id}")
     @Operation(summary = "更新智能体")
     public Result<AgentVO> update(@PathVariable Long id, @Valid @RequestBody AgentUpdateDTO dto) {
         return Result.success(agentDefinitionService.update(id, dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_REMOVE + "')")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除智能体")
     public Result<Void> delete(@PathVariable Long id) {
@@ -124,6 +131,7 @@ public class AgentController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_EDIT + "')")
     @PutMapping("/{id}/default")
     @Operation(summary = "设为默认智能体")
     public Result<Void> setDefault(@PathVariable Long id) {
@@ -137,12 +145,14 @@ public class AgentController {
         return Result.success(agentGraphService.getGraph(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_GRAPH + "')")
     @PutMapping("/{id}/graph")
     @Operation(summary = "保存 Graph（workflow_type=GRAPH）")
     public Result<WorkflowGraph> saveGraph(@PathVariable Long id, @Valid @RequestBody GraphSaveDTO dto) {
         return Result.success(agentGraphService.saveGraph(id, dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_GRAPH + "')")
     @PostMapping("/{id}/graph/validate")
     @Operation(summary = "校验 Graph 结构")
     public Result<GraphValidationResult> validateGraph(
@@ -160,6 +170,7 @@ public class AgentController {
         return Result.success(list);
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_QUERY + "')")
     @PostMapping("/{id}/trial")
     @Operation(summary = "试运行（支持多轮 conversationId）")
     public Result<ChatResponseVO> trial(@PathVariable Long id, @Valid @RequestBody AgentTrialDTO dto) {
@@ -167,6 +178,7 @@ public class AgentController {
                 id, dto.message(), dto.enableRag(), dto.conversationId(), dto.enableMemory()));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_AGENT_QUERY + "')")
     @PostMapping(value = "/{id}/trial/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "试运行流式（SSE：progress|trace|message|done；无 Tools 阶段为 token 真流式）")
     public Flux<ServerSentEvent<String>> trialStream(

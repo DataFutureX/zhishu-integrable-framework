@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import cn.datafuturex.zhishu.ai.shared.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
+import org.springframework.security.access.prepost.PreAuthorize;
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentUploadDTO;
 import cn.datafuturex.zhishu.ai.knowledge.vo.DocumentVO;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentManagementService;
@@ -29,6 +31,7 @@ public class DocumentController {
 
     private final DocumentManagementService documentManagementService;
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_DOCUMENT_ADD + "')")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "上传文档", description = "上传文档到指定知识库分类，自动解析、切片并向量化")
     public Result<DocumentVO> uploadDocument(
@@ -59,6 +62,7 @@ public class DocumentController {
         return Result.success(documentManagementService.getDocumentById(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_DOCUMENT_EDIT + "')")
     @PutMapping("/{id}/category")
     @Operation(summary = "调整文档所属知识库")
     public Result<DocumentVO> updateCategory(
@@ -68,6 +72,7 @@ public class DocumentController {
         return Result.success(documentManagementService.updateDocumentCategory(id, categoryId));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_DOCUMENT_REMOVE + "')")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除文档")
     public Result<Void> deleteDocument(
@@ -76,6 +81,7 @@ public class DocumentController {
         return Result.success(null);
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_DOCUMENT_EDIT + "')")
     @PostMapping("/{id}/reprocess")
     @Operation(summary = "重新处理文档")
     public Result<DocumentVO> reprocessDocument(

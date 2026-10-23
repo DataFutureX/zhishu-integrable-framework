@@ -18,6 +18,8 @@ import cn.datafuturex.zhishu.ai.mcp.service.McpClientAdminService;
 import cn.datafuturex.zhishu.ai.mcp.service.McpUpstreamAdminService;
 import cn.datafuturex.zhishu.ai.mcp.support.McpOutboundCatalog;
 import cn.datafuturex.zhishu.ai.shared.Result;
+import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
+import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -79,24 +81,28 @@ public class McpHubController {
         return Result.success(clientAdminService.list());
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PostMapping("/clients")
     @Operation(summary = "创建对外 MCP Client（apiKey 仅返回一次）")
     public Result<McpClientVO> createClient(@Valid @RequestBody McpClientCreateDTO dto) {
         return Result.success(clientAdminService.create(dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PutMapping("/clients/{id}")
     @Operation(summary = "更新对外 MCP Client")
     public Result<McpClientVO> updateClient(@PathVariable Long id, @Valid @RequestBody McpClientUpdateDTO dto) {
         return Result.success(clientAdminService.update(id, dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PostMapping("/clients/{id}/rotate-key")
     @Operation(summary = "轮换 API Key")
     public Result<McpClientVO> rotateKey(@PathVariable Long id) {
         return Result.success(clientAdminService.rotateKey(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @DeleteMapping("/clients/{id}")
     @Operation(summary = "删除对外 MCP Client")
     public Result<Void> deleteClient(@PathVariable Long id) {
@@ -110,18 +116,21 @@ public class McpHubController {
         return Result.success(upstreamAdminService.list());
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PostMapping("/upstreams")
     @Operation(summary = "登记他方 MCP")
     public Result<McpUpstreamVO> createUpstream(@Valid @RequestBody McpUpstreamUpsertDTO dto) {
         return Result.success(upstreamAdminService.create(dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PutMapping("/upstreams/{id}")
     @Operation(summary = "更新他方 MCP")
     public Result<McpUpstreamVO> updateUpstream(@PathVariable Long id, @Valid @RequestBody McpUpstreamUpsertDTO dto) {
         return Result.success(upstreamAdminService.update(id, dto));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @DeleteMapping("/upstreams/{id}")
     @Operation(summary = "删除他方 MCP")
     public Result<Void> deleteUpstream(@PathVariable Long id) {
@@ -129,6 +138,7 @@ public class McpHubController {
         return Result.success();
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PostMapping("/upstreams/{id}/probe")
     @Operation(summary = "探活并刷新 tools/list")
     public Result<McpUpstreamVO> probe(@PathVariable Long id) {
@@ -141,6 +151,7 @@ public class McpHubController {
         return Result.success(upstreamAdminService.listTools(id));
     }
 
+    @PreAuthorize("hasAuthority('" + PermissionConstants.AI_MCP_EDIT + "')")
     @PutMapping("/upstreams/{id}/tools")
     @Operation(summary = "启用或停用上游 Tool")
     public Result<McpUpstreamToolVO> patchUpstreamTool(

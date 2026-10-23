@@ -19,8 +19,7 @@ import java.util.List;
  * <p>
  * 执行顺序：
  * <ol>
- *   <li>{@code db/init_gateway.sql}（新库建全量结构）</li>
- *   <li>{@code db/gateway_schema.sql}（幂等、非破坏：补 模型表 v2 列与索引）</li>
+ *   <li>{@code db/init_gateway.sql}（唯一权威脚本：建全量表结构 + 非破坏性结构对齐）</li>
  *   <li>校验必需列；仍缺失则标记网关不可用并给出可操作提示（不阻断应用启动）</li>
  * </ol>
  * 历史库的数据下沉与旧列清理不在此自动执行，需手工跑
@@ -49,8 +48,6 @@ public class GatewaySchemaInitializer implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         runScript("db/init_gateway.sql");
-        // 结构对齐（仅非破坏性变更）
-        runScript("db/gateway_schema.sql");
 
         List<String> missing = REQUIRED_COLUMNS.stream().filter(col -> !columnExists(col)).toList();
         if (missing.isEmpty()) {
@@ -58,7 +55,7 @@ public class GatewaySchemaInitializer implements ApplicationRunner {
             return;
         }
         readiness.markNotReady("表 " + TABLE + " 缺少必需列 " + missing
-                + "；请确认 db/gateway_schema.sql 执行成功（若库仍持有供应商历史列，请先手工执行 patch_provider_model_split.sql）");
+                + "；请确认 db/init_gateway.sql 执行成功（若库仍持有供应商历史列，请先手工执行 archive/patch_provider_model_split.sql）");
     }
 
     private void runScript(String path) {

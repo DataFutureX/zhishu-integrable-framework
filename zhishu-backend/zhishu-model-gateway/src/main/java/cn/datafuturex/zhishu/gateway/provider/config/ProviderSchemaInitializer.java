@@ -7,23 +7,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.sql.DataSource;
-
 /**
- * 建表与旧数据引导（模型网关侧）。
- * <ol>
- *   <li>幂等执行 {@code db/V_add_model_provider.sql}</li>
- *   <li>供应商表为空时，从 {@code spring.ai.openai.*} 引导一条默认供应商（Key 加密入库）</li>
- * </ol>
- * 必须在 {@link cn.datafuturex.zhishu.gateway.config.GatewaySchemaInitializer}（Order 17）之前执行，
- * 后者会把供应商上的历史模型字段下沉为 {@code ai_gateway_model} 模型行。
+ * 默认供应商引导（模型网关侧）。
+ * <p>
+ * 表结构由 {@link cn.datafuturex.zhishu.gateway.config.GatewaySchemaInitializer}（Order 17）
+ * 统一执行 {@code db/init_gateway.sql} 负责；本类只做一件事：
+ * 供应商表为空时，从 {@code spring.ai.openai.*} 引导一条默认供应商（Key 加密入库）。
  * <p>
  * 这里只用 JdbcTemplate 读写，不依赖 ai 模块的内部实体，保持模块方向 gateway → ai。
  */
@@ -33,7 +27,6 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 public class ProviderSchemaInitializer implements ApplicationRunner {
 
-    private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
     private final ModelConfigProperties modelConfigProperties;
 
@@ -50,17 +43,6 @@ public class ProviderSchemaInitializer implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments args) {
-        try {
-            ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-            populator.setContinueOnError(true);
-            populator.setSeparator(";");
-            populator.addScript(new ClassPathResource("db/V_add_model_provider.sql"));
-            populator.execute(dataSource);
-            log.info("已执行供应商建表与补丁脚本");
-        } catch (Exception e) {
-            log.warn("供应商脚本执行跳过或失败: {}", e.getMessage());
-        }
-
         bootstrapDefaultProvider();
     }
 

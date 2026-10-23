@@ -11,7 +11,7 @@ import cn.datafuturex.zhishu.ai.mcp.domain.vo.McpUpstreamVO;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiAgentMcpUpstreamMapper;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamMapper;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamToolMapper;
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
 import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiAgentMcpUpstreamEntity;
@@ -138,7 +138,7 @@ public class McpUpstreamAdminService {
         entity.setBaseUrl(trimSlash(dto.baseUrl()));
         entity.setEndpoint(StringUtils.hasText(dto.endpoint()) ? dto.endpoint().trim() : "/mcp");
         if (creating || StringUtils.hasText(dto.authHeader())) {
-            entity.setAuthHeaderEnc(McpCrypto.encrypt(blankToNull(dto.authHeader()), properties.getCryptoKey()));
+            entity.setAuthHeaderEnc(CredentialCrypto.encrypt(blankToNull(dto.authHeader()), properties.getCryptoKey()));
         }
         entity.setRequestTimeoutMs(dto.requestTimeoutMs() == null ? 20_000 : dto.requestTimeoutMs());
         entity.setStatus(StringUtils.hasText(dto.status()) ? dto.status().trim().toUpperCase() : "ENABLED");

@@ -1,9 +1,9 @@
 package cn.datafuturex.zhishu.ai.gatewayclient;
 
 import cn.datafuturex.zhishu.ai.gatewayclient.config.GatewayInternalProperties;
-import cn.datafuturex.zhishu.ai.modelconfig.api.AiChatTargetPort;
-import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.RefreshableOpenAiModels;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AiChatTargetPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.GatewayChannels;
+import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import com.github.benmanes.caffeine.cache.Cache;

@@ -3,6 +3,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "Agent",
-        allowedDependencies = {"shared", "knowledge :: api", "biztools :: api", "modelconfig :: api"}
+        allowedDependencies = {"shared", "knowledge :: api", "biztools :: api", "gatewayclient :: api", "gatewayclient"}
 )
 package cn.datafuturex.zhishu.ai.agent;

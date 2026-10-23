@@ -8,7 +8,8 @@
                 "agent :: api",
                 "knowledge :: api",
                 "biztools :: api",
-                "modelconfig :: api"
+                "gatewayclient :: api",
+                "gatewayclient"
         }
 )
 package cn.datafuturex.zhishu.ai.chat;

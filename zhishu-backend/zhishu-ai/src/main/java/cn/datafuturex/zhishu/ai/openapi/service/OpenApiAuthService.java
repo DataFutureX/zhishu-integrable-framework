@@ -2,8 +2,8 @@ package cn.datafuturex.zhishu.ai.openapi.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
-import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.ai.openapi.domain.entity.OpenAppEntity;
 import cn.datafuturex.zhishu.ai.openapi.mapper.OpenAppMapper;
 import cn.datafuturex.zhishu.ai.openapi.support.OpenApiCrypto;
@@ -64,7 +64,7 @@ public class OpenApiAuthService {
         }
         String sk;
         try {
-            sk = McpCrypto.decrypt(app.getSecretKeyEnc(), modelConfigProperties.getCryptoKey());
+            sk = CredentialCrypto.decrypt(app.getSecretKeyEnc(), modelConfigProperties.getCryptoKey());
         } catch (Exception e) {
             throw new OpenApiAuthException(500, "服务端解密失败");
         }

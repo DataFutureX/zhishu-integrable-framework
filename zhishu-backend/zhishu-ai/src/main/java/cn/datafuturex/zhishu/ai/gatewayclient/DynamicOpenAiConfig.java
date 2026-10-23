@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.gatewayclient;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.AiChatTargetPort;
-import cn.datafuturex.zhishu.ai.modelconfig.api.AiEmbeddingTargetPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AiChatTargetPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AiEmbeddingTargetPort;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;

@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.ai.mcp.support;
+package cn.datafuturex.zhishu.ai.shared.crypto;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -9,11 +9,21 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-public final class McpCrypto {
+/**
+ * 凭证加解密与摘要工具（AES-256-GCM，密钥取配置值的 SHA-256）。
+ * <p>
+ * 原位于 {@code ai.mcp.support}，但实际使用方已跨三域（MCP 上游凭证、开放应用 AK/SK、
+ * 模型网关供应商 API Key），故下沉到 {@code ai.shared.crypto}：shared 为 OPEN 模块，
+ * 兄弟模块与跳 Maven 模块（zhishu-model-gateway）均可合法引用。
+ * <p>
+ * 存储约定：{@code enc:Base64(iv[12] + cipherText+tag)}；无 {@code enc:} 前缀的值视为明文原样返回。
+ * 更换 {@code zhishu.ai.crypto-key} 会使存量密文无法解出（抛「解密失败」）。
+ */
+public final class CredentialCrypto {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private McpCrypto() {
+    private CredentialCrypto() {
     }
 
     public static String sha256Hex(String raw) {
@@ -68,7 +78,7 @@ public final class McpCrypto {
             return stored;
         }
         if (cryptoKey == null || cryptoKey.isBlank()) {
-            throw new IllegalStateException("已加密上游凭证，但未配置 wanxiang.mcp.crypto-key");
+            throw new IllegalStateException("已加密上游凭证，但未配置解密密钥（zhishu.ai.crypto-key 或 wanxiang.mcp.crypto-key）");
         }
         try {
             byte[] packed = Base64.getDecoder().decode(stored.substring(4));

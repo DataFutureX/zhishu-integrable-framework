@@ -5,4 +5,4 @@
  * 避免解密与参数拼装分叉。
  */
 @org.springframework.modulith.NamedInterface("api")
-package cn.datafuturex.zhishu.ai.modelconfig.runtime;
+package cn.datafuturex.zhishu.ai.gatewayclient.runtime;

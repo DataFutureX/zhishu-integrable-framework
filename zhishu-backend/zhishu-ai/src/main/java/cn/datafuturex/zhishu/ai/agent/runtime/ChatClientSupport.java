@@ -4,7 +4,7 @@ import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentTimeContext;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
-import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.GatewayChannels;
 import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import lombok.RequiredArgsConstructor;

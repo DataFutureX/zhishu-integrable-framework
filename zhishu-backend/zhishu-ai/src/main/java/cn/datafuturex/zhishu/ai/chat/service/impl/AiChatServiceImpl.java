@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.chat.service.impl;
 
 import cn.datafuturex.zhishu.ai.agent.api.AgentChatPort;
-import cn.datafuturex.zhishu.ai.agent.runtime.ChatClientSupport;
+import cn.datafuturex.zhishu.ai.agent.api.AgentChatClientFactory;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import cn.datafuturex.zhishu.ai.shared.dto.ChatRequestDTO;
 import cn.datafuturex.zhishu.ai.shared.dto.ChatStructuredRequestDTO;
@@ -54,7 +54,7 @@ public class AiChatServiceImpl implements AiChatService {
     private final TerminalOverviewPort terminalOverviewPort;
     private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final AgentChatPort agentChatPort;
-    private final ChatClientSupport chatClientSupport;
+    private final AgentChatClientFactory agentChatClientFactory;
 
     @Override
     public ChatResponseVO chat(ChatRequestDTO request) {
@@ -286,7 +286,7 @@ public class AiChatServiceImpl implements AiChatService {
     private ChatClient buildCapabilityScopedClient(
             long agentId, String systemHint, int maxTokens, Double temperature) {
         List<String> capabilities = agentChatPort.resolveCapabilities(agentId);
-        List<ToolCallback> tools = chatClientSupport.resolveTools(capabilities, null, null, agentId);
+        List<ToolCallback> tools = agentChatClientFactory.resolveTools(capabilities, agentId);
         var builder = OpenAiChatOptions.builder().model(gatewayChatModelRegistry.resolveModelId(null));
         builder.maxTokens(maxTokens);
         if (temperature != null) {
@@ -294,7 +294,7 @@ public class AiChatServiceImpl implements AiChatService {
         }
         log.info("结构化对话按能力装配 agentId={}, caps={}, tools={}",
                 agentId, capabilities, tools.size());
-        return chatClientSupport.buildClient(systemHint, tools, builder.build(), true);
+        return agentChatClientFactory.buildClient(systemHint, tools, builder.build(), true);
     }
 
     private ChatResponseVO buildOnlineStatusResponse(String conversationId) {

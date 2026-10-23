@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.provider.service.impl;
 
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelProviderPort;
-import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.domain.ModelProviderEntity;
@@ -90,7 +90,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
         entity.setUpdateTime(LocalDateTime.now());
         if (StringUtils.hasText(dto.apiKey())) {
             String plain = sanitizeApiKey(dto.apiKey());
-            entity.setApiKeyEnc(McpCrypto.encrypt(plain, wrapKey()));
+            entity.setApiKeyEnc(CredentialCrypto.encrypt(plain, wrapKey()));
             entity.setApiKeyMasked(maskApiKey(plain));
         }
         if (Boolean.TRUE.equals(entity.getIsDefault())) {
@@ -127,7 +127,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
         entity.setUpdateTime(LocalDateTime.now());
         if (shouldUpdateApiKey(dto.apiKey())) {
             String plain = sanitizeApiKey(dto.apiKey());
-            entity.setApiKeyEnc(McpCrypto.encrypt(plain, wrapKey()));
+            entity.setApiKeyEnc(CredentialCrypto.encrypt(plain, wrapKey()));
             entity.setApiKeyMasked(maskApiKey(plain));
         }
         modelProviderMapper.updateById(entity);
@@ -339,7 +339,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
 
     private String resolveApiKey(ModelProviderEntity entity) {
         if (StringUtils.hasText(entity.getApiKeyEnc())) {
-            return McpCrypto.decrypt(entity.getApiKeyEnc(), wrapKey());
+            return CredentialCrypto.decrypt(entity.getApiKeyEnc(), wrapKey());
         }
         return null;
     }

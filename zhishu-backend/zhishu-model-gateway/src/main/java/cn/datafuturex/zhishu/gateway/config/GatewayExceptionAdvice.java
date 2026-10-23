@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * 网关协议面异常处理器：{@code /v1} 控制器统一返回 OpenAI 错误体。
  * <p>
- * 只作用于 {@code cn.datafuturex.zhishu.gateway.controller}（对外协议面），
+ * 只作用于 {@code cn.datafuturex.zhishu.gateway.api}（对外协议面），
  * 管理面控制器走平台既有 {@code Result} 处理器；通过最高优先级确保不被全局处理器覆盖。
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice(basePackages = "cn.datafuturex.zhishu.gateway.controller")
+@RestControllerAdvice(basePackages = "cn.datafuturex.zhishu.gateway.api")
 public class GatewayExceptionAdvice {
 
     /**

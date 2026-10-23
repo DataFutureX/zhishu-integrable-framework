@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpClientEntity;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpClientMapper;
 import cn.datafuturex.zhishu.ai.mcp.support.McpCallerContext;
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.ai.mcp.support.McpJson;
 import cn.datafuturex.zhishu.ai.mcp.support.McpOutboundCatalog;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
@@ -27,7 +27,7 @@ public class McpAuthService {
         if (!StringUtils.hasText(bearerToken) || !bearerToken.startsWith("wxmcp_")) {
             return false;
         }
-        String prefix = McpCrypto.keyPrefix(bearerToken);
+        String prefix = CredentialCrypto.keyPrefix(bearerToken);
         AiMcpClientEntity entity = clientMapper.selectOne(
                 new LambdaQueryWrapper<AiMcpClientEntity>()
                         .eq(AiMcpClientEntity::getKeyPrefix, prefix)
@@ -35,7 +35,7 @@ public class McpAuthService {
         if (entity == null || !"ENABLED".equalsIgnoreCase(entity.getStatus())) {
             return false;
         }
-        if (!McpCrypto.sha256Hex(bearerToken).equalsIgnoreCase(entity.getSecretHash())) {
+        if (!CredentialCrypto.sha256Hex(bearerToken).equalsIgnoreCase(entity.getSecretHash())) {
             return false;
         }
         Set<String> tools = allowedTools(McpJson.parseStringList(entity.getCapabilities()));

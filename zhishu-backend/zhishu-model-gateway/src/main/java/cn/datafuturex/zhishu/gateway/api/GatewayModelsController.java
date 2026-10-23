@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.gateway.controller;
+package cn.datafuturex.zhishu.gateway.api;
 
 import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelView;

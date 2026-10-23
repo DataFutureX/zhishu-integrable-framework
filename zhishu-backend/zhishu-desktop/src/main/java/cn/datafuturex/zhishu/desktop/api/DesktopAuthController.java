@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.desktop.controller;
+package cn.datafuturex.zhishu.desktop.api;
 
 import cn.datafuturex.zhishu.api.spi.AuthAuditApi;
 import cn.datafuturex.zhishu.common.ClientIpUtils;

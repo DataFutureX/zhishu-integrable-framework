@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.provider.service.impl;
 
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.gateway.provider.domain.ModelProviderEntity;
 import cn.datafuturex.zhishu.gateway.provider.mapper.ModelProviderMapper;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +65,7 @@ public class ModelUpstreamServiceImpl implements ModelUpstreamPort {
     private String resolveApiKey(ModelProviderEntity entity) {
         if (StringUtils.hasText(entity.getApiKeyEnc())) {
             String wrapKey = modelConfigProperties.getCryptoKey();
-            return McpCrypto.decrypt(entity.getApiKeyEnc(),
+            return CredentialCrypto.decrypt(entity.getApiKeyEnc(),
                     StringUtils.hasText(wrapKey) ? wrapKey : "zhishu-dev-model-key-wrap");
         }
         return StringUtils.hasText(envApiKey) ? envApiKey.trim() : null;

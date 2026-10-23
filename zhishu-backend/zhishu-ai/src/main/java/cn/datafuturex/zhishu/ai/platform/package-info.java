@@ -4,6 +4,6 @@
 @org.springframework.modulith.ApplicationModule(
         type = org.springframework.modulith.ApplicationModule.Type.OPEN,
         displayName = "Platform",
-        allowedDependencies = {"biztools :: api", "shared"}
+        allowedDependencies = {"biztools :: api", "shared", "gatewayclient :: api"}
 )
 package cn.datafuturex.zhishu.ai.platform;

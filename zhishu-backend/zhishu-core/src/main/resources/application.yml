@@ -191,16 +191,9 @@ zhishu:
     auth-key: ${ZHISHU_DESKTOP_AUTH_KEY:}     # 生产环境必须配置，空 = 不鉴权（开发模式）
     auth-header: X-Desktop-Key
     api-version: 1.0.0
-  briefing:
-    event-scan:
-      enabled: false
-    mail:
-      jdbc-enabled: false
-    webhook:
-      # 仅知枢内部简报可选外推，默认关闭。外部简报请自行调度并调用 /open/v1/chat
-      enabled: ${ZHISHU_BRIEFING_WEBHOOK_ENABLED:false}
-      url: ${ZHISHU_BRIEFING_WEBHOOK_URL:http://127.0.0.1:8180/api/v1/internal/briefings/notify}
-      api-key: ${ZHISHU_BRIEFING_WEBHOOK_KEY:dev-briefing-webhook-key}
+  # 简报（briefing）已跳出平台：由外部自行调度并调用 /open/v1/chat，
+  # 原 zhishu.briefing.* 配置与 /api/v1/internal/briefings/notify 端点均无代码绑定，已移除；
+  # 历史投递表 ai_briefing_delivery / ai_briefing_schedule 的退役见 db/patch_retire_briefing.sql（需人工执行）。
   gateway:
     # 统一模型网关（OpenAI 兼容 /v1），桌面端与平台内部共用
     enabled: ${ZHISHU_GATEWAY_ENABLED:true}

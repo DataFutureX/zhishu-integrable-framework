@@ -7,7 +7,7 @@ import cn.datafuturex.zhishu.ai.mcp.domain.dto.McpClientUpdateDTO;
 import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpClientEntity;
 import cn.datafuturex.zhishu.ai.mcp.domain.vo.McpClientVO;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpClientMapper;
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.ai.mcp.support.McpJson;
 import cn.datafuturex.zhishu.ai.mcp.support.McpOutboundCatalog;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
@@ -37,11 +37,11 @@ public class McpClientAdminService {
 
     @Transactional
     public McpClientVO create(McpClientCreateDTO dto) {
-        String apiKey = McpCrypto.newApiKey();
+        String apiKey = CredentialCrypto.newApiKey();
         AiMcpClientEntity entity = new AiMcpClientEntity();
         entity.setName(dto.name().trim());
-        entity.setKeyPrefix(McpCrypto.keyPrefix(apiKey));
-        entity.setSecretHash(McpCrypto.sha256Hex(apiKey));
+        entity.setKeyPrefix(CredentialCrypto.keyPrefix(apiKey));
+        entity.setSecretHash(CredentialCrypto.sha256Hex(apiKey));
         entity.setBoundUserId(dto.boundUserId());
         entity.setBoundUsername(dto.boundUsername());
         entity.setCapabilities(McpJson.toJson(
@@ -76,9 +76,9 @@ public class McpClientAdminService {
     @Transactional
     public McpClientVO rotateKey(Long id) {
         AiMcpClientEntity entity = require(id);
-        String apiKey = McpCrypto.newApiKey();
-        entity.setKeyPrefix(McpCrypto.keyPrefix(apiKey));
-        entity.setSecretHash(McpCrypto.sha256Hex(apiKey));
+        String apiKey = CredentialCrypto.newApiKey();
+        entity.setKeyPrefix(CredentialCrypto.keyPrefix(apiKey));
+        entity.setSecretHash(CredentialCrypto.sha256Hex(apiKey));
         entity.setUpdateTime(LocalDateTime.now());
         clientMapper.updateById(entity);
         return toVo(entity, apiKey);

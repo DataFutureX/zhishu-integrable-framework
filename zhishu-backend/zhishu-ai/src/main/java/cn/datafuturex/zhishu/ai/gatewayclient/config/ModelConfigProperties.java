@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.ai.modelconfig.config;
+package cn.datafuturex.zhishu.ai.gatewayclient.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

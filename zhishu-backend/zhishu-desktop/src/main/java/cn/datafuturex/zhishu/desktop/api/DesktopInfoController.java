@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.desktop.controller;
+package cn.datafuturex.zhishu.desktop.api;
 
 import cn.datafuturex.zhishu.desktop.config.DesktopApiProperties;
 import cn.datafuturex.zhishu.desktop.dto.DesktopInfoDTO;

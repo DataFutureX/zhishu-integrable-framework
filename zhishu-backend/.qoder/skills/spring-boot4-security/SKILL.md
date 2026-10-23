@@ -45,7 +45,7 @@ zhishu-core（唯一启动壳）
 - `zhishu-api`：`cn.datafuturex.zhishu.api`，只放跨模块 SPI（如 `AuthAuditApi`、`LoginSecuritySettingsApi`）与纯 DTO（record）。
 - `zhishu-security`：`captcha`、`common`（Result/PageResult/GlobalExceptionHandler/SecurityUtils）、`config/security`、`modules`（controller/dto/entity/mapper/service/vo/constant）、`security`（登录加密、Token 黑名单）、`security.sso`。
 - `zhishu-biz`：公告 `announcement`、操作日志 `operationlog`、系统配置 `systemconfig`、系统监控 `systemmonitor`；每个业务域目录含 `package-info.java` + `@ApplicationModule`，并按 controller/dto/entity/mapper/service(+impl)/vo 分层；SPI 实现在域的 `spi` 子包。
-- `zhishu-ai`：`agent`、`briefing`、`chat`、`knowledge`、`kg`、`mcp`（Hub）、`modelconfig`、`openapi`、`biztools`、`shared`、`platform`、`config`；与 core 同进程启动，不单独占端口。
+- `zhishu-ai`：`agent`、`chat`、`knowledge`、`kg`、`mcp`（Hub）、`gatewayclient`（模型接入层，原 `modelconfig` 已并入）、`openapi`、`biztools`、`shared`、`platform`；与 core 同进程启动，不单独占端口。模块边界由 `AiModulithStructureTest`（`ApplicationModules.verify()`）校验，新增跨模块依赖时必须同步 `allowedDependencies`。
 - `zhishu-mcp`：`config`/`security`/`tool`，独立 Spring AI MCP Server 模块，对外暴露 `/mcp`；不要与 zhishu-ai 旧 MCP Server 装配重复注册同一端点（改动前先确认启用链路）。
 - `zhishu-core`：`YqapApplication` 与基础设施装配（数据源、MyBatis-Plus、OpenAPI、异步、调度、静态资源、`common/logging`）。
 - `zhishu-test-support`：仅测试依赖，不进入运行时类路径。

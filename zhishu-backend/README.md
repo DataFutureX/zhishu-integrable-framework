@@ -193,7 +193,7 @@ flowchart TB
 | **zhishu-api** | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），切断 security ↔ biz 循环依赖 |
 | **zhishu-security** | 认证鉴权、用户/角色/菜单/单位、JWT、滑动验证码、登录 RSA 加密、伙伴 SSO、公共 `Result` |
 | **zhishu-biz** | 公告（含 SSE）、操作日志、系统配置、系统监控；Spring Modulith 应用模块 |
-| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API；与 core **同进程**（`modelconfig` 只留跨模块契约：推理目标端口与共享构建器） |
+| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API；与 core **同进程**（`gatewayclient` 为模型接入层：推理目标端口、通道常量与共享构建器） |
 | **zhishu-model-gateway** | 模型网关：`/v1` 协议面（目录/补全/额度）、额度计量与台账、**供应商与模型的业务实现**（`provider/` 包：`ModelProviderEntity`/Mapper/Registry/CRUD/上游解析 + 建表引导）、管理面 REST；依赖 security（JWT/用户）与 ai 的端口 |
 | **zhishu-core** | `YqapApplication` 启动壳：数据源、MyBatis-Plus、OpenAPI UI、异步/调度、静态资源、配置 |
 | **zhishu-test-support** | 集成测试夹具（不进入运行时类路径） |
@@ -277,7 +277,7 @@ flowchart TB
     Know["Knowledge RAG"]
     KG["KG Neo4j"]
     MCP["MCP Hub"]
-    Model["ModelConfig 端口"]
+    Model["GatewayClient 模型接入层"]
   end
 
   Entry --> Runtime
@@ -293,7 +293,7 @@ flowchart TB
 | Knowledge | `ai.knowledge` | 文档入库、向量化、Hybrid 检索、文档问答 |
 | KnowledgeGraph | `ai.kg` | Neo4j 同步 / 查询 / 可视化；开放写入 `/open/v1/kg` |
 | Mcp | `ai.mcp` | 对外 Streamable HTTP Server + 上游 Client + Hub 管理与审计 |
-| ModelConfig | `ai.modelconfig` | 跨模块契约：`AiChatTargetPort` / `AiEmbeddingTargetPort` 端口、`ModelConfigProperties`（`zhishu.ai.*`）与 `RefreshableOpenAiModels` 构建器；供应商与模型契约已下沉到 `zhishu-model-gateway` |
+| GatewayClient | `ai.gatewayclient` | 模型接入层（原 `ai.modelconfig` 已并入）：`api` 子包放跨模块端口（推理目标端口、`AgentModelUsagePort`、`GatewayChannels`），`runtime` 放 OpenAI 兼容构建器，`config` 放 `ModelConfigProperties` / `GatewayInternalProperties`；供应商与模型契约在 `zhishu-model-gateway` |
 | OpenAPI | `ai.openapi` | `/open/v1` 控制器、AK/SK 鉴权、开放应用管理 |
 | BizTools | `ai.biztools` | 监测 Tool 端口，当前空实现 |
 | Platform / Shared | `ai.platform` / `ai.shared` | OPEN 模块：Web 装配与共享类型 |
@@ -613,17 +613,16 @@ zhishu-integrable-framework/
     ├── zhishu-ai/
     │   └── .../ai/
     │       ├── agent/ · chat/ · knowledge/ · kg/
-    │       ├── mcp/ · modelconfig/ · openapi/ · biztools/
-    │       │                             #   modelconfig 仅保留跨模块契约：推理目标端口 + 密钥配置 + OpenAI 构建器
+    │       ├── mcp/ · openapi/ · biztools/
     │       ├── platform/ · shared/
-    │       └── gatewayclient/          # 经网关调用的 ChatModel 客户端 + 运行时 Bean 装配
+    │       └── gatewayclient/          # 模型接入层：端口与通道常量 + OpenAI 构建器 + 经网关调用的客户端与 Bean 装配
     ├── zhishu-model-gateway/            # 模型网关（/v1 协议面 + 管理面）
     │   └── .../gateway/
     │       ├── auth/ · compat/ · catalog/
     │       ├── quota/ · usage/ · upstream/
     │       ├── chat/ · embedding/ · admin/
     │       ├── provider/                 # 供应商：api 端口/dto/vo + 实体/Mapper/运行时缓存/CRUD/建表引导
-    │       └── controller/ · config/
+    │       └── api/ · config/            #   api = 对外 `/v1` 协议面（与 admin/controller 的管理面区分）
     ├── zhishu-core/
     │   └── src/main/
     │       ├── java/.../YqapApplication.java

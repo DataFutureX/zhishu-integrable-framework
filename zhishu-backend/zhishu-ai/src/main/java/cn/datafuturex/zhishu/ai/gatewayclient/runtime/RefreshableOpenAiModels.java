@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.ai.modelconfig.runtime;
+package cn.datafuturex.zhishu.ai.gatewayclient.runtime;
 
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import com.openai.client.OpenAIClient;

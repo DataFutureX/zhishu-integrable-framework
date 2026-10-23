@@ -1,6 +1,6 @@
-package cn.datafuturex.zhishu.gateway.controller;
+package cn.datafuturex.zhishu.gateway.api;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.GatewayChannels;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.GatewayChannels;
 import cn.datafuturex.zhishu.gateway.auth.GatewayAuthFilter;
 import cn.datafuturex.zhishu.gateway.auth.GatewayPrincipal;
 import cn.datafuturex.zhishu.gateway.chat.GatewayChatService;

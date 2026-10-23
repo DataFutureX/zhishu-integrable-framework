@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.gateway.provider.config;
 
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
-import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -85,7 +85,7 @@ public class ProviderSchemaInitializer implements ApplicationRunner {
             return;
         }
         try {
-            String apiKeyEnc = McpCrypto.encrypt(envApiKey, modelConfigProperties.getCryptoKey());
+            String apiKeyEnc = CredentialCrypto.encrypt(envApiKey, modelConfigProperties.getCryptoKey());
             String masked = envApiKey.length() <= 8
                     ? "****" : envApiKey.substring(0, 3) + "****" + envApiKey.substring(envApiKey.length() - 4);
             int inserted = jdbcTemplate.update("""

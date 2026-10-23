@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.platform.ai;
 
 import cn.datafuturex.zhishu.ai.biztools.api.BizToolProviderPort;
-import cn.datafuturex.zhishu.ai.modelconfig.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;

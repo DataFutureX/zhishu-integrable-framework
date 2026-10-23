@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.ai.modelconfig.api;
+package cn.datafuturex.zhishu.ai.gatewayclient.api;
 
 /**
  * 模型网关台账通道与内部转发的通道声明头。

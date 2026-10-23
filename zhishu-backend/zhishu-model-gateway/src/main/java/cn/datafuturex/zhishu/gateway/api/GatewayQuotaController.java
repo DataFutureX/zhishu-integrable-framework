@@ -1,4 +1,4 @@
-package cn.datafuturex.zhishu.gateway.controller;
+package cn.datafuturex.zhishu.gateway.api;
 
 import cn.datafuturex.zhishu.gateway.auth.GatewayAuthFilter;
 import cn.datafuturex.zhishu.gateway.auth.GatewayPrincipal;

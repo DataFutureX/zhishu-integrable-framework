@@ -3,10 +3,10 @@ package cn.datafuturex.zhishu.gateway.admin.service.impl;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort.UpstreamEndpoint;
 import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AgentModelUsagePort;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelBatchImportDTO;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelUpsertDTO;
-import cn.datafuturex.zhishu.gateway.admin.mapper.AgentModelRefMapper;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayModelAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayModelAdminVO;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;
@@ -49,7 +49,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     private final GatewayModelMapper gatewayModelMapper;
     private final ModelUpstreamPort modelUpstreamPort;
     private final GatewayCatalogService catalogService;
-    private final AgentModelRefMapper agentModelRefMapper;
+    private final AgentModelUsagePort agentModelUsagePort;
     private final UpstreamHttpClient upstreamHttpClient;
     private final ModelRuntimeCache modelRuntimeCache;
 
@@ -169,9 +169,9 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     public void delete(Long id) {
         GatewayModelEntity entity = requireEntity(id);
         if (TYPE_CHAT.equalsIgnoreCase(entity.getModelType())) {
-            int refs = agentModelRefMapper.countByModel(entity.getModelId());
+            int refs = agentModelUsagePort.countAgentsBoundTo(entity.getModelId());
             if (refs > 0) {
-                List<String> names = agentModelRefMapper.listNamesByModel(entity.getModelId());
+                List<String> names = agentModelUsagePort.listAgentNamesBoundTo(entity.getModelId());
                 throw new BusinessException(400, "该模型已被 " + refs + " 个 Agent 引用（"
                         + String.join("、", names) + "），请先调整 Agent 绑定");
             }

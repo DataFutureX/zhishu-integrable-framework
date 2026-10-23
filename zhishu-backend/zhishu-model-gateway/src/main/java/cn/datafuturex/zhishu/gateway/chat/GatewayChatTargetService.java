@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.chat;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.AiChatTargetPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AiChatTargetPort;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.RefreshableOpenAiModels;
+import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;

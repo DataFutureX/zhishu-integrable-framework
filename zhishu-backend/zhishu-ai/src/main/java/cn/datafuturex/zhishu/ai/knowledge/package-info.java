@@ -3,6 +3,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "Knowledge",
-        allowedDependencies = {"shared", "modelconfig :: api"}
+        allowedDependencies = {"shared", "gatewayclient :: api", "gatewayclient"}
 )
 package cn.datafuturex.zhishu.ai.knowledge;

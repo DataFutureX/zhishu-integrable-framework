@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.embedding;
 
-import cn.datafuturex.zhishu.ai.modelconfig.api.AiEmbeddingTargetPort;
+import cn.datafuturex.zhishu.ai.gatewayclient.api.AiEmbeddingTargetPort;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.modelconfig.runtime.RefreshableOpenAiModels;
+import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;

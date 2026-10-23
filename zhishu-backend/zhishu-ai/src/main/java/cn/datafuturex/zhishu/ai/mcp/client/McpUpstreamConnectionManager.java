@@ -5,7 +5,7 @@ import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpUpstreamEntity;
 import cn.datafuturex.zhishu.ai.mcp.domain.entity.AiMcpUpstreamToolEntity;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamMapper;
 import cn.datafuturex.zhishu.ai.mcp.mapper.AiMcpUpstreamToolMapper;
-import cn.datafuturex.zhishu.ai.mcp.support.McpCrypto;
+import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.ai.mcp.support.McpUpstreamCircuit;
 import cn.datafuturex.zhishu.ai.shared.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
@@ -100,7 +100,7 @@ public class McpUpstreamConnectionManager {
 
     private McpSyncClient openClient(AiMcpUpstreamEntity upstream) {
         rejectStdio(upstream.getProtocol());
-        String auth = McpCrypto.decrypt(upstream.getAuthHeaderEnc(), properties.getCryptoKey());
+        String auth = CredentialCrypto.decrypt(upstream.getAuthHeaderEnc(), properties.getCryptoKey());
         Duration timeout = Duration.ofMillis(
                 upstream.getRequestTimeoutMs() == null ? 20_000 : upstream.getRequestTimeoutMs());
         String endpoint = StringUtils.hasText(upstream.getEndpoint()) ? upstream.getEndpoint() : "/mcp";

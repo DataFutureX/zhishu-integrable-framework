@@ -112,7 +112,8 @@ public class GatewayProviderAdminController {
      */
     @PostMapping("/{id}/test")
     @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_PROVIDER_LIST + "')")
-    @Operation(summary = "连通性测试", description = "调用上游 GET /models，返回可用模型数与耗时")
+    @Operation(summary = "连通性测试",
+            description = "调用上游模型列表（OpenAI 兼容 GET /models，Ollama 为 GET /api/tags），返回可用模型数与耗时")
     public Result<String> test(@PathVariable Long id) {
         return Result.success(gatewayProviderAdminService.test(id));
     }

@@ -29,11 +29,14 @@ public class AiAgentEntity {
     @TableField("system_prompt")
     private String systemPrompt;
 
+    /** 绑定的网关模型 id；null 表示跟随网关默认模型，必须能写回 NULL */
+    @TableField(value = "model", updateStrategy = FieldStrategy.ALWAYS)
     private String model;
 
+    @TableField(value = "temperature", updateStrategy = FieldStrategy.ALWAYS)
     private BigDecimal temperature;
 
-    @TableField("max_tokens")
+    @TableField(value = "max_tokens", updateStrategy = FieldStrategy.ALWAYS)
     private Integer maxTokens;
 
     /** JSON 数组字符串 */

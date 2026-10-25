@@ -1,5 +1,6 @@
 package cn.datafuturex.zhishu.gateway.provider.domain;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -41,6 +42,7 @@ public class ModelProviderEntity {
     @TableField("sort_order")
     private Integer sortOrder;
 
+    @TableField(value = "remark", updateStrategy = FieldStrategy.ALWAYS)
     private String remark;
 
     @TableField("create_time")

@@ -78,3 +78,6 @@ springdoc:
 #   NEO4J_PASSWORD            仅 wanxiang.kg.enabled=true 时必填（不得用默认弱口令）
 # 应急逃生：ZHISHU_PROD_GUARD_ENABLED=false 可临时关闭守卫（只用于回滚窗口，启动日志会持续告警）
 # =============================================================================
+zhishu:
+  prod-guard:
+    enabled: ${ZHISHU_PROD_GUARD_ENABLED:false}

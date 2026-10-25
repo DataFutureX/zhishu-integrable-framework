@@ -21,14 +21,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 供应商服务实现：只维护连接与凭据（模型与生成参数在模型网关侧维护）。
@@ -40,6 +43,8 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int HTTP_TIMEOUT_SECONDS = 15;
+    private static final String OPENAI_MODELS_PATH = "/models";
+    private static final String OLLAMA_TAGS_PATH = "/api/tags";
 
     private final ModelProviderMapper modelProviderMapper;
     private final ModelRuntimeCache modelRuntimeCache;
@@ -172,7 +177,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
     @Override
     public String testConnection(Long id) {
         ModelProviderEntity entity = requireEntity(id);
-        if (!StringUtils.hasText(resolveApiKey(entity))) {
+        if (!isOllamaProvider(entity) && !StringUtils.hasText(resolveApiKey(entity))) {
             return "未配置 API Key，无法测试连通性";
         }
         long start = System.nanoTime();
@@ -227,19 +232,22 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
     // ---- 内部方法 ----
 
     private List<UpstreamModelInfo> fetchUpstreamModels(ModelProviderEntity entity) {
+        boolean ollama = isOllamaProvider(entity);
         String apiKey = resolveApiKey(entity);
-        if (!StringUtils.hasText(apiKey)) {
+        if (!ollama && !StringUtils.hasText(apiKey)) {
             throw new BusinessException(400, "未配置 API Key");
         }
-        String url = trimSlash(entity.getBaseUrl()) + "/models";
+        String url = upstreamModelsUrl(entity, ollama);
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(HTTP_TIMEOUT_SECONDS))
-                .header("Authorization", "Bearer " + apiKey)
-                .GET()
-                .build();
+                .GET();
+        if (StringUtils.hasText(apiKey)) {
+            builder.header("Authorization", "Bearer " + apiKey);
+        }
+        HttpRequest request = builder.build();
         try {
             HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() >= 400) {
@@ -258,9 +266,43 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new BusinessException(500, "拉取上游模型被中断");
+        } catch (HttpTimeoutException e) {
+            log.warn("拉取上游模型超时 url={}: {}", url, e.toString());
+            throw new BusinessException(502, "连接上游超时：" + url);
+        } catch (ConnectException e) {
+            log.warn("拉取上游模型连接失败 url={}: {}", url, e.toString());
+            throw new BusinessException(502, "无法连接上游：" + url
+                    + (ollama ? "（请确认 Ollama 已启动，且从后端所在主机可访问该地址）" : ""));
         } catch (Exception e) {
-            throw new BusinessException(502, e.getMessage() == null ? "上游不可达" : e.getMessage());
+            log.warn("拉取上游模型失败 url={}: {}", url, e.toString());
+            String detail = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            throw new BusinessException(502, "拉取上游模型失败：" + url + "，" + detail);
         }
+    }
+
+    /**
+     * 上游模型列表地址：Ollama 的原生接口在根路径 {@code /api/tags}，其余供应商走 OpenAI 兼容的 {@code /models}。
+     * Ollama 的 Base URL 常按 OpenAI 兼容方式填成 {@code .../v1}，此处先剥掉版本后缀再拼原生路径。
+     */
+    private static String upstreamModelsUrl(ModelProviderEntity entity, boolean ollama) {
+        String baseUrl = trimSlash(entity.getBaseUrl());
+        if (!ollama) {
+            return baseUrl + OPENAI_MODELS_PATH;
+        }
+        if (baseUrl.length() >= 3 && baseUrl.regionMatches(true, baseUrl.length() - 3, "/v1", 0, 3)) {
+            baseUrl = trimSlash(baseUrl.substring(0, baseUrl.length() - 3));
+        }
+        return baseUrl + OLLAMA_TAGS_PATH;
+    }
+
+    private static boolean isOllamaProvider(ModelProviderEntity entity) {
+        return containsOllama(entity.getProviderKey())
+                || containsOllama(entity.getName())
+                || containsOllama(entity.getBaseUrl());
+    }
+
+    private static boolean containsOllama(String value) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains("ollama");
     }
 
     /**

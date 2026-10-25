@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
- * 上游模型元数据（由供应商 {@code GET /models} 解析而来）。
+ * 上游模型元数据（由供应商 {@code GET /models} 或 Ollama 的 {@code GET /api/tags} 解析而来）。
  * <p>
  * 各厂商字段覆盖度不一，缺省的字段一律为 {@code null}，由调用方决定回退策略。
  *

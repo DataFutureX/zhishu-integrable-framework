@@ -52,7 +52,7 @@ public interface GatewayProviderAdminService {
     GatewayProviderAdminVO markDefault(Long id);
 
     /**
-     * 连通性测试（GET 上游 /models）。
+     * 连通性测试（GET 上游 /models；Ollama 为 /api/tags）。
      *
      * @param id 主键
      * @return 测试结果说明
@@ -60,7 +60,7 @@ public interface GatewayProviderAdminService {
     String test(Long id);
 
     /**
-     * 拉取上游模型列表（含 {@code GET /models} 元数据）。
+     * 拉取上游模型列表（含 GET /models 元数据；Ollama 为 /api/tags）。
      *
      * @param id 主键
      * @return 上游模型元数据列表

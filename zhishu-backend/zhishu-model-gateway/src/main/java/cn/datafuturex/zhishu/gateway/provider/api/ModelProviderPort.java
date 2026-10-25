@@ -60,7 +60,7 @@ public interface ModelProviderPort {
     ModelProviderVO setDefault(Long id);
 
     /**
-     * 连通性测试：调用上游 {@code GET /models}。
+     * 连通性测试：调用上游模型列表（OpenAI 兼容 {@code GET /models}，Ollama 为 {@code GET /api/tags}）。
      *
      * @param id 供应商 ID
      * @return 测试结果说明
@@ -68,7 +68,7 @@ public interface ModelProviderPort {
     String testConnection(Long id);
 
     /**
-     * 拉取上游模型 id 列表，供「导入模型」使用。
+     * 拉取上游模型 id 列表，供「导入模型」使用（Ollama 供应商走 {@code GET /api/tags}）。
      *
      * @param id 供应商 ID
      * @return 模型 id 列表

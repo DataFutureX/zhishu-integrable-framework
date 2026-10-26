@@ -844,18 +844,18 @@ function idFrom(value: string) {
  */
 const DEMO_PROVIDERS = [
   {
-    id: '910000000000000001',
-    name: '阿里百炼',
-    providerKey: 'dashscope',
-    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    apiKeyMasked: 'sk-****1a2b',
-    apiKeyConfigured: true,
-    isDefault: true,
-    status: 'ENABLED',
+    id: '910000000000000003',
+    name: '内部测试网关（已停用）',
+    providerKey: 'internal',
+    baseUrl: 'http://10.0.0.8:8000/v1',
+    apiKeyMasked: null,
+    apiKeyConfigured: false,
+    isDefault: false,
+    status: 'DISABLED',
     sortOrder: 0,
-    remark: null,
-    chatModelCount: 2,
-    embeddingModelCount: 1,
+    remark: '演示排序：停用供应商沉底',
+    chatModelCount: 0,
+    embeddingModelCount: 0,
     updateTime: nowStr(),
   },
   {
@@ -873,7 +873,41 @@ const DEMO_PROVIDERS = [
     embeddingModelCount: 0,
     updateTime: nowStr(),
   },
+  {
+    id: '910000000000000001',
+    name: '阿里百炼',
+    providerKey: 'dashscope',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    apiKeyMasked: 'sk-****1a2b',
+    apiKeyConfigured: true,
+    isDefault: true,
+    status: 'ENABLED',
+    sortOrder: 0,
+    remark: null,
+    chatModelCount: 2,
+    embeddingModelCount: 1,
+    updateTime: nowStr(),
+  },
 ] as const
+
+/**
+ * 与后端一致的展示排序：默认 → 启用 → 排序号 → 主键（停用沉底）。
+ * 演示数据故意不按序定义，页面上看到的就是排序后的结果。
+ */
+function listDemoProviders() {
+  return [...DEMO_PROVIDERS]
+    .sort((a, b) => {
+      const byDefault = Number(b.isDefault) - Number(a.isDefault)
+      if (byDefault !== 0) return byDefault
+      const byStatus = Number(b.status === 'ENABLED') - Number(a.status === 'ENABLED')
+      if (byStatus !== 0) return byStatus
+      const bySort =
+        (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER)
+      if (bySort !== 0) return bySort
+      return String(a.id).localeCompare(String(b.id))
+    })
+    .map((item) => ({ ...item }))
+}
 
 /**
  * 模拟连通性探测：Ollama / 本机端口视为无需鉴权；其余供应商未配 Key 时返回 401 提示。
@@ -902,7 +936,7 @@ function handleModelGateway(
   body: Record<string, unknown>,
 ) {
   if (method === 'GET' && path === '/model-gateway/providers') {
-    return DEMO_PROVIDERS.map((item) => ({ ...item }))
+    return listDemoProviders()
   }
   // 保存前试跑：baseUrl 必填，apiKey 可为空
   if (method === 'POST' && path === '/model-gateway/providers/test') {

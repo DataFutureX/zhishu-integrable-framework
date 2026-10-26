@@ -1010,7 +1010,7 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/v1/model-gateway/providers` | 供应商列表（含 `modelCount`、`isDefault`、Key 是否已配置） |
+| GET | `/api/v1/model-gateway/providers` | 供应商列表（含 `modelCount`、`isDefault`、Key 是否已配置）；按「默认 → 启用 → 排序号 → 主键」排序，停用沉底 |
 | POST / PUT / DELETE | `/api/v1/model-gateway/providers[/{id}]` | 增删改（被模型引用时拒删） |
 | POST | `/api/v1/model-gateway/providers/{id}/default` | 设为默认供应商 |
 | POST | `/api/v1/model-gateway/providers/{id}/test` | 连通性：`GET {baseUrl}/models`（Ollama 为 `/api/tags`），返回可用模型数与耗时；未配 Key 时匿名探测 |

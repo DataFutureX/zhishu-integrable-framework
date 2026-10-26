@@ -31,6 +31,7 @@ import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -46,6 +47,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
     private static final int HTTP_TIMEOUT_SECONDS = 15;
     private static final String OPENAI_MODELS_PATH = "/models";
     private static final String OLLAMA_TAGS_PATH = "/api/tags";
+    private static final String STATUS_ENABLED = "ENABLED";
 
     private final ModelProviderMapper modelProviderMapper;
     private final ModelRuntimeCache modelRuntimeCache;
@@ -61,7 +63,25 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
                         .orderByDesc(ModelProviderEntity::getIsDefault)
                         .orderByAsc(ModelProviderEntity::getSortOrder)
                         .orderByAsc(ModelProviderEntity::getId));
-        return entities.stream().map(this::toVo).toList();
+        return sortForAdmin(entities).stream().map(this::toVo).toList();
+    }
+
+    /**
+     * 供应商管理列表排序：默认供应商 → 已启用 → 排序号 → 主键。
+     * <p>
+     * 停用的供应商沉到列表末尾，避免管理员误选；抽出为包级方法便于单测。
+     *
+     * @param entities 待排序供应商
+     * @return 排序后的新列表（不修改入参）
+     */
+    static List<ModelProviderEntity> sortForAdmin(List<ModelProviderEntity> entities) {
+        List<ModelProviderEntity> sorted = new ArrayList<>(entities);
+        sorted.sort(Comparator
+                .comparing((ModelProviderEntity e) -> !Boolean.TRUE.equals(e.getIsDefault()))
+                .thenComparing(e -> !STATUS_ENABLED.equalsIgnoreCase(String.valueOf(e.getStatus())))
+                .thenComparing(e -> e.getSortOrder() == null ? Integer.MAX_VALUE : e.getSortOrder())
+                .thenComparing(e -> e.getId() == null ? Long.MAX_VALUE : e.getId()));
+        return sorted;
     }
 
     /**

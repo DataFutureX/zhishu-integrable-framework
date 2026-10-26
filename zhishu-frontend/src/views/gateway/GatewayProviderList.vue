@@ -24,10 +24,16 @@
         :closable="false"
         show-icon
         class="gateway-page__hint"
-        title="供应商只维护连接与密钥；对话/向量模型与生成参数请在「模型设置」中按供应商添加。"
+        title="供应商只维护连接与密钥；对话/向量模型与生成参数请在「模型设置」中按供应商添加。列表按「默认 → 启用 → 排序号」展示，停用的排在最后。"
       />
 
-      <el-table v-loading="loading" :data="providers" class="modern-table" empty-text="暂无供应商">
+      <el-table
+        v-loading="loading"
+        :data="providers"
+        class="modern-table"
+        empty-text="暂无供应商"
+        :row-class-name="providerRowClassName"
+      >
         <el-table-column prop="name" label="名称" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
             <span>{{ row.name }}</span>
@@ -338,6 +344,11 @@ function resetTestState() {
   lastTest.value = null
 }
 
+/** 停用的供应商整行置灰，配合排序（停用沉底）减少误选 */
+function providerRowClassName({ row }: { row: GatewayProviderVO }) {
+  return row.status === 'ENABLED' ? '' : 'provider-row--disabled'
+}
+
 async function handleDefault(row: GatewayProviderVO) {
   await setDefaultGatewayProviderApi(row.id)
   ElMessage.success('已设为默认供应商')
@@ -383,6 +394,10 @@ onMounted(loadProviders)
 
 .gateway-page__test-result {
   margin-top: 4px;
+}
+
+:deep(.provider-row--disabled) {
+  color: var(--el-text-color-placeholder);
 }
 
 .ml-6 {

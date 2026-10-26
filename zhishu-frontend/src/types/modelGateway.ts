@@ -185,6 +185,7 @@ export interface GatewayUsageSummaryVO {
   successCount: number
   errorCount: number
   estimatedCount: number
+  byProvider: GatewayUsageBucket[]
   byModel: GatewayUsageBucket[]
   byUser: GatewayUsageBucket[]
   byDay: GatewayUsageBucket[]

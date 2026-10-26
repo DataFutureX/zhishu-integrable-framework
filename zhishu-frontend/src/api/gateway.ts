@@ -150,7 +150,7 @@ export const pageGatewayUsagesApi = (params: {
   return get<GatewayPageResult<GatewayUsageVO>>('/model-gateway/usages', { params })
 }
 
-/** 调用汇总 GET /api/v1/model-gateway/usages/summary */
+/** 调用用量汇总（总量 + 按模型/用户/天聚合） GET /api/v1/model-gateway/usages/summary */
 export const summaryGatewayUsagesApi = (params?: { from?: string; to?: string }) => {
   return get<GatewayUsageSummaryVO>('/model-gateway/usages/summary', { params })
 }

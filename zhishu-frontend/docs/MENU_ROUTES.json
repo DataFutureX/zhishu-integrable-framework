@@ -35,6 +35,7 @@
     "  ├─ 供应商管理 /gateway/providers",
     "  ├─ 模型设置 /gateway/models",
     "  ├─ 额度策略 /gateway/quotas",
+    "  ├─ 调用台账 /gateway/ledger",
     "  ├─ 调用用量 /gateway/usage",
     "  └─ 接入说明 /gateway/guide",
     "账号管理 /permission → /permission/user",
@@ -329,6 +330,24 @@
         {
           "id": 1203,
           "parentId": 12,
+          "title": "调用台账",
+          "path": "/gateway/ledger",
+          "routeName": "GatewayUsageLedger",
+          "redirect": null,
+          "icon": "Tickets",
+          "menuType": "MENU",
+          "visible": true,
+          "requiresAuth": true,
+          "sort": 4,
+          "component": "views/gateway/GatewayUsageLedger.vue",
+          "meta": { "title": "调用台账" },
+          "children": [
+            { "id": 120301, "parentId": 1203, "title": "用量查询", "path": null, "routeName": "gateway:usage:query", "menuType": "BUTTON", "visible": false, "requiresAuth": true, "sort": 1 }
+          ]
+        },
+        {
+          "id": 1205,
+          "parentId": 12,
           "title": "调用用量",
           "path": "/gateway/usage",
           "routeName": "GatewayUsage",
@@ -337,8 +356,8 @@
           "menuType": "MENU",
           "visible": true,
           "requiresAuth": true,
-          "sort": 4,
-          "component": "views/gateway/GatewayUsageList.vue",
+          "sort": 5,
+          "component": "views/gateway/GatewayUsageStats.vue",
           "meta": { "title": "调用用量" }
         },
         {
@@ -352,7 +371,7 @@
           "menuType": "MENU",
           "visible": true,
           "requiresAuth": true,
-          "sort": 5,
+          "sort": 6,
           "component": "views/gateway/GatewayGuide.vue",
           "meta": { "title": "接入说明" }
         }

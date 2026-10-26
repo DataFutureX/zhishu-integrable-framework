@@ -80,22 +80,22 @@ public class GatewayUsageAdminServiceImpl implements GatewayUsageAdminService {
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         List<Object> args = new ArrayList<>();
         if (from != null) {
-            where.append(" AND create_time >= ?");
+            where.append(" AND u.create_time >= ?");
             args.add(from);
         }
         if (to != null) {
-            where.append(" AND create_time <= ?");
+            where.append(" AND u.create_time <= ?");
             args.add(to);
         }
 
         Map<String, Object> totals = jdbcTemplate.queryForMap(
                 """
                 SELECT COUNT(*) AS requests,
-                       COALESCE(SUM(total_tokens), 0) AS tokens,
-                       COUNT(*) FILTER (WHERE status = 'SUCCESS') AS success_count,
-                       COUNT(*) FILTER (WHERE status <> 'SUCCESS') AS error_count,
-                       COUNT(*) FILTER (WHERE estimated = TRUE) AS estimated_count
-                  FROM ai_gateway_usage
+                       COALESCE(SUM(u.total_tokens), 0) AS tokens,
+                       COUNT(*) FILTER (WHERE u.status = 'SUCCESS') AS success_count,
+                       COUNT(*) FILTER (WHERE u.status <> 'SUCCESS') AS error_count,
+                       COUNT(*) FILTER (WHERE u.estimated = TRUE) AS estimated_count
+                  FROM ai_gateway_usage u
                 """ + where, args.toArray());
 
         return new GatewayUsageSummaryVO(
@@ -104,9 +104,10 @@ public class GatewayUsageAdminServiceImpl implements GatewayUsageAdminService {
                 toLong(totals.get("success_count")),
                 toLong(totals.get("error_count")),
                 toLong(totals.get("estimated_count")),
-                buckets("model_id", where.toString(), args, "LIMIT 20"),
-                buckets("username", where.toString(), args, "LIMIT 20"),
-                buckets("to_char(create_time, 'YYYY-MM-DD')", where.toString(), args, "ORDER BY 1"));
+                providerBuckets(where.toString(), args),
+                buckets("u.model_id", where.toString(), args, "LIMIT 20"),
+                buckets("u.username", where.toString(), args, "LIMIT 20"),
+                buckets("to_char(u.create_time, 'YYYY-MM-DD')", where.toString(), args, "ORDER BY 1"));
     }
 
     private List<Bucket> buckets(String keyExpression, String where, List<Object> args, String tail) {
@@ -114,13 +115,37 @@ public class GatewayUsageAdminServiceImpl implements GatewayUsageAdminService {
         String sql = """
                 SELECT %s AS bucket_key,
                        COUNT(*) AS requests,
-                       COALESCE(SUM(total_tokens), 0) AS tokens
-                  FROM ai_gateway_usage
+                       COALESCE(SUM(u.total_tokens), 0) AS tokens
+                  FROM ai_gateway_usage u
                 %s
                  GROUP BY 1
                 %s
                 """.formatted(keyExpression, where, order);
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, args.toArray());
+        return toBuckets(jdbcTemplate.queryForList(sql, args.toArray()));
+    }
+
+    /**
+     * 按供应商聚合：台账只存 provider_id，联同模块的 ai_model_provider 取展示名。
+     * 供应商被删除或历史行未记录 provider_id 时给出可读兜底。
+     */
+    private List<Bucket> providerBuckets(String where, List<Object> args) {
+        String sql = """
+                SELECT COALESCE(p.name,
+                                CASE WHEN u.provider_id IS NULL
+                                     THEN '(未记录)' ELSE '(已删除供应商)' END) AS bucket_key,
+                       COUNT(*) AS requests,
+                       COALESCE(SUM(u.total_tokens), 0) AS tokens
+                  FROM ai_gateway_usage u
+                  LEFT JOIN ai_model_provider p ON p.id = u.provider_id
+                %s
+                 GROUP BY 1
+                 ORDER BY tokens DESC
+                 LIMIT 20
+                """.formatted(where);
+        return toBuckets(jdbcTemplate.queryForList(sql, args.toArray()));
+    }
+
+    private static List<Bucket> toBuckets(List<Map<String, Object>> rows) {
         List<Bucket> buckets = new ArrayList<>(rows.size());
         for (Map<String, Object> row : rows) {
             Object key = row.get("bucket_key");

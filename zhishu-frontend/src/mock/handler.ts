@@ -13,9 +13,11 @@ import {
 } from './openApp'
 import { mockState } from './state'
 import type { MenuVO } from '@/types/menu'
+import type { GatewayUsageVO } from '@/types/modelGateway'
 import type { UnitVO } from '@/types/unit'
 import {
   createDemoCaptchaImages,
+  daysAgoStr,
   deepClone,
   filterByTimeRange,
   nextId,
@@ -910,6 +912,160 @@ function listDemoProviders() {
 }
 
 /**
+ * 模型网关调用台账演示数据：近 14 天、每天 6 条，覆盖多用户/模型/通道与失败、估算场景。
+ * 生成过程完全确定，避免每次进入页面数字漂移。
+ */
+const DEMO_USAGE_SAMPLES = [
+  {
+    modelId: 'gw-deepseek',
+    upstreamModel: 'deepseek-flash',
+    providerId: '910000000000000002',
+    prompt: 1280,
+    completion: 640,
+  },
+  {
+    modelId: 'gw-qwen-max',
+    upstreamModel: 'qwen-max',
+    providerId: '910000000000000001',
+    prompt: 960,
+    completion: 420,
+  },
+  {
+    modelId: 'gw-embedding-v3',
+    upstreamModel: 'text-embedding-v3',
+    providerId: '910000000000000001',
+    prompt: 512,
+    completion: 0,
+  },
+]
+/** 供应商 id → 展示名，与供应商列表 DEMO_PROVIDERS 保持一致 */
+const DEMO_PROVIDER_NAMES: Record<string, string> = Object.fromEntries(
+  DEMO_PROVIDERS.map((item) => [String(item.id), item.name]),
+)
+const DEMO_USAGE_USERS = ['admin', 'zhangsan', 'lisi', 'wangwu']
+const DEMO_USAGE_CHANNELS = ['CONSOLE', 'DESKTOP', 'AGENT', 'OPENAPI']
+
+function demoUsageStatus(index: number) {
+  if (index % 17 === 3) return 'REJECTED_QUOTA'
+  if (index % 11 === 5) return index % 2 === 0 ? 'ERROR' : 'TIMEOUT'
+  return 'SUCCESS'
+}
+
+function buildDemoUsages(): GatewayUsageVO[] {
+  const records: GatewayUsageVO[] = []
+  const days = 14
+  const perDay = 6
+  for (let day = 0; day < days; day += 1) {
+    for (let i = 0; i < perDay; i += 1) {
+      const index = day * perDay + i
+      const sample = DEMO_USAGE_SAMPLES[index % DEMO_USAGE_SAMPLES.length]
+      const user = DEMO_USAGE_USERS[(day + i) % DEMO_USAGE_USERS.length]
+      const channel = DEMO_USAGE_CHANNELS[(day + i) % DEMO_USAGE_CHANNELS.length]
+      const status = demoUsageStatus(index)
+      const failed = status !== 'SUCCESS'
+      const httpStatus = failed ? (status === 'REJECTED_QUOTA' ? 429 : 502) : 200
+      const promptTokens = sample.prompt + i * 40
+      const completionTokens = failed ? 0 : sample.completion + i * 30
+      records.push({
+        id: `92000000000000${String(index).padStart(4, '0')}`,
+        requestId: `req-demo-${String(index).padStart(4, '0')}`,
+        userId: `88${String((index % DEMO_USAGE_USERS.length) + 1).padStart(4, '0')}`,
+        username: user,
+        channel,
+        modelId: sample.modelId,
+        providerId: sample.providerId,
+        upstreamModel: sample.upstreamModel,
+        stream: index % 2 === 0,
+        status,
+        httpStatus,
+        reservedTokens: promptTokens + completionTokens,
+        promptTokens,
+        completionTokens,
+        totalTokens: promptTokens + completionTokens,
+        cachedTokens: index % 4 === 0 ? 128 : 0,
+        reasoningTokens: sample.modelId === 'gw-deepseek' ? completionTokens % 200 : 0,
+        estimated: index % 9 === 0,
+        latencyMs: failed ? null : 420 + index * 7,
+        ttftMs: failed ? null : 90 + index * 3,
+        clientName: channel === 'DESKTOP' ? 'zhishu-desktop' : 'zhishu-console',
+        clientVersion: '1.0.0',
+        ip: '127.0.0.1',
+        errorCode: failed
+          ? status === 'REJECTED_QUOTA'
+            ? 'insufficient_quota'
+            : 'upstream_error'
+          : null,
+        errorMessage: failed ? '演示数据：该次调用未成功（额度不足或上游错误）' : null,
+        createTime: daysAgoStr(day, 9 + i, (index * 7) % 60),
+      })
+    }
+  }
+  return records.sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)))
+}
+
+const DEMO_USAGES = buildDemoUsages()
+
+/** 台账筛选：与后端一致，用户名模糊，模型/通道/状态精确，日期按天比较 */
+function filterDemoUsages(params: Record<string, unknown>) {
+  const username = str(params.username)
+  const modelId = str(params.modelId)
+  const channel = str(params.channel).toUpperCase()
+  const status = str(params.status).toUpperCase()
+  const from = str(params.from)
+  const to = str(params.to)
+  return DEMO_USAGES.filter((item) => {
+    const day = String(item.createTime ?? '').slice(0, 10)
+    if (username && !includesIgnoreCase(item.username, username)) return false
+    if (modelId && item.modelId !== modelId) return false
+    if (channel && item.channel !== channel) return false
+    if (status && item.status !== status) return false
+    if (from && day < from) return false
+    if (to && day > to) return false
+    return true
+  })
+}
+
+function bucketDemoUsages(records: GatewayUsageVO[], keyOf: (item: GatewayUsageVO) => string) {
+  const map = new Map<string, { key: string; requests: number; tokens: number }>()
+  records.forEach((item) => {
+    const key = keyOf(item)
+    const bucket = map.get(key) ?? { key, requests: 0, tokens: 0 }
+    bucket.requests += 1
+    bucket.tokens += item.totalTokens ?? 0
+    map.set(key, bucket)
+  })
+  return [...map.values()]
+}
+
+/** 用量汇总：总量 + 按模型/用户/天聚合，口径与后端 summary 一致 */
+function summaryDemoUsages(params: Record<string, unknown>) {
+  const records = filterDemoUsages(params)
+  const byTokensDesc = (a: { tokens: number }, b: { tokens: number }) => b.tokens - a.tokens
+  return {
+    totalRequests: records.length,
+    totalTokens: records.reduce((sum, item) => sum + (item.totalTokens ?? 0), 0),
+    successCount: records.filter((item) => item.status === 'SUCCESS').length,
+    errorCount: records.filter((item) => item.status !== 'SUCCESS').length,
+    estimatedCount: records.filter((item) => item.estimated).length,
+    byProvider: bucketDemoUsages(
+      records,
+      (item) => DEMO_PROVIDER_NAMES[String(item.providerId)] || '(未知供应商)',
+    )
+      .sort(byTokensDesc)
+      .slice(0, 20),
+    byModel: bucketDemoUsages(records, (item) => item.modelId)
+      .sort(byTokensDesc)
+      .slice(0, 20),
+    byUser: bucketDemoUsages(records, (item) => item.username || '(未知)')
+      .sort(byTokensDesc)
+      .slice(0, 20),
+    byDay: bucketDemoUsages(records, (item) => String(item.createTime ?? '').slice(0, 10)).sort(
+      (a, b) => a.key.localeCompare(b.key),
+    ),
+  }
+}
+
+/**
  * 模拟连通性探测：Ollama / 本机端口视为无需鉴权；其余供应商未配 Key 时返回 401 提示。
  * 文案与后端保持一致（连通成功/连通失败 + 耗时）。
  */
@@ -932,9 +1088,15 @@ function fakeProbeResult(providerKey: string, baseUrl: string, apiKey: string): 
 function handleModelGateway(
   method: string,
   path: string,
-  _params: Record<string, unknown>,
+  params: Record<string, unknown>,
   body: Record<string, unknown>,
 ) {
+  if (method === 'GET' && path === '/model-gateway/usages/summary') {
+    return summaryDemoUsages(params)
+  }
+  if (method === 'GET' && path === '/model-gateway/usages') {
+    return paginate(filterDemoUsages(params), num(params.current, 1), num(params.size, 20))
+  }
   if (method === 'GET' && path === '/model-gateway/providers') {
     return listDemoProviders()
   }

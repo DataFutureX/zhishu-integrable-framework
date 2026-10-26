@@ -663,17 +663,24 @@ public interface UpstreamProtocolAdapter {
 ### 10.1 目标菜单树
 
 ```
-模型网关 (12, DIRECTORY, /gateway → /gateway/models, sort=3)
-├── 网关模型   (1201, /gateway/models)
-├── 模型设置   (105,  /gateway/model-settings)   ← 原「智能中心」下迁移，组件路径不变
+模型网关 (12, DIRECTORY, /gateway → /gateway/providers, sort=3)
+├── 供应商管理 (105,  /gateway/providers)
+├── 模型设置   (1201, /gateway/models)
 ├── 额度策略   (1202, /gateway/quotas)
-├── 调用用量   (1203, /gateway/usage)
+├── 调用台账   (1203, /gateway/ledger)   ← 逐条调用明细
+├── 调用用量   (1205, /gateway/usage)    ← 按模型/用户/天统计
 └── 接入说明   (1204, /gateway/guide)
 ```
+
+> 「调用用量」于 2026-10 拆为两页：1203 就地改造为「调用台账」（`views/gateway/GatewayUsageLedger.vue`），
+> 新增 1205「调用用量」承接原 `/gateway/usage`（`views/gateway/GatewayUsageStats.vue`），
+> 两页共用权限码 `gateway:usage:query`（BUTTON 120301 挂 1203 下）；落地脚本 `patch_menu_gateway_usage_split.sql`。
 
 一级目录 sort 顺延：`模型网关=3`、`账号管理 5 → 4`、`系统设置 6 → 5`、`个人中心 7` 保持 9。
 
 ### 10.2 `patch_menu_model_gateway.sql` 要点
+
+> 下列为 v1 脚本原文（历史记录）；「调用台账 / 调用用量」拆分以 `patch_menu_gateway_usage_split.sql` 为准。
 
 ```sql
 INSERT INTO sys_menu (id, parent_id, title, path, route_name, redirect, icon, menu_type,
@@ -735,7 +742,8 @@ ON CONFLICT (id) DO UPDATE SET menu_id = EXCLUDED.menu_id;
 |---|---|
 | `src/views/gateway/GatewayModelList.vue` | 网关目录 CRUD、设默认、启停、端到端测试；表格列展示上游供应商、能力元数据、状态 |
 | `src/views/gateway/GatewayQuotaPolicy.vue` | 角色默认额度表 + 用户覆盖（新增/编辑/删除），展示当前窗口与用量 |
-| `src/views/gateway/GatewayUsageList.vue` | 台账分页查询 + 汇总卡片（按用户/模型/天） |
+| `src/views/gateway/GatewayUsageLedger.vue` | 调用台账：逐条明细分页（时间/用户/通道/模型/token/耗时/状态/请求 ID/错误）+ 用户名、模型、通道、状态、日期筛选 |
+| `src/views/gateway/GatewayUsageStats.vue` | 调用用量：时间区间切换 + 总量卡片 + 按供应商/按模型/按用户/按天聚合（token 降序或日期升序，含占比） |
 | `src/views/gateway/GatewayGuide.vue` | 接入说明：baseURL、三个端点、curl 示例、错误码表、`X-Zhishu-Channel` 说明 |
 | `src/api/gateway.ts` | 上述接口封装 |
 | `src/views/ai/AgentManage.vue` | 模型下拉改 `GET /api/v1/model-gateway/models/available`，值 = `model_id` |
@@ -809,7 +817,7 @@ zhishu:
 
 - `ai_gateway_usage` 即审计与统计主数据源（通道、模型、用户、状态、tokens、耗时）。
 - 结构化日志：`request_id`、`user`、`model_id`、`provider`、`status`、`latency`、`ttft` 贯穿一次请求。
-- 管理页「调用用量」提供按天/用户/模型的聚合视图，替代 Prometheus（项目未引入）。
+- 管理页「调用台账」展示逐条明细（用户/模型/通道/状态/tokens/耗时/错误），「调用用量」提供按供应商/模型/用户/天的聚合视图，两者共同替代 Prometheus（项目未引入）。
 - 慢请求与上游错误率通过日志采样告警（阈值可配）。
 
 ## 13. 测试与验收
@@ -982,7 +990,10 @@ public interface AiEmbeddingTargetPort {
 |---|---|---|---|---|
 | 105 | 供应商管理 | `/gateway/providers` | `views/gateway/GatewayProviderList.vue` | 就地改造，保留原 id 与角色授权 |
 | 1201 | 模型设置 | `/gateway/models` | `views/gateway/GatewayModelList.vue` | 原标题「网关模型」改名 |
-| 1202 / 1203 / 1204 | 额度策略 / 调用用量 / 接入说明 | 不变 | 不变 | — |
+| 1202 | 额度策略 | `/gateway/quotas` | `views/gateway/GatewayQuotaPolicy.vue` | 不变 |
+| 1203 | 调用台账 | `/gateway/ledger` | `views/gateway/GatewayUsageLedger.vue` | 原「调用用量」就地改造为明细页 |
+| 1205 | 调用用量 | `/gateway/usage` | `views/gateway/GatewayUsageStats.vue` | 新增，承接按模型/用户/天统计 |
+| 1204 | 接入说明 | `/gateway/guide` | `views/gateway/GatewayGuide.vue` | 不变 |
 
 ```sql
 UPDATE sys_menu SET title = '供应商管理', path = '/gateway/providers',
@@ -992,7 +1003,8 @@ UPDATE sys_menu SET title = '模型设置', sort = 2,
        update_time = CURRENT_TIMESTAMP WHERE id = 1201;
 UPDATE sys_menu SET sort = 3, update_time = CURRENT_TIMESTAMP WHERE id = 1202;
 UPDATE sys_menu SET sort = 4, update_time = CURRENT_TIMESTAMP WHERE id = 1203;
-UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
+UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1205;
+UPDATE sys_menu SET sort = 6, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 ```
 
 **前端**

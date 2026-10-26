@@ -52,6 +52,22 @@
         <el-table-column label="已用" width="140" align="right">
           <template #default="{ row }">{{ row.usedTokens ?? 0 }}</template>
         </el-table-column>
+        <el-table-column label="使用百分比" width="190">
+          <template #default="{ row }">
+            <div v-if="usagePercent(row as GatewayQuotaVO) != null" class="gateway-page__usage">
+              <el-progress
+                :percentage="progressValue(row as GatewayQuotaVO)"
+                :status="progressStatus(row as GatewayQuotaVO)"
+                :stroke-width="8"
+                :show-text="false"
+              />
+              <span class="gateway-page__usage-text">
+                {{ usagePercent(row as GatewayQuotaVO) }}%
+              </span>
+            </div>
+            <span v-else class="gateway-page__meta">不限量</span>
+          </template>
+        </el-table-column>
         <el-table-column label="剩余" width="140" align="right">
           <template #default="{ row }">{{
             row.remaining != null && row.remaining >= 0 ? row.remaining : '—'
@@ -240,6 +256,27 @@ function formatDate(value?: string | null) {
   return value ? value.slice(0, 10) : '—'
 }
 
+/** 使用百分比：不限量（tokenLimit 为空或非正）时无法计算，返回 null */
+function usagePercent(row: GatewayQuotaVO): number | null {
+  const limit = row.tokenLimit ?? 0
+  if (limit <= 0) return null
+  const used = row.usedTokens ?? 0
+  return Math.round((used / limit) * 1000) / 10
+}
+
+/** 进度条取值：超限后条形封顶，避免溢出到下一列 */
+function progressValue(row: GatewayQuotaVO) {
+  return Math.min(usagePercent(row) ?? 0, 100)
+}
+
+/** 进度条状态：≥90% 告警，≥100% 标记超限 */
+function progressStatus(row: GatewayQuotaVO): 'warning' | 'exception' | undefined {
+  const percent = usagePercent(row) ?? 0
+  if (percent >= 100) return 'exception'
+  if (percent >= 90) return 'warning'
+  return undefined
+}
+
 onMounted(loadQuotas)
 </script>
 
@@ -275,5 +312,23 @@ onMounted(loadQuotas)
   color: var(--el-text-color-secondary);
   font-size: 12px;
   line-height: 1.6;
+}
+
+.gateway-page__usage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gateway-page__usage :deep(.el-progress) {
+  flex: 1;
+  min-width: 60px;
+}
+
+.gateway-page__usage-text {
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  min-width: 48px;
+  text-align: right;
 }
 </style>

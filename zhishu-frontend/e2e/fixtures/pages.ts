@@ -130,6 +130,18 @@ export const AUTH_PAGES: AuthPageFixture[] = [
     titleSelector: '.page-header__title',
   },
   {
+    name: 'gateway-usage-ledger',
+    path: '/gateway/ledger',
+    title: '调用台账',
+    titleSelector: '.gateway-page__title',
+  },
+  {
+    name: 'gateway-usage-stats',
+    path: '/gateway/usage',
+    title: '调用用量',
+    titleSelector: '.gateway-page__title',
+  },
+  {
     name: 'knowledge-graph',
     path: '/ai/knowledge-graph',
     title: '知识图谱',

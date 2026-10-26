@@ -1,32 +1,5 @@
 <template>
   <div class="gateway-page">
-    <el-row :gutter="12" class="gateway-page__stats">
-      <el-col :span="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-card__label">请求总数</div>
-          <div class="stat-card__value">{{ summary.totalRequests }}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-card__label">总 token</div>
-          <div class="stat-card__value">{{ summary.totalTokens }}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-card__label">失败次数</div>
-          <div class="stat-card__value">{{ summary.errorCount }}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card shadow="never" class="stat-card">
-          <div class="stat-card__label">估算计量</div>
-          <div class="stat-card__value">{{ summary.estimatedCount }}</div>
-        </el-card>
-      </el-col>
-    </el-row>
-
     <el-card shadow="never">
       <template #header>
         <div class="gateway-page__header">
@@ -74,6 +47,7 @@
               style="width: 230px"
             />
             <el-button size="small" :icon="Search" @click="handleSearch">查询</el-button>
+            <el-button size="small" :icon="Refresh" @click="handleReset">重置</el-button>
           </div>
         </div>
       </template>
@@ -82,19 +56,30 @@
         <el-table-column prop="createTime" label="时间" width="170" />
         <el-table-column prop="username" label="用户" width="110" show-overflow-tooltip />
         <el-table-column prop="channel" label="通道" width="100" align="center" />
-        <el-table-column prop="modelId" label="模型" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="modelId" label="模型" min-width="170" show-overflow-tooltip />
+        <el-table-column prop="upstreamModel" label="上游模型" width="150" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.upstreamModel || '—' }}</template>
+        </el-table-column>
         <el-table-column label="token" width="150" align="right">
           <template #default="{ row }">
-            {{ row.promptTokens ?? '—' }} / {{ row.completionTokens ?? '—' }} /
-            {{ row.totalTokens ?? '—' }}
+            <el-tooltip
+              placement="top"
+              :content="`缓存 ${row.cachedTokens ?? 0} / 推理 ${row.reasoningTokens ?? 0}`"
+            >
+              <span>
+                {{ row.promptTokens ?? '—' }} / {{ row.completionTokens ?? '—' }} /
+                {{ row.totalTokens ?? '—' }}
+              </span>
+            </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column label="耗时" width="120" align="right">
-          <template #default="{ row }">{{
-            row.latencyMs != null ? `${row.latencyMs} ms` : '—'
-          }}</template>
+        <el-table-column label="耗时" width="130" align="right">
+          <template #default="{ row }">
+            <div>{{ row.latencyMs != null ? `${row.latencyMs} ms` : '—' }}</div>
+            <div v-if="row.ttftMs != null" class="gateway-page__meta">首字 {{ row.ttftMs }} ms</div>
+          </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="130" align="center">
+        <el-table-column prop="status" label="状态" width="140" align="center">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)" size="small" effect="light">{{
               row.status
@@ -104,7 +89,10 @@
             >
           </template>
         </el-table-column>
-        <el-table-column prop="errorMessage" label="错误" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="requestId" label="请求 ID" width="170" show-overflow-tooltip />
+        <el-table-column label="错误" min-width="180" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.errorMessage || row.errorCode || '—' }}</template>
+        </el-table-column>
       </el-table>
 
       <el-pagination
@@ -117,49 +105,16 @@
         @change="loadRecords"
       />
     </el-card>
-
-    <el-row :gutter="12" class="gateway-page__stats">
-      <el-col :span="8">
-        <el-card shadow="never">
-          <template #header>按模型</template>
-          <el-table :data="summary.byModel" size="small" empty-text="暂无数据">
-            <el-table-column prop="key" label="模型" show-overflow-tooltip />
-            <el-table-column prop="requests" label="次数" width="80" align="right" />
-            <el-table-column prop="tokens" label="token" width="110" align="right" />
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="never">
-          <template #header>按用户</template>
-          <el-table :data="summary.byUser" size="small" empty-text="暂无数据">
-            <el-table-column prop="key" label="用户" show-overflow-tooltip />
-            <el-table-column prop="requests" label="次数" width="80" align="right" />
-            <el-table-column prop="tokens" label="token" width="110" align="right" />
-          </el-table>
-        </el-card>
-      </el-col>
-      <el-col :span="8">
-        <el-card shadow="never">
-          <template #header>按天</template>
-          <el-table :data="summary.byDay" size="small" empty-text="暂无数据">
-            <el-table-column prop="key" label="日期" show-overflow-tooltip />
-            <el-table-column prop="requests" label="次数" width="80" align="right" />
-            <el-table-column prop="tokens" label="token" width="110" align="right" />
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import { pageGatewayUsagesApi, summaryGatewayUsagesApi } from '@/api/gateway'
-import type { GatewayUsageSummaryVO, GatewayUsageVO } from '@/types/modelGateway'
+import { Refresh, Search } from '@element-plus/icons-vue'
+import { pageGatewayUsagesApi } from '@/api/gateway'
+import type { GatewayUsageVO } from '@/types/modelGateway'
 
-defineOptions({ name: 'GatewayUsageList' })
+defineOptions({ name: 'GatewayUsageLedger' })
 
 const channels = ['DESKTOP', 'CONSOLE', 'AGENT', 'BRIEFING', 'OPENAPI', 'TEST']
 const statuses = ['SUCCESS', 'ERROR', 'ABORTED', 'TIMEOUT', 'REJECTED_QUOTA', 'RESERVED']
@@ -169,33 +124,17 @@ const records = ref<GatewayUsageVO[]>([])
 const dateRange = ref<[string, string] | null>(null)
 const filters = reactive({ username: '', modelId: '', channel: '', status: '' })
 const pagination = reactive({ current: 1, size: 20, total: 0 })
-const summary = ref<GatewayUsageSummaryVO>({
-  totalRequests: 0,
-  totalTokens: 0,
-  successCount: 0,
-  errorCount: 0,
-  estimatedCount: 0,
-  byModel: [],
-  byUser: [],
-  byDay: [],
-})
-
-function queryParams() {
-  return {
-    username: filters.username || undefined,
-    modelId: filters.modelId || undefined,
-    channel: filters.channel || undefined,
-    status: filters.status || undefined,
-    from: dateRange.value?.[0],
-    to: dateRange.value?.[1],
-  }
-}
 
 async function loadRecords() {
   loading.value = true
   try {
     const page = await pageGatewayUsagesApi({
-      ...queryParams(),
+      username: filters.username || undefined,
+      modelId: filters.modelId || undefined,
+      channel: filters.channel || undefined,
+      status: filters.status || undefined,
+      from: dateRange.value?.[0],
+      to: dateRange.value?.[1],
       current: pagination.current,
       size: pagination.size,
     })
@@ -206,17 +145,18 @@ async function loadRecords() {
   }
 }
 
-async function loadSummary() {
-  summary.value = await summaryGatewayUsagesApi({
-    from: dateRange.value?.[0],
-    to: dateRange.value?.[1],
-  })
-}
-
 function handleSearch() {
   pagination.current = 1
   void loadRecords()
-  void loadSummary()
+}
+
+function handleReset() {
+  filters.username = ''
+  filters.modelId = ''
+  filters.channel = ''
+  filters.status = ''
+  dateRange.value = null
+  handleSearch()
 }
 
 function statusType(status: string) {
@@ -228,7 +168,6 @@ function statusType(status: string) {
 
 onMounted(() => {
   void loadRecords()
-  void loadSummary()
 })
 </script>
 
@@ -253,24 +192,14 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.gateway-page__stats {
-  margin-bottom: 12px;
-}
-
 .gateway-page__pager {
   margin-top: 12px;
   justify-content: flex-end;
 }
 
-.stat-card__label {
+.gateway-page__meta {
   color: var(--el-text-color-secondary);
   font-size: 12px;
-}
-
-.stat-card__value {
-  font-size: 22px;
-  font-weight: 600;
-  margin-top: 4px;
 }
 
 .ml-4 {

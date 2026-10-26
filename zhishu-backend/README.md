@@ -950,7 +950,7 @@ yunqi:
 | 鉴权 | 复用知枢 JWT（`/desktop/v1/auth` 或控制台登录得到的同一个 token）；登出/改密立即失效；可选静态 token 兼容模式 |
 | 额度 | 按用户月度 token；`USER → ROLE → DEFAULT` 解析；预留→结算，不足返回 `429 insufficient_quota` |
 | 台账 | 每次调用记录用户/模型/提示与补全 token/缓存命中/推理 token/通道/耗时/状态；通道取 `X-Zhishu-Channel`（平台内部 Agent 调用主动声明 `AGENT`），无声明时按转发头与回环地址判定 `DESKTOP`/`CONSOLE` |
-| 管理面 | 供应商（CRUD + 测试连接 + 拉取上游模型）、模型（按类型/供应商 + 批量导入 + 设默认）、额度策略、调用用量；方法级 `@PreAuthorize` 鉴权 |
+| 管理面 | 供应商（CRUD + 测试连接 + 拉取上游模型）、模型（按类型/供应商 + 批量导入 + 设默认）、额度策略、调用台账与调用用量（按供应商/模型/用户/天统计）；方法级 `@PreAuthorize` 鉴权 |
 | 内部统一 | Agent / 知识问答经本机 `/v1` 调用（台账分别记 `AGENT` / `CONSOLE`），额度计入当前登录用户 |
 
 开启与配置见下文 [配置速查](#配置速查)；对端（LetsWork 桌面）接入见 [`../docs/模型网关接入指南.md`](../docs/模型网关接入指南.md)。
@@ -1108,11 +1108,11 @@ yunqi:
 | POST | `/models/{id}/default`、`/enable`、`/disable`、`/test` | 按类型设默认 / 启停 / 端到端连通性测试 |
 | GET/POST/PUT/DELETE | `/quotas`、`/quotas/{id}` | 额度策略（`USER` / `ROLE` / `DEFAULT`） |
 | POST | `/quotas/{id}/reset` | 清零已用量 |
-| GET | `/usages`、`/usages/summary` | 调用台账 / 按用户或模型汇总 |
+| GET | `/usages`、`/usages/summary` | 调用台账分页（用户名/模型/通道/状态/日期过滤）/ 调用用量汇总（总量 + 按供应商/模型/用户/天聚合） |
 
 > 管理面接口均带**方法级权限注解**（`@PreAuthorize`）：读接口需 `gateway:provider:list` / `gateway:model:list` / `gateway:quota:list` / `gateway:usage:query`，写接口需对应的 `gateway:*:update`；`/models/available` 额外允许 `ai:agent:query`（保证 Agent 编辑器下拉可用）。
 >
-> **前提**：先执行 `db/patch_menu_model_gateway.sql`（或全新库跑 `init.sql`）以建立 BUTTON 权限行；ADMIN 角色自动获得全部按钮权限，但若权限行不存在，ADMIN 调用也会 403。
+> **前提**：先执行 `db/patch_menu_model_gateway.sql`（或全新库跑 `init.sql`）以建立 BUTTON 权限行；已有库再执行 `db/patch_menu_gateway_usage_split.sql`，把原「调用用量」拆分为「调用台账（/gateway/ledger）」与「调用用量（/gateway/usage）」，否则侧栏缺少新页面、旧组件路径失效。ADMIN 角色自动获得全部按钮权限，但若权限行不存在，ADMIN 调用也会 403。
 
 ### 开放应用 — `/api/v1/open-apps`
 

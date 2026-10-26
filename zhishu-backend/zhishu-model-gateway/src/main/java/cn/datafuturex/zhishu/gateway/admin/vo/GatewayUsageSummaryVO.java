@@ -12,6 +12,7 @@ import java.util.List;
  * @param successCount  成功次数
  * @param errorCount    失败次数
  * @param estimatedCount 估算计量次数
+ * @param byProvider    按供应商聚合
  * @param byModel       按模型聚合
  * @param byUser        按用户聚合
  * @param byDay         按天聚合
@@ -23,6 +24,7 @@ public record GatewayUsageSummaryVO(
         long successCount,
         long errorCount,
         long estimatedCount,
+        List<Bucket> byProvider,
         List<Bucket> byModel,
         List<Bucket> byUser,
         List<Bucket> byDay
@@ -31,7 +33,7 @@ public record GatewayUsageSummaryVO(
     /**
      * 聚合桶。
      *
-     * @param key      聚合键（模型 / 用户 / 日期）
+     * @param key      聚合键（供应商 / 模型 / 用户 / 日期）
      * @param requests 请求数
      * @param tokens   总 token
      */

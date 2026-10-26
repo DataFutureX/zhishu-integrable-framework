@@ -9,6 +9,10 @@ const unitReportHtml = path.resolve(__dirname, '../docs/unit-test-report/index.h
 
 export default defineConfig({
   plugins: [vue()],
+  // 与 vite.config.ts 保持一致：单测里演示开关恒为 false
+  define: {
+    __DEMO_MODE__: 'false',
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

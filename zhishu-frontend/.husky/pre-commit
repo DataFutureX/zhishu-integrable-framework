@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# 仓库为多子项目布局（git 根目录在 zhishu-frontend 的上一级），
+# husky 无法在子目录自动安装，需在仓库根执行一次：
+#   git config core.hooksPath zhishu-frontend/.husky
+# 之后每次提交都会由 lint-staged 对暂存文件跑 eslint --fix + prettier。
+
+cd "$(dirname "$0")/.." || exit 1
+npx --no-install lint-staged

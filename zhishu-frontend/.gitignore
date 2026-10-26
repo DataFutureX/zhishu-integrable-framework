@@ -24,6 +24,7 @@ build/
 .wrangler/
 
 # Environment variables
+.env
 .env.local
 .env.*.local
 
@@ -51,6 +52,3 @@ build/
 # Auto-generated types
 src/types/auto-imports.d.ts
 src/types/components.d.ts
-
-.github
-.husky

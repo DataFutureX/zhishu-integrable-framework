@@ -9,6 +9,8 @@ export default tseslint.config(
   {
     ignores: [
       'dist/**',
+      // deployment/web 由 scripts/package-web.ps1 从 dist 拷贝，属于构建产物，不得被 lint/--fix 改写
+      'deployment/**',
       'node_modules/**',
       'public/**',
       'src/types/auto-imports.d.ts',

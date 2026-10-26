@@ -507,6 +507,7 @@ import {
   updateGatewayModelApi,
 } from '@/api/gateway'
 import type {
+  GatewayId,
   GatewayModelType,
   GatewayModelUpsertDTO,
   GatewayModelVO,
@@ -520,13 +521,13 @@ const loading = ref(false)
 const saving = ref(false)
 const importing = ref(false)
 const loadingUpstream = ref(false)
-const testingId = ref<number | null>(null)
+const testingId = ref<GatewayId | null>(null)
 
 const providers = ref<GatewayProviderVO[]>([])
 const models = ref<GatewayModelVO[]>([])
 // 供应商筛选哨兵值：0 = 全部供应商
 const ALL_PROVIDERS = 0
-const selectedProviderId = ref<number>(ALL_PROVIDERS)
+const selectedProviderId = ref<GatewayId>(ALL_PROVIDERS)
 // '' = 全部类型
 const modelType = ref<GatewayModelType | ''>('')
 const typeOptions: { value: GatewayModelType | ''; label: string; icon: Component }[] = [
@@ -664,13 +665,13 @@ function formatTokens(value?: number | null): string {
 }
 
 const dialogVisible = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<GatewayId | null>(null)
 /** 表单弹窗改为展示型组件后，校验入口通过组件暴露的 validate() 调用 */
 const modelFormRef = ref<{ validate: () => Promise<boolean> }>()
 
 const importVisible = ref(false)
 const importType = ref<GatewayModelType>('CHAT')
-const importProviderId = ref<number | null>(null)
+const importProviderId = ref<GatewayId | null>(null)
 const importSelection = ref<GatewayUpstreamModel[]>([])
 const upstreamModels = ref<GatewayUpstreamModel[]>([])
 
@@ -861,7 +862,7 @@ async function loadModels() {
 }
 
 /** 弹窗预选供应商：优先用当前筛选值，其次默认供应商，再否则首个 */
-function pickInitialProviderId(): number {
+function pickInitialProviderId(): GatewayId {
   if (selectedProviderId.value !== ALL_PROVIDERS) {
     return selectedProviderId.value
   }

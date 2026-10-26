@@ -185,6 +185,7 @@
 import { ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type {
+  GatewayId,
   GatewayModelUpsertDTO,
   GatewayProviderVO,
   GatewayUpstreamModel,
@@ -198,7 +199,7 @@ defineOptions({ name: 'GatewayModelFormDialog' })
 
 // 只在模板中使用，无需绑定局部变量；表单对象来自父组件 reactive，子组件内改字段会回写父级
 defineProps<{
-  editingId: number | null
+  editingId: GatewayId | null
   providers: GatewayProviderVO[]
   form: GatewayModelUpsertDTO
   rules: FormRules

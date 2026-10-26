@@ -137,7 +137,7 @@ import {
   resetGatewayQuotaApi,
   updateGatewayQuotaApi,
 } from '@/api/gateway'
-import type { GatewayQuotaUpsertDTO, GatewayQuotaVO } from '@/types/modelGateway'
+import type { GatewayId, GatewayQuotaUpsertDTO, GatewayQuotaVO } from '@/types/modelGateway'
 
 defineOptions({ name: 'GatewayQuotaPolicy' })
 
@@ -146,7 +146,7 @@ const saving = ref(false)
 const quotas = ref<GatewayQuotaVO[]>([])
 const subjectFilter = ref('')
 const dialogVisible = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<GatewayId | null>(null)
 const formRef = ref<FormInstance>()
 
 const form = reactive<GatewayQuotaUpsertDTO>({

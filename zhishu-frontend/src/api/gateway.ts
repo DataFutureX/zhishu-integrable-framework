@@ -1,10 +1,12 @@
 import { del, get, post, put } from '@/utils/request'
 import type {
+  GatewayId,
   GatewayModelUpsertDTO,
   GatewayModelVO,
   GatewayPageResult,
   GatewayProviderUpsertDTO,
   GatewayProviderVO,
+  GatewayProviderTestDTO,
   GatewayQuotaUpsertDTO,
   GatewayQuotaVO,
   GatewayModelImportItem,
@@ -24,32 +26,37 @@ export const createGatewayProviderApi = (data: GatewayProviderUpsertDTO) => {
 }
 
 /** 修改供应商 PUT /api/v1/model-gateway/providers/{id} */
-export const updateGatewayProviderApi = (id: number, data: GatewayProviderUpsertDTO) => {
+export const updateGatewayProviderApi = (id: GatewayId, data: GatewayProviderUpsertDTO) => {
   return put<GatewayProviderVO>(`/model-gateway/providers/${id}`, data)
 }
 
 /** 删除供应商 DELETE /api/v1/model-gateway/providers/{id} */
-export const deleteGatewayProviderApi = (id: number) => {
+export const deleteGatewayProviderApi = (id: GatewayId) => {
   return del(`/model-gateway/providers/${id}`)
 }
 
 /** 设为默认供应商 POST /api/v1/model-gateway/providers/{id}/default */
-export const setDefaultGatewayProviderApi = (id: number) => {
+export const setDefaultGatewayProviderApi = (id: GatewayId) => {
   return post<GatewayProviderVO>(`/model-gateway/providers/${id}/default`)
 }
 
 /** 供应商连通性测试 POST /api/v1/model-gateway/providers/{id}/test */
-export const testGatewayProviderApi = (id: number) => {
+export const testGatewayProviderApi = (id: GatewayId) => {
   return post<string>(`/model-gateway/providers/${id}/test`)
 }
 
+/** 供应商连通性试跑 POST /api/v1/model-gateway/providers/test（不落库，API Key 可为空） */
+export const testGatewayProviderDraftApi = (data: GatewayProviderTestDTO) => {
+  return post<string>('/model-gateway/providers/test', data)
+}
+
 /** 拉取上游模型列表（含元数据） GET /api/v1/model-gateway/providers/{id}/upstream-models */
-export const listUpstreamModelsApi = (id: number | string) => {
+export const listUpstreamModelsApi = (id: GatewayId) => {
   return get<GatewayUpstreamModel[]>(`/model-gateway/providers/${id}/upstream-models`)
 }
 
 /** 模型列表 GET /api/v1/model-gateway/models */
-export const listGatewayModelsApi = (params?: { type?: string; providerId?: number }) => {
+export const listGatewayModelsApi = (params?: { type?: string; providerId?: GatewayId }) => {
   return get<GatewayModelVO[]>('/model-gateway/models', { params })
 }
 
@@ -59,7 +66,7 @@ export const listAvailableGatewayModelsApi = () => {
 }
 
 /** 网关模型详情 GET /api/v1/model-gateway/models/{id} */
-export const getGatewayModelApi = (id: number) => {
+export const getGatewayModelApi = (id: GatewayId) => {
   return get<GatewayModelVO>(`/model-gateway/models/${id}`)
 }
 
@@ -69,33 +76,33 @@ export const createGatewayModelApi = (data: GatewayModelUpsertDTO) => {
 }
 
 /** 修改网关模型 PUT /api/v1/model-gateway/models/{id} */
-export const updateGatewayModelApi = (id: number, data: GatewayModelUpsertDTO) => {
+export const updateGatewayModelApi = (id: GatewayId, data: GatewayModelUpsertDTO) => {
   return put<GatewayModelVO>(`/model-gateway/models/${id}`, data)
 }
 
 /** 删除网关模型 DELETE /api/v1/model-gateway/models/{id} */
-export const deleteGatewayModelApi = (id: number) => {
+export const deleteGatewayModelApi = (id: GatewayId) => {
   return del(`/model-gateway/models/${id}`)
 }
 
 /** 设为默认模型 POST /api/v1/model-gateway/models/{id}/default */
-export const setDefaultGatewayModelApi = (id: number) => {
+export const setDefaultGatewayModelApi = (id: GatewayId) => {
   return post<GatewayModelVO>(`/model-gateway/models/${id}/default`)
 }
 
 /** 启用/停用 POST /api/v1/model-gateway/models/{id}/enable|disable */
-export const changeGatewayModelStatusApi = (id: number, enabled: boolean) => {
+export const changeGatewayModelStatusApi = (id: GatewayId, enabled: boolean) => {
   return post<GatewayModelVO>(`/model-gateway/models/${id}/${enabled ? 'enable' : 'disable'}`)
 }
 
 /** 端到端连通测试 POST /api/v1/model-gateway/models/{id}/test */
-export const testGatewayModelApi = (id: number) => {
+export const testGatewayModelApi = (id: GatewayId) => {
   return post<string>(`/model-gateway/models/${id}/test`)
 }
 
 /** 从上游批量导入 POST /api/v1/model-gateway/models/batch */
 export const batchImportGatewayModelsApi = (data: {
-  providerId: number
+  providerId: GatewayId
   modelType?: string
   models: GatewayModelImportItem[]
 }) => {
@@ -115,17 +122,17 @@ export const createGatewayQuotaApi = (data: GatewayQuotaUpsertDTO) => {
 }
 
 /** 修改额度策略 PUT /api/v1/model-gateway/quotas/{id} */
-export const updateGatewayQuotaApi = (id: number, data: GatewayQuotaUpsertDTO) => {
+export const updateGatewayQuotaApi = (id: GatewayId, data: GatewayQuotaUpsertDTO) => {
   return put<GatewayQuotaVO>(`/model-gateway/quotas/${id}`, data)
 }
 
 /** 删除额度策略 DELETE /api/v1/model-gateway/quotas/{id} */
-export const deleteGatewayQuotaApi = (id: number) => {
+export const deleteGatewayQuotaApi = (id: GatewayId) => {
   return del(`/model-gateway/quotas/${id}`)
 }
 
 /** 清零已用量 POST /api/v1/model-gateway/quotas/{id}/reset */
-export const resetGatewayQuotaApi = (id: number) => {
+export const resetGatewayQuotaApi = (id: GatewayId) => {
   return post<GatewayQuotaVO>(`/model-gateway/quotas/${id}/reset`)
 }
 

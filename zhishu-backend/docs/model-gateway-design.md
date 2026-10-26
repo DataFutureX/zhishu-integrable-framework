@@ -1013,7 +1013,8 @@ UPDATE sys_menu SET sort = 5, update_time = CURRENT_TIMESTAMP WHERE id = 1204;
 | GET | `/api/v1/model-gateway/providers` | 供应商列表（含 `modelCount`、`isDefault`、Key 是否已配置） |
 | POST / PUT / DELETE | `/api/v1/model-gateway/providers[/{id}]` | 增删改（被模型引用时拒删） |
 | POST | `/api/v1/model-gateway/providers/{id}/default` | 设为默认供应商 |
-| POST | `/api/v1/model-gateway/providers/{id}/test` | 连通性：`GET {baseUrl}/models`，返回可用模型数与耗时 |
+| POST | `/api/v1/model-gateway/providers/{id}/test` | 连通性：`GET {baseUrl}/models`（Ollama 为 `/api/tags`），返回可用模型数与耗时；未配 Key 时匿名探测 |
+| POST | `/api/v1/model-gateway/providers/test` | 保存前试跑（不落库）：`baseUrl` 必填，`apiKey` 可为空——为空且带 `providerId` 时回落已保存 Key，否则匿名探测 |
 | GET | `/api/v1/model-gateway/providers/{id}/upstream-models` | 拉上游模型列表，返回 `UpstreamModelInfo[]`（id/展示名/上下文窗口/输出上限/模态/推理档位/system 更新方式），供「导入模型」 |
 | GET | `/api/v1/model-gateway/models?type=CHAT\|EMBEDDING&providerId=` | 按类型/供应商过滤 |
 | POST | `/api/v1/model-gateway/models/batch` | 批量导入（入参：providerId + 类型 + `models[]` 条目，每个条目可带上游元数据；兼容旧的 `upstreamModels[]` 名字列表），model_id 自动生成 `gw-<provider>-<model>` |

@@ -130,8 +130,12 @@
             v-model="form.apiKey"
             type="password"
             show-password
-            :placeholder="editingId ? '留空表示不修改' : '粘贴供应商 API Key'"
+            :placeholder="editingId ? '留空表示不修改' : '可留空：Ollama 等无需鉴权的上游直接测试'"
           />
+          <span class="gateway-page__meta">
+            可留空：编辑态留空时测试使用已保存的 Key；新建时按匿名方式探测，由上游 401
+            反馈是否需要鉴权
+          </span>
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number
@@ -155,6 +159,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
+        <el-button :loading="testingDraft" @click="handleTestDraft">测试连接</el-button>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
       </template>
@@ -173,18 +178,21 @@ import {
   listGatewayProvidersApi,
   setDefaultGatewayProviderApi,
   testGatewayProviderApi,
+  testGatewayProviderDraftApi,
   updateGatewayProviderApi,
 } from '@/api/gateway'
-import type { GatewayProviderUpsertDTO, GatewayProviderVO } from '@/types/modelGateway'
+import type { GatewayId, GatewayProviderUpsertDTO, GatewayProviderVO } from '@/types/modelGateway'
 
 defineOptions({ name: 'GatewayProviderList' })
 
 const loading = ref(false)
 const saving = ref(false)
-const testingId = ref<number | null>(null)
+const testingId = ref<GatewayId | null>(null)
+/** 弹窗内「测试连接」的加载态（与行内测试互不影响） */
+const testingDraft = ref(false)
 const providers = ref<GatewayProviderVO[]>([])
 const dialogVisible = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<GatewayId | null>(null)
 const formRef = ref<FormInstance>()
 
 const form = reactive<GatewayProviderUpsertDTO>({
@@ -261,11 +269,49 @@ async function handleSubmit() {
 async function handleTest(row: GatewayProviderVO) {
   testingId.value = row.id
   try {
-    const result = await testGatewayProviderApi(row.id)
-    ElMessage.info(result || '测试完成')
+    showTestResult(await testGatewayProviderApi(row.id))
   } finally {
     testingId.value = null
   }
+}
+
+/** 未配置 API Key 也可测：后端会以匿名方式探测，401 时返回需要鉴权的提示 */
+async function handleTestDraft() {
+  if (!form.baseUrl.trim()) {
+    ElMessage.warning('请先填写 Base URL')
+    return
+  }
+  // 只校验 Base URL：名称/标识/API Key 都不是测试的必填项
+  const baseUrlValid = await new Promise<boolean>((resolve) => {
+    const result = formRef.value?.validateField('baseUrl', (isValid: boolean) =>
+      resolve(Boolean(isValid)),
+    )
+    if (!result) resolve(false)
+  })
+  if (!baseUrlValid) return
+
+  testingDraft.value = true
+  try {
+    const result = await testGatewayProviderDraftApi({
+      providerId: editingId.value,
+      providerKey: form.providerKey?.trim() || undefined,
+      baseUrl: form.baseUrl.trim(),
+      apiKey: form.apiKey?.trim() || null,
+    })
+    showTestResult(result)
+  } finally {
+    testingDraft.value = false
+  }
+}
+
+/** 统一测试结果提示：成功用 success，其余作为警告展示后端原因 */
+function showTestResult(result?: string) {
+  const message = result || '测试完成'
+  if (message.includes('连通成功')) {
+    ElMessage.success(message)
+    return
+  }
+  ElMessage.warning(message)
 }
 
 async function handleDefault(row: GatewayProviderVO) {
@@ -303,6 +349,12 @@ onMounted(loadProviders)
 
 .gateway-page__hint {
   margin-bottom: 12px;
+}
+
+.gateway-page__meta {
+  margin-left: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
 }
 
 .ml-6 {

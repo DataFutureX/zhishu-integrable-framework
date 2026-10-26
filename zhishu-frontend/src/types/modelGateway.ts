@@ -1,8 +1,10 @@
 /** 模型网关（Model Gateway）类型定义 */
+/** 网关主键多为 19 位雪花 ID，服务端超出 JS 安全整数范围时以字符串下发 */
+export type GatewayId = number | string
 
 /** 供应商（只含连接与凭据） */
 export interface GatewayProviderVO {
-  id: number
+  id: GatewayId
   name: string
   providerKey: string
   baseUrl: string
@@ -30,6 +32,17 @@ export interface GatewayProviderUpsertDTO {
 
 export type GatewayModelType = 'CHAT' | 'EMBEDDING'
 
+/**
+ * 供应商连通性试跑（保存前，不落库）。
+ * API Key 可为空：为空且带 providerId 时后端回落到已保存 Key，否则匿名探测（Ollama / vLLM 等）。
+ */
+export interface GatewayProviderTestDTO {
+  providerId?: GatewayId | null
+  providerKey?: string
+  baseUrl: string
+  apiKey?: string | null
+}
+
 /** 上游模型元数据（GET /model-gateway/providers/{id}/upstream-models） */
 export interface GatewayUpstreamModel {
   id: string
@@ -55,10 +68,10 @@ export interface GatewayModelImportItem {
 }
 
 export interface GatewayModelVO {
-  id: number
+  id: GatewayId
   modelId: string
   displayName: string
-  providerId: number
+  providerId: GatewayId
   providerName?: string | null
   providerKey?: string | null
   upstreamModel: string
@@ -86,7 +99,7 @@ export interface GatewayModelVO {
 export interface GatewayModelUpsertDTO {
   modelId: string
   displayName: string
-  providerId: number
+  providerId: GatewayId
   upstreamModel: string
   modelType?: GatewayModelType | string
   contextWindow?: number | null
@@ -107,7 +120,7 @@ export interface GatewayModelUpsertDTO {
 }
 
 export interface GatewayQuotaVO {
-  id: number
+  id: GatewayId
   subjectType: 'USER' | 'ROLE' | 'DEFAULT' | string
   subjectKey: string
   periodKind: string
@@ -132,13 +145,13 @@ export interface GatewayQuotaUpsertDTO {
 }
 
 export interface GatewayUsageVO {
-  id: number
+  id: GatewayId
   requestId: string
   userId?: string | null
   username?: string | null
   channel: string
   modelId: string
-  providerId?: number | null
+  providerId?: GatewayId | null
   upstreamModel?: string | null
   stream?: boolean | null
   status: string

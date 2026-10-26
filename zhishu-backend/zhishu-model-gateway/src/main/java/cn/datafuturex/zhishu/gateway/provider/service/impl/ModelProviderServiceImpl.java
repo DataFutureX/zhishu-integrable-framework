@@ -4,6 +4,7 @@ import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelProviderPort;
 import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.domain.ModelProviderEntity;
 import cn.datafuturex.zhishu.gateway.provider.mapper.ModelProviderMapper;
@@ -177,20 +178,58 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
     @Override
     public String testConnection(Long id) {
         ModelProviderEntity entity = requireEntity(id);
-        if (!isOllamaProvider(entity) && !StringUtils.hasText(resolveApiKey(entity))) {
-            return "未配置 API Key，无法测试连通性";
-        }
+        return probeConnection(
+                entity.getProviderKey(),
+                entity.getName(),
+                entity.getBaseUrl(),
+                resolveApiKey(entity),
+                "id=" + id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String testConnection(ModelProviderTestDTO dto) {
+        String apiKey = StringUtils.hasText(dto.apiKey())
+                ? sanitizeApiKey(dto.apiKey())
+                : resolveStoredApiKey(dto.providerId());
+        String providerKey = StringUtils.hasText(dto.providerKey()) ? dto.providerKey().trim() : "openai-compatible";
+        return probeConnection(providerKey, dto.providerKey(), dto.baseUrl(), apiKey,
+                "draft providerId=" + dto.providerId());
+    }
+
+    /**
+     * 统一的探测入口：记录耗时并把异常转成可读文案（不抛异常，便于弹窗直接展示）。
+     *
+     * @param providerKey 程序标识（参与 Ollama 判定）
+     * @param name        展示名称（参与 Ollama 判定，可为空）
+     * @param baseUrl     Base URL
+     * @param apiKey      明文 Key，可为空（为空则匿名探测）
+     * @param scene       日志标识
+     * @return 测试结果说明
+     */
+    private String probeConnection(String providerKey, String name, String baseUrl, String apiKey, String scene) {
         long start = System.nanoTime();
         try {
-            List<UpstreamModelInfo> models = fetchUpstreamModels(entity);
+            List<UpstreamModelInfo> models = fetchUpstreamModels(providerKey, name, baseUrl, apiKey);
             long elapsed = (System.nanoTime() - start) / 1_000_000L;
-            log.info("供应商连通性测试通过 id={}, 模型数={}", id, models.size());
+            log.info("供应商连通性测试通过 {}, 模型数={}", scene, models.size());
             return "连通成功，耗时 " + elapsed + " ms，上游可用模型 " + models.size() + " 个";
         } catch (Exception e) {
             long elapsed = (System.nanoTime() - start) / 1_000_000L;
-            log.warn("供应商连通性测试失败 id={}: {}", id, e.getMessage());
+            log.warn("供应商连通性测试失败 {}: {}", scene, e.getMessage());
             return "连通失败，耗时 " + elapsed + " ms：" + e.getMessage();
         }
+    }
+
+    /** 编辑态测试时可用已保存的 Key：留空即表示不修改密钥 */
+    private String resolveStoredApiKey(Long providerId) {
+        if (providerId == null) {
+            return null;
+        }
+        ModelProviderEntity stored = modelProviderMapper.selectById(providerId);
+        return stored == null ? null : resolveApiKey(stored);
     }
 
     /**
@@ -231,13 +270,27 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
 
     // ---- 内部方法 ----
 
+    /**
+     * 允许无 Key 上游（vLLM / LM Studio / Ollama 等自建服务常不设密钥）：
+     * 服务端不做「必须配 Key」的预判，缺 Key 导致的鉴权失败由上游的 401 反馈真实原因。
+     */
     private List<UpstreamModelInfo> fetchUpstreamModels(ModelProviderEntity entity) {
-        boolean ollama = isOllamaProvider(entity);
-        String apiKey = resolveApiKey(entity);
-        if (!ollama && !StringUtils.hasText(apiKey)) {
-            throw new BusinessException(400, "未配置 API Key");
-        }
-        String url = upstreamModelsUrl(entity, ollama);
+        return fetchUpstreamModels(entity.getProviderKey(), entity.getName(), entity.getBaseUrl(),
+                resolveApiKey(entity));
+    }
+
+    /**
+     * 同上，但连接信息来自调用方（保存前试跑时尚未落库）。
+     *
+     * @param providerKey 程序标识（参与 Ollama 判定，可为空）
+     * @param name        展示名称（参与 Ollama 判定，可为空）
+     * @param baseUrl     Base URL
+     * @param apiKey      明文 Key，可为空（为空则匿名请求，由上游 401 决定是否需要鉴权）
+     */
+    private List<UpstreamModelInfo> fetchUpstreamModels(String providerKey, String name, String baseUrl,
+                                                        String apiKey) {
+        boolean ollama = isOllamaProvider(providerKey, name, baseUrl);
+        String url = upstreamModelsUrl(baseUrl, ollama);
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
@@ -251,8 +304,11 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
         try {
             HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() >= 400) {
+                boolean keyless = !ollama && !StringUtils.hasText(apiKey);
+                String hint = (response.statusCode() == 401 || response.statusCode() == 403) && keyless
+                        ? "（该供应商未配置 API Key，若上游需要鉴权请先填写）" : "";
                 throw new BusinessException(response.statusCode(),
-                        "上游返回 HTTP " + response.statusCode());
+                        "上游返回 HTTP " + response.statusCode() + hint);
             }
             JsonNode root = MAPPER.readTree(response.body());
             List<UpstreamModelInfo> models = new ArrayList<>();
@@ -284,21 +340,22 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
      * 上游模型列表地址：Ollama 的原生接口在根路径 {@code /api/tags}，其余供应商走 OpenAI 兼容的 {@code /models}。
      * Ollama 的 Base URL 常按 OpenAI 兼容方式填成 {@code .../v1}，此处先剥掉版本后缀再拼原生路径。
      */
-    private static String upstreamModelsUrl(ModelProviderEntity entity, boolean ollama) {
-        String baseUrl = trimSlash(entity.getBaseUrl());
+    static String upstreamModelsUrl(String baseUrl, boolean ollama) {
+        String normalized = trimSlash(baseUrl == null ? "" : baseUrl.trim());
         if (!ollama) {
-            return baseUrl + OPENAI_MODELS_PATH;
+            return normalized + OPENAI_MODELS_PATH;
         }
-        if (baseUrl.length() >= 3 && baseUrl.regionMatches(true, baseUrl.length() - 3, "/v1", 0, 3)) {
-            baseUrl = trimSlash(baseUrl.substring(0, baseUrl.length() - 3));
+        if (normalized.length() >= 3
+                && normalized.regionMatches(true, normalized.length() - 3, "/v1", 0, 3)) {
+            normalized = trimSlash(normalized.substring(0, normalized.length() - 3));
         }
-        return baseUrl + OLLAMA_TAGS_PATH;
+        return normalized + OLLAMA_TAGS_PATH;
     }
 
-    private static boolean isOllamaProvider(ModelProviderEntity entity) {
-        return containsOllama(entity.getProviderKey())
-                || containsOllama(entity.getName())
-                || containsOllama(entity.getBaseUrl());
+    static boolean isOllamaProvider(String providerKey, String name, String baseUrl) {
+        return containsOllama(providerKey)
+                || containsOllama(name)
+                || containsOllama(baseUrl);
     }
 
     private static boolean containsOllama(String value) {

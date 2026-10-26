@@ -2,6 +2,7 @@ package cn.datafuturex.zhishu.gateway.admin.service.impl;
 
 import cn.datafuturex.zhishu.gateway.provider.api.ModelProviderPort;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.vo.ModelProviderVO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
@@ -93,6 +94,14 @@ public class GatewayProviderAdminServiceImpl implements GatewayProviderAdminServ
     @Override
     public String test(Long id) {
         return modelProviderPort.testConnection(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String testDraft(ModelProviderTestDTO dto) {
+        return modelProviderPort.testConnection(dto);
     }
 
     /**

@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.gateway.provider.api;
 
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.vo.ModelProviderVO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
@@ -66,6 +67,17 @@ public interface ModelProviderPort {
      * @return 测试结果说明
      */
     String testConnection(Long id);
+
+    /**
+     * 保存前试跑：用表单里的临时连接信息探测上游（不落库）。
+     * <p>
+     * {@code apiKey} 可为空：为空且带 {@code providerId} 时回落到已保存的 Key，
+     * 两者都没有则按匿名方式探测（适配 Ollama / vLLM 等无需鉴权的上游）。
+     *
+     * @param dto 临时连接信息
+     * @return 测试结果说明
+     */
+    String testConnection(ModelProviderTestDTO dto);
 
     /**
      * 拉取上游模型 id 列表，供「导入模型」使用（Ollama 供应商走 {@code GET /api/tags}）。

@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.gateway.admin.service;
 
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayProviderAdminVO;
@@ -58,6 +59,14 @@ public interface GatewayProviderAdminService {
      * @return 测试结果说明
      */
     String test(Long id);
+
+    /**
+     * 保存前试跑连通性（不落库；API Key 可为空）。
+     *
+     * @param dto 临时连接信息
+     * @return 测试结果说明
+     */
+    String testDraft(ModelProviderTestDTO dto);
 
     /**
      * 拉取上游模型列表（含 GET /models 元数据；Ollama 为 /api/tags）。

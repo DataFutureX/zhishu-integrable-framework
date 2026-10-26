@@ -1,6 +1,7 @@
 package cn.datafuturex.zhishu.gateway.admin.controller;
 
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
+import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
 import cn.datafuturex.zhishu.common.Result;
@@ -116,6 +117,20 @@ public class GatewayProviderAdminController {
             description = "调用上游模型列表（OpenAI 兼容 GET /models，Ollama 为 GET /api/tags），返回可用模型数与耗时")
     public Result<String> test(@PathVariable Long id) {
         return Result.success(gatewayProviderAdminService.test(id));
+    }
+
+    /**
+     * 保存前试跑连通性（API Key 可为空）。
+     *
+     * @param dto 临时连接信息
+     * @return 测试结果说明
+     */
+    @PostMapping("/test")
+    @PreAuthorize("hasAuthority('" + PermissionConstants.GATEWAY_PROVIDER_LIST + "')")
+    @Operation(summary = "连通性试跑（不落库）",
+            description = "用表单里的 Base URL 直接探测；API Key 可为空：为空且带 providerId 时回落到已保存 Key，否则匿名探测")
+    public Result<String> testDraft(@Valid @RequestBody ModelProviderTestDTO dto) {
+        return Result.success(gatewayProviderAdminService.testDraft(dto));
     }
 
     /**

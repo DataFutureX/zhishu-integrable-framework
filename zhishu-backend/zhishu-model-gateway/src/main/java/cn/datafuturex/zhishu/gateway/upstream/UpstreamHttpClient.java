@@ -141,11 +141,14 @@ public class UpstreamHttpClient {
 
     private HttpRequest build(String url, String apiKey, String accept, byte[] body, int timeoutMs) {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .header(HttpHeaders.ACCEPT, accept)
                 .header(HttpHeaders.USER_AGENT, USER_AGENT)
                 .POST(HttpRequest.BodyPublishers.ofByteArray(body));
+        // 无 Key 上游（Ollama / vLLM / LM Studio 等）不发送 Authorization，交由上游返回 401 说明真实原因
+        if (apiKey != null && !apiKey.isBlank()) {
+            builder.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey);
+        }
         if (timeoutMs > 0) {
             builder.timeout(Duration.ofMillis(timeoutMs));
         }

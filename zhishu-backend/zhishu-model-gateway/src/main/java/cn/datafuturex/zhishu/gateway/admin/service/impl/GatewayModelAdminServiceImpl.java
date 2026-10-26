@@ -223,8 +223,10 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
         if (upstream.isEmpty()) {
             return "上游供应商不存在或已禁用，无法测试";
         }
-        if (!upstream.get().usable()) {
-            return "上游未配置 API Key，无法测试";
+        // 无 Key 上游（Ollama / vLLM / LM Studio 等）同样允许测试：
+        // 仅要求 Base URL，是否需鉴权由上游返回 401/403 说明真实原因。
+        if (upstream.get().baseUrl() == null || upstream.get().baseUrl().isBlank()) {
+            return "上游未配置 Base URL，无法测试";
         }
         if (TYPE_EMBEDDING.equalsIgnoreCase(entity.getModelType())) {
             return "向量模型不提供对话测试，请直接在知识库入库/检索中验证";

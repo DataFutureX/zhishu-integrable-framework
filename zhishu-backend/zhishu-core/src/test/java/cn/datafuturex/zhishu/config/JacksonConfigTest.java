@@ -1,9 +1,9 @@
 package cn.datafuturex.zhishu.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,19 +13,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 大整数序列化约定：超出 JS 安全整数的 Long 走字符串，其余仍是数字。
  * 前端据此删除了「JSON 原文正则加引号」的兜底逻辑，此用例是双方契约的守门员。
+ * 这里必须用 Jackson 3（HTTP 响应实际使用的 Mapper），Jackson 2 的 Module 对出网 JSON 无效。
  */
 class JacksonConfigTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JacksonConfig().safeLongModule());
+    private final JsonMapper jsonMapper = JsonMapper.builder()
+            .addModule(new JacksonConfig().safeLongModule())
+            .build();
 
-    private JsonNode write(Object value) throws Exception {
-        return objectMapper.readTree(objectMapper.writeValueAsString(value));
+    private JsonNode write(Object value) {
+        return jsonMapper.readTree(jsonMapper.writeValueAsString(value));
     }
 
     @Test
     @DisplayName("19 位雪花 ID 序列化为字符串")
-    void snowflakeIdSerializedAsString() throws Exception {
+    void snowflakeIdSerializedAsString() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("id", 1999999999999999999L);
         assertThat(write(payload).get("id").isTextual()).isTrue();
@@ -34,7 +36,7 @@ class JacksonConfigTest {
 
     @Test
     @DisplayName("安全范围内的数值仍为数字，不破坏既有契约")
-    void safeNumbersStayNumeric() throws Exception {
+    void safeNumbersStayNumeric() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("total", 100L);
         payload.put("uptimeMillis", 86400000L);
@@ -48,7 +50,7 @@ class JacksonConfigTest {
 
     @Test
     @DisplayName("负数超出安全范围同样转字符串")
-    void negativeUnsafeNumberSerializedAsString() throws Exception {
+    void negativeUnsafeNumberSerializedAsString() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("offset", -9007199254740992L);
         assertThat(write(payload).get("offset").isTextual()).isTrue();
@@ -56,7 +58,7 @@ class JacksonConfigTest {
 
     @Test
     @DisplayName("null 保持 null")
-    void nullStaysNull() throws Exception {
+    void nullStaysNull() {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("parentId", null);
         assertThat(write(payload).get("parentId").isNull()).isTrue();

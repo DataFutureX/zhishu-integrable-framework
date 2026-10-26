@@ -8,7 +8,8 @@
     :hero-metrics="heroMetrics"
   >
     <template #heroDescription>
-      智能体可挂载的能力与 Tool 方法目录。描述来自后端 <code>@Tool</code>；在 Agents 中勾选能力后，运行时会注入对应工具。
+      智能体可挂载的能力与 Tool 方法目录。描述来自后端 <code>@Tool</code>；在 Agents
+      中勾选能力后，运行时会注入对应工具。
     </template>
     <template #heroActions>
       <el-button size="small" :icon="Refresh" :loading="loading" @click="fetchList">刷新</el-button>
@@ -88,9 +89,7 @@ const resolveCapTools = (cap: CapabilityVO): ToolInfoVO[] => {
   return (cap.toolNames || []).map((name) => ({ name, description: '' }))
 }
 
-const toolBasedCapCount = computed(
-  () => capabilities.value.filter((c) => c.toolBased).length,
-)
+const toolBasedCapCount = computed(() => capabilities.value.filter((c) => c.toolBased).length)
 
 const toolMethodCount = computed(() => {
   const names = new Set<string>()
@@ -131,7 +130,12 @@ const filteredCapabilities = computed(() => {
     if (kindFilter.value === 'OTHER' && cap.toolBased) return false
     if (!q) return true
     const tools = resolveCapTools(cap)
-    const hay = [cap.label, cap.code, cap.description, ...tools.map((t) => `${t.name} ${t.description}`)]
+    const hay = [
+      cap.label,
+      cap.code,
+      cap.description,
+      ...tools.map((t) => `${t.name} ${t.description}`),
+    ]
       .join(' ')
       .toLowerCase()
     return hay.includes(q)

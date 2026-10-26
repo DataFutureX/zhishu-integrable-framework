@@ -5,14 +5,21 @@
         <div class="gateway-page__header">
           <span class="gateway-page__title">额度策略</span>
           <div class="gateway-page__actions">
-            <el-select v-model="subjectFilter" size="small" style="width: 140px" @change="loadQuotas">
+            <el-select
+              v-model="subjectFilter"
+              size="small"
+              style="width: 140px"
+              @change="loadQuotas"
+            >
               <el-option label="全部主体" value="" />
               <el-option label="用户" value="USER" />
               <el-option label="角色" value="ROLE" />
               <el-option label="兜底" value="DEFAULT" />
             </el-select>
             <el-button size="small" :icon="Refresh" @click="loadQuotas">刷新</el-button>
-            <el-button type="primary" size="small" :icon="Plus" @click="openCreate">新建策略</el-button>
+            <el-button type="primary" size="small" :icon="Plus" @click="openCreate"
+              >新建策略</el-button
+            >
           </div>
         </div>
       </template>
@@ -33,21 +40,31 @@
           </template>
         </el-table-column>
         <el-table-column label="周期" width="140">
-          <template #default="{ row }">{{ row.periodKind }} / {{ formatDate(row.periodEnd) }}</template>
+          <template #default="{ row }"
+            >{{ row.periodKind }} / {{ formatDate(row.periodEnd) }}</template
+          >
         </el-table-column>
         <el-table-column label="上限" width="140" align="right">
-          <template #default="{ row }">{{ row.tokenLimit == null ? '不限量' : row.tokenLimit }}</template>
+          <template #default="{ row }">{{
+            row.tokenLimit == null ? '不限量' : row.tokenLimit
+          }}</template>
         </el-table-column>
         <el-table-column label="已用" width="140" align="right">
           <template #default="{ row }">{{ row.usedTokens ?? 0 }}</template>
         </el-table-column>
         <el-table-column label="剩余" width="140" align="right">
-          <template #default="{ row }">{{ row.remaining != null && row.remaining >= 0 ? row.remaining : '—' }}</template>
+          <template #default="{ row }">{{
+            row.remaining != null && row.remaining >= 0 ? row.remaining : '—'
+          }}</template>
         </el-table-column>
         <el-table-column label="操作" width="240" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEdit(row as GatewayQuotaVO)">编辑</el-button>
-            <el-button link type="primary" size="small" @click="handleReset(row as GatewayQuotaVO)">清零</el-button>
+            <el-button link type="primary" size="small" @click="openEdit(row as GatewayQuotaVO)"
+              >编辑</el-button
+            >
+            <el-button link type="primary" size="small" @click="handleReset(row as GatewayQuotaVO)"
+              >清零</el-button
+            >
             <el-button
               link
               type="danger"
@@ -62,7 +79,11 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑额度策略' : '新建额度策略'" width="520px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑额度策略' : '新建额度策略'"
+      width="520px"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
         <el-form-item label="主体类型" prop="subjectType">
           <el-select v-model="form.subjectType" :disabled="!!editingId" style="width: 100%">

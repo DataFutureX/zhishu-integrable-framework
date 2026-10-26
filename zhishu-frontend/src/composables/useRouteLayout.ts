@@ -1,15 +1,13 @@
 import { computed, type Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@/stores/useLayoutStore'
-import type {
-  EffectiveRouteLayout,
-  PageLayoutType,
-  RouteLayoutMeta,
-} from '@/types/route'
+import type { EffectiveRouteLayout, PageLayoutType, RouteLayoutMeta } from '@/types/route'
 
 const LAYOUT_PRESETS: Record<
   PageLayoutType,
-  Required<Pick<RouteLayoutMeta, 'fullBleed' | 'hideTabBar' | 'hideBreadcrumb' | 'hideSecondaryAside'>>
+  Required<
+    Pick<RouteLayoutMeta, 'fullBleed' | 'hideTabBar' | 'hideBreadcrumb' | 'hideSecondaryAside'>
+  >
 > = {
   default: {
     fullBleed: false,
@@ -46,9 +44,10 @@ const pickRouteLayoutMeta = (routeMeta: Record<string, unknown>): RouteLayoutMet
 })
 
 /** 从 matched 链中解析页面布局（子路由优先） */
-export function resolvePageLayoutType(
-  matched: { meta: Record<string, unknown> }[],
-): { layoutType: PageLayoutType; explicitMeta: RouteLayoutMeta } {
+export function resolvePageLayoutType(matched: { meta: Record<string, unknown> }[]): {
+  layoutType: PageLayoutType
+  explicitMeta: RouteLayoutMeta
+} {
   for (let i = matched.length - 1; i >= 0; i--) {
     const meta = pickRouteLayoutMeta(matched[i].meta)
     if (meta.layout) {

@@ -8,7 +8,8 @@
     :hero-metrics="heroMetrics"
   >
     <template #heroDescription>
-      对外提供只读监测 MCP（<code>/mcp</code>），并接入他方 MCP 供智能中心 Agent 调用。接入工具不会再对外转发。
+      对外提供只读监测 MCP（<code>/mcp</code>），并接入他方 MCP 供智能中心 Agent
+      调用。接入工具不会再对外转发。
     </template>
     <template #heroActions>
       <el-button
@@ -54,7 +55,12 @@
           <el-radio-button value="out">对外 Client</el-radio-button>
           <el-radio-button value="log">调用审计</el-radio-button>
         </el-radio-group>
-        <el-radio-group v-if="tab === 'log'" v-model="logDirection" size="default" @change="loadLogs">
+        <el-radio-group
+          v-if="tab === 'log'"
+          v-model="logDirection"
+          size="default"
+          @change="loadLogs"
+        >
           <el-radio-button value="">全部</el-radio-button>
           <el-radio-button value="OUT">对外</el-radio-button>
           <el-radio-button value="IN">接入</el-radio-button>
@@ -119,7 +125,9 @@
             </header>
 
             <p class="mcp-card__desc" :title="row.remark || ''">
-              {{ row.remark || row.boundUsername || '他方 Agent 凭 MCP Key 调用本平台只读监测 Tool。' }}
+              {{
+                row.remark || row.boundUsername || '他方 Agent 凭 MCP Key 调用本平台只读监测 Tool。'
+              }}
             </p>
 
             <div class="mcp-card__specs">
@@ -138,11 +146,7 @@
             </div>
 
             <div class="mcp-card__skills">
-              <span
-                v-for="cap in row.capabilities || []"
-                :key="cap"
-                class="mcp-skill"
-              >
+              <span v-for="cap in row.capabilities || []" :key="cap" class="mcp-skill">
                 {{ capLabel(cap) }}
               </span>
               <span v-if="!(row.capabilities || []).length" class="mcp-card__skills-empty">
@@ -233,12 +237,7 @@
                   <span class="mcp-card__meta">{{ protocolLabel(row.protocol) }}</span>
                 </div>
               </div>
-              <el-tag
-                size="small"
-                :type="healthTag(row.healthStatus)"
-                effect="plain"
-                round
-              >
+              <el-tag size="small" :type="healthTag(row.healthStatus)" effect="plain" round>
                 {{ row.healthStatus || 'UNKNOWN' }}
               </el-tag>
             </header>
@@ -307,7 +306,11 @@
         <el-table-column prop="createTime" label="时间" width="170" />
         <el-table-column prop="direction" label="方向" width="80">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.direction === 'OUT' ? 'primary' : 'success'" effect="plain">
+            <el-tag
+              size="small"
+              :type="row.direction === 'OUT' ? 'primary' : 'success'"
+              effect="plain"
+            >
               {{ row.direction === 'OUT' ? '对外' : '接入' }}
             </el-tag>
           </template>
@@ -400,7 +403,11 @@
             <p v-else class="curl-hint">支持 curl、纯 URL；解析后自动填充协议、地址与鉴权。</p>
           </el-form-item>
           <el-form-item label="编码" required>
-            <el-input v-model="upstreamForm.code" :disabled="!!upstreamEditingId" placeholder="weather" />
+            <el-input
+              v-model="upstreamForm.code"
+              :disabled="!!upstreamEditingId"
+              placeholder="weather"
+            />
           </el-form-item>
           <el-form-item label="名称" required>
             <el-input v-model="upstreamForm.name" />
@@ -523,12 +530,18 @@
 
           <el-tabs v-model="accessTab" class="access-tabs">
             <el-tab-pane label="Cursor" name="cursor">
-              <p class="access-field__hint">写入 Cursor 的 <code>mcp.json</code> → <code>mcpServers</code>。</p>
+              <p class="access-field__hint">
+                写入 Cursor 的 <code>mcp.json</code> → <code>mcpServers</code>。
+              </p>
               <el-input :model-value="cursorSnippet" type="textarea" :rows="11" readonly />
-              <el-button class="copy-snippet" @click="copyText(cursorSnippet)">复制 Cursor 配置</el-button>
+              <el-button class="copy-snippet" @click="copyText(cursorSnippet)"
+                >复制 Cursor 配置</el-button
+              >
             </el-tab-pane>
             <el-tab-pane label="curl" name="curl">
-              <p class="access-field__hint">用 Streamable HTTP 探测 initialize；成功应返回 MCP 会话而非 401。</p>
+              <p class="access-field__hint">
+                用 Streamable HTTP 探测 initialize；成功应返回 MCP 会话而非 401。
+              </p>
               <el-input :model-value="curlSnippet" type="textarea" :rows="10" readonly />
               <el-button class="copy-snippet" @click="copyText(curlSnippet)">复制 curl</el-button>
             </el-tab-pane>
@@ -555,7 +568,10 @@
             <template #default="{ row }">
               <el-switch
                 :model-value="row.enabled"
-                @change="(on: string | number | boolean) => toggleTool(row as McpUpstreamToolVO, on === true)"
+                @change="
+                  (on: string | number | boolean) =>
+                    toggleTool(row as McpUpstreamToolVO, on === true)
+                "
               />
             </template>
           </el-table-column>
@@ -570,7 +586,15 @@ defineOptions({ name: 'AIMcpHub' })
 
 import { computed, nextTick, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Connection, Key, Link, Plus, QuestionFilled, Refresh, Search } from '@element-plus/icons-vue'
+import {
+  Connection,
+  Key,
+  Link,
+  Plus,
+  QuestionFilled,
+  Refresh,
+  Search,
+} from '@element-plus/icons-vue'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { PERMISSIONS } from '@/constants/permissions'
@@ -597,10 +621,7 @@ import type {
   McpUpstreamToolVO,
   McpUpstreamVO,
 } from '@/types/mcp'
-import {
-  parseMcpUpstreamSnippet,
-  type ParsedMcpUpstreamSnippet,
-} from '@/utils/parseMcpCurl'
+import { parseMcpUpstreamSnippet, type ParsedMcpUpstreamSnippet } from '@/utils/parseMcpCurl'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -725,7 +746,10 @@ const curlSnippet = computed(() => {
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"probe","version":"1.0"}}}'`
 })
 
-const openClientAccess = (row: McpClientVO, options?: { apiKey?: string; justRevealed?: boolean }) => {
+const openClientAccess = (
+  row: McpClientVO,
+  options?: { apiKey?: string; justRevealed?: boolean },
+) => {
   accessClient.value = row
   accessTab.value = 'cursor'
   publicMcpUrl.value = defaultMcpUrl()
@@ -796,8 +820,7 @@ const filteredLogs = computed(() => {
 
 const capLabel = (code: string) => outboundCaps.find((c) => c.code === code)?.label || code
 
-const protocolLabel = (protocol: string) =>
-  protocol === 'SSE' ? 'SSE' : 'Streamable HTTP'
+const protocolLabel = (protocol: string) => (protocol === 'SSE' ? 'SSE' : 'Streamable HTTP')
 
 const healthTag = (status?: string | null) => {
   if (status === 'UP') return 'success'
@@ -1128,12 +1151,17 @@ useRouteActivate(() => {
   background: #fff;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 
   &:hover {
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--mcp-primary) 35%, transparent);
-    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05), 0 12px 24px rgba(15, 23, 42, 0.07);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.05),
+      0 12px 24px rgba(15, 23, 42, 0.07);
   }
 
   &--clickable {
@@ -1158,7 +1186,11 @@ useRouteActivate(() => {
   }
 
   &__rail {
-    background: linear-gradient(180deg, var(--persona-tone), color-mix(in srgb, var(--persona-tone) 70%, #fff));
+    background: linear-gradient(
+      180deg,
+      var(--persona-tone),
+      color-mix(in srgb, var(--persona-tone) 70%, #fff)
+    );
   }
 
   &__body {

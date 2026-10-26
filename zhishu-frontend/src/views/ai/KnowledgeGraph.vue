@@ -15,7 +15,9 @@
       <el-tag size="small" :type="health?.connected ? 'success' : 'danger'" effect="plain">
         Neo4j {{ health?.connected ? '已连接' : '未连接' }}
       </el-tag>
-      <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
+      <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll"
+        >刷新</el-button
+      >
       <el-button
         v-permission="PERMISSIONS.AI_KG_SYNC"
         type="primary"
@@ -47,12 +49,7 @@
               style="width: 100%"
               @change="onProjectChange"
             >
-              <el-option
-                v-for="p in projects"
-                :key="p.id"
-                :label="p.projectName"
-                :value="p.id"
-              />
+              <el-option v-for="p in projects" :key="p.id" :label="p.projectName" :value="p.id" />
             </el-select>
           </el-form-item>
           <el-form-item label="展开深度">
@@ -66,7 +63,9 @@
           </el-form-item>
           <el-form-item label="节点类型">
             <el-checkbox-group v-model="selectedTypes" @change="loadSubgraph">
-              <el-checkbox v-for="t in typeOptions" :key="t" :label="t">{{ typeLabel(t) }}</el-checkbox>
+              <el-checkbox v-for="t in typeOptions" :key="t" :label="t">{{
+                typeLabel(t)
+              }}</el-checkbox>
             </el-checkbox-group>
           </el-form-item>
           <el-form-item label="搜索实体">
@@ -85,14 +84,28 @@
 
         <div v-if="topology" class="kg-panel">
           <div class="kg-panel__title">工程拓扑摘要</div>
-          <div v-if="!topology.found" class="kg-panel__hint">{{ topology.message || '暂无摘要' }}</div>
+          <div v-if="!topology.found" class="kg-panel__hint">
+            {{ topology.message || '暂无摘要' }}
+          </div>
           <ul v-else class="kg-topo">
-            <li><span>工程</span><b>{{ topology.projectName || `#${topology.projectId}` }}</b></li>
-            <li><span>站点</span><b>{{ topology.terminalCount }}</b></li>
-            <li><span>告警</span><b>{{ topology.openAlertCount }}</b></li>
-            <li><span>巡检计划</span><b>{{ topology.planCount }}</b></li>
-            <li><span>巡检任务</span><b>{{ topology.taskCount }}</b></li>
-            <li><span>未关闭异常</span><b>{{ topology.openIssueCount }}</b></li>
+            <li>
+              <span>工程</span><b>{{ topology.projectName || `#${topology.projectId}` }}</b>
+            </li>
+            <li>
+              <span>站点</span><b>{{ topology.terminalCount }}</b>
+            </li>
+            <li>
+              <span>告警</span><b>{{ topology.openAlertCount }}</b>
+            </li>
+            <li>
+              <span>巡检计划</span><b>{{ topology.planCount }}</b>
+            </li>
+            <li>
+              <span>巡检任务</span><b>{{ topology.taskCount }}</b>
+            </li>
+            <li>
+              <span>未关闭异常</span><b>{{ topology.openIssueCount }}</b>
+            </li>
           </ul>
         </div>
 
@@ -108,7 +121,12 @@
               <em>{{ formatEndpoint(pathTo) }}</em>
             </div>
             <div class="kg-path__actions">
-              <el-button size="small" :disabled="!pathFrom || !pathTo" :loading="pathLoading" @click="runPath">
+              <el-button
+                size="small"
+                :disabled="!pathFrom || !pathTo"
+                :loading="pathLoading"
+                @click="runPath"
+              >
                 查找路径
               </el-button>
               <el-button size="small" text @click="clearPath">清除</el-button>
@@ -123,7 +141,9 @@
           <template v-else>
             <div class="kg-sync-meta">
               <div>上次成功：{{ formatTime(syncStatus.lastSuccessAt) }}</div>
-              <div v-if="syncStatus.lastMessage" class="kg-panel__hint">{{ syncStatus.lastMessage }}</div>
+              <div v-if="syncStatus.lastMessage" class="kg-panel__hint">
+                {{ syncStatus.lastMessage }}
+              </div>
             </div>
             <div v-if="syncStatus.watermarks?.length" class="kg-wm">
               <div v-for="w in syncStatus.watermarks" :key="w.sourceTable" class="kg-wm__row">
@@ -163,10 +183,14 @@
             <el-button text size="small" @click="selectedNode = null">关闭</el-button>
           </div>
           <el-descriptions :column="1" border size="small">
-            <el-descriptions-item label="类型">{{ typeLabel(selectedNode.label) }}</el-descriptions-item>
+            <el-descriptions-item label="类型">{{
+              typeLabel(selectedNode.label)
+            }}</el-descriptions-item>
             <el-descriptions-item label="名称">{{ selectedNode.name || '—' }}</el-descriptions-item>
             <el-descriptions-item label="bizId">{{ selectedNode.bizId }}</el-descriptions-item>
-            <el-descriptions-item label="工程ID">{{ selectedNode.projectId ?? '—' }}</el-descriptions-item>
+            <el-descriptions-item label="工程ID">{{
+              selectedNode.projectId ?? '—'
+            }}</el-descriptions-item>
             <el-descriptions-item v-if="propStr(selectedNode, 'status')" label="状态">
               {{ propStr(selectedNode, 'status') }}
             </el-descriptions-item>
@@ -208,7 +232,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Connection, OfficeBuilding, Refresh, Search, Share, View } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import { echarts, type EChartsInstance, type GraphChartOption } from '@/utils/echarts'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import { getProjectListApi } from '@/api/project'
 import {
@@ -268,7 +292,7 @@ const typeLabel = (t: string) => LABEL_MAP[t] || t
 
 const router = useRouter()
 const chartRef = ref<HTMLDivElement | null>(null)
-const chart = shallowRef<echarts.ECharts | null>(null)
+const chart = shallowRef<EChartsInstance | null>(null)
 const loading = ref(false)
 const syncing = ref(false)
 const pathLoading = ref(false)
@@ -433,8 +457,7 @@ async function loadSubgraph() {
     await nextTick()
     renderChart()
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : '加载子图失败'
-    ElMessage.error(msg)
+    console.error('加载子图失败:', e)
     subgraph.value = { nodes: [], edges: [] }
     renderChart()
   } finally {
@@ -450,7 +473,7 @@ async function handleSearch() {
   try {
     searchHits.value = await searchKgEntities(keyword.value.trim(), 20)
   } catch (e: unknown) {
-    ElMessage.error(e instanceof Error ? e.message : '搜索失败')
+    console.error('搜索实体失败:', e)
   }
 }
 
@@ -473,7 +496,7 @@ async function focusEntity(label: string, bizId: number | string) {
     await nextTick()
     renderChart()
   } catch (e: unknown) {
-    ElMessage.error(e instanceof Error ? e.message : '展开失败')
+    console.error('展开邻居失败:', e)
   }
 }
 
@@ -540,7 +563,7 @@ async function runPath() {
     await nextTick()
     renderChart()
   } catch (e: unknown) {
-    ElMessage.error(e instanceof Error ? e.message : '路径查询失败')
+    console.error('路径查询失败:', e)
   } finally {
     pathLoading.value = false
   }
@@ -567,7 +590,7 @@ async function loadAlertImpact() {
     renderChart()
     ElMessage.success(res.message || '已展示告警影响面')
   } catch (e: unknown) {
-    ElMessage.error(e instanceof Error ? e.message : '影响面加载失败')
+    console.error('加载告警影响面失败:', e)
   } finally {
     impactLoading.value = false
   }
@@ -607,9 +630,7 @@ function mapLink(node: KgNodeVO): { projectId?: string; terminalId?: string } | 
     // 告警挂在终端上：优先用 properties 中的关联，否则按工程缩放
     const props = node.properties || {}
     const terminalId =
-      props.terminalId != null && props.terminalId !== ''
-        ? String(props.terminalId)
-        : undefined
+      props.terminalId != null && props.terminalId !== '' ? String(props.terminalId) : undefined
     const projectId = resolveKgProjectId(node) || undefined
     if (!terminalId && !projectId) return null
     return { terminalId, projectId }
@@ -650,7 +671,7 @@ async function handleSync(full: boolean) {
       ElMessage.warning(res.message || '同步未完成')
     }
   } catch (e: unknown) {
-    ElMessage.error(e instanceof Error ? e.message : '同步失败')
+    console.error('图谱同步失败:', e)
   } finally {
     syncing.value = false
   }
@@ -663,7 +684,7 @@ function renderChart() {
   const catIndex = Object.fromEntries(typeOptions.map((t, i) => [t, i]))
   const hlNodes = highlightNodeIds.value
   const hlEdges = highlightEdgeKeys.value
-  const option: echarts.EChartsOption = {
+  const option: GraphChartOption = {
     tooltip: {
       formatter: (p: unknown) => {
         const data = (p as { data?: { name?: string } }).data
@@ -726,7 +747,8 @@ function renderChart() {
     selectedNode.value = {
       ...raw,
       bizId: bizId || raw.bizId,
-      projectId: raw.projectId == null || raw.projectId === '' ? raw.projectId : String(raw.projectId),
+      projectId:
+        raw.projectId == null || raw.projectId === '' ? raw.projectId : String(raw.projectId),
     }
   })
 }

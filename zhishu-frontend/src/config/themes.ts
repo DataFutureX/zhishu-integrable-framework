@@ -14,8 +14,7 @@ export const hydroThemePalette = {
   textRegular: 'rgba(186, 230, 253, 0.9)',
   textSecondary: 'rgba(125, 211, 252, 0.62)',
   headerBg: 'linear-gradient(180deg, rgba(8, 32, 56, 0.98) 0%, rgba(6, 20, 36, 0.96) 100%)',
-  headerShadow:
-    '0 4px 24px rgba(0, 12, 28, 0.5), 0 1px 0 rgba(125, 211, 252, 0.12) inset',
+  headerShadow: '0 4px 24px rgba(0, 12, 28, 0.5), 0 1px 0 rgba(125, 211, 252, 0.12) inset',
 } as const
 
 /** 云起浅色主题色系（GitHub 式中性白灰 + Primer 蓝） */
@@ -106,11 +105,7 @@ export const themeLabels: Record<ThemeStyle, string> = {
 }
 
 /** 主题切换器展示顺序（云起浅色置顶） */
-export const themeOrder: ThemeStyle[] = [
-  ThemeStyle.LIGHT,
-  ThemeStyle.BLUE,
-  ThemeStyle.DARK,
-]
+export const themeOrder: ThemeStyle[] = [ThemeStyle.LIGHT, ThemeStyle.BLUE, ThemeStyle.DARK]
 
 /** 将主题配置写入 document CSS 变量（壳层：顶栏/侧栏/主色，不含内容区） */
 export function applyThemeVariables(config: ThemeConfig): void {

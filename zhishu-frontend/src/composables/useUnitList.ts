@@ -1,5 +1,5 @@
-import { computed, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus'
+import { computed, ref } from 'vue'
+import { ElMessage, type FormRules } from 'element-plus'
 import {
   getUnitPageApi,
   getUnitTreeApi,
@@ -9,10 +9,14 @@ import {
 } from '@/api/unit'
 import type { UnitVO, UnitQueryDTO, UnitCreateDTO, UnitUpdateDTO } from '@/types/unit'
 import { UnitStatus } from '@/types/unit'
+import { useCrudList, type CrudQuery, type FilterChip } from '@/composables/useCrudList'
 
 type ViewMode = 'tree' | 'table'
 
 const ROOT_PARENT_ID = 0
+
+/** 单位列表查询条件：分页字段必填（表格视图） */
+type UnitListQuery = Required<Pick<UnitQueryDTO, 'pageNum' | 'pageSize'>> & UnitQueryDTO & CrudQuery
 
 export interface UnitFormModel {
   parentId?: number | string
@@ -78,10 +82,6 @@ const defaultUnitForm = (): UnitFormModel => ({
 })
 
 export function useUnitList() {
-  const tableRef = ref<TableInstance>()
-
-  const loading = ref(false)
-  const submitLoading = ref(false)
   const filterExpanded = ref(true)
   const viewMode = ref<ViewMode>('tree')
   const tableData = ref<UnitVO[]>([])
@@ -89,22 +89,67 @@ export function useUnitList() {
   const total = ref(0)
   const unitTree = ref<UnitVO[]>([])
 
-  const queryParams = reactive<Required<Pick<UnitQueryDTO, 'pageNum' | 'pageSize'>> & UnitQueryDTO>({
-    unitCode: '',
-    unitName: '',
-    unitType: '',
-    parentId: undefined,
-    status: undefined,
-    pageNum: 1,
-    pageSize: 20,
+  // 单位列表有树/表两种视图：查询与弹窗骨架统一交给 useCrudList，
+  // reload 里根据当前视图拉取数据并同步上级单位树
+  const crud = useCrudList<UnitVO, UnitFormModel, UnitListQuery>({
+    defaultQuery: () => ({
+      unitCode: '',
+      unitName: '',
+      unitType: '',
+      parentId: undefined,
+      status: undefined,
+      pageNum: 1,
+      pageSize: 20,
+    }),
+    defaultForm: () => defaultUnitForm(),
+    createTitle: '新增单位',
+    editTitle: '编辑单位',
+    reload: async () => {
+      await fetchUnitTree()
+      await refreshCurrentView()
+    },
+    deleteApi: (id) => deleteUnitApi(id),
+    rowLabel: (row) => row.unitName,
+    deleteConfirmText: (row) => `确定删除单位「${row.unitName}」吗？`,
+    chipBuilder: (query): FilterChip[] => {
+      const chips: FilterChip[] = []
+      if (query.unitCode?.trim())
+        chips.push({ key: 'unitCode', label: `编码：${query.unitCode.trim()}` })
+      if (query.unitName?.trim())
+        chips.push({ key: 'unitName', label: `名称：${query.unitName.trim()}` })
+      if (query.unitType?.trim())
+        chips.push({ key: 'unitType', label: `类型：${query.unitType.trim()}` })
+      if (query.parentId != null && query.parentId !== '') {
+        chips.push({ key: 'parentId', label: '已选上级单位' })
+      }
+      if (query.status === 0 || query.status === 1) {
+        chips.push({ key: 'status', label: query.status === 1 ? '启用' : '停用' })
+      }
+      return chips
+    },
+    clearChipField: (key, query) => {
+      if (key === 'unitCode') query.unitCode = ''
+      else if (key === 'unitName') query.unitName = ''
+      else if (key === 'unitType') query.unitType = ''
+      else if (key === 'parentId') query.parentId = undefined
+      else if (key === 'status') query.status = undefined
+    },
   })
 
-  const dialogVisible = ref(false)
-  const dialogTitle = ref('新增单位')
-  const isCreate = ref(true)
-  const editingId = ref<number | string>()
-
-  const unitForm = reactive<UnitFormModel>(defaultUnitForm())
+  const {
+    loading,
+    submitLoading,
+    tableRef,
+    queryParams,
+    form: unitForm,
+    dialogVisible,
+    dialogTitle,
+    isCreate,
+    editingId,
+    filterChips,
+    activeFilterCount,
+    removeFilterChip,
+  } = crud
 
   const formRules: FormRules = {
     unitName: [{ required: true, message: '请输入单位名称', trigger: 'blur' }],
@@ -123,7 +168,9 @@ export function useUnitList() {
     return Math.round((enabled / rows.length) * 100)
   })
 
-  const pageEnabledCount = computed(() => currentViewUnits.value.filter((row) => row.status === 1).length)
+  const pageEnabledCount = computed(
+    () => currentViewUnits.value.filter((row) => row.status === 1).length,
+  )
 
   const unitTypeOptions = computed(() => {
     const types = new Set<string>()
@@ -143,28 +190,6 @@ export function useUnitList() {
     })
     return map
   })
-
-  const filterChips = computed(() => {
-    const chips: { key: string; label: string }[] = []
-    if (queryParams.unitCode?.trim()) {
-      chips.push({ key: 'unitCode', label: `编码：${queryParams.unitCode.trim()}` })
-    }
-    if (queryParams.unitName?.trim()) {
-      chips.push({ key: 'unitName', label: `名称：${queryParams.unitName.trim()}` })
-    }
-    if (queryParams.unitType?.trim()) {
-      chips.push({ key: 'unitType', label: `类型：${queryParams.unitType.trim()}` })
-    }
-    if (queryParams.parentId != null && queryParams.parentId !== '') {
-      chips.push({ key: 'parentId', label: '已选上级单位' })
-    }
-    if (queryParams.status === 0 || queryParams.status === 1) {
-      chips.push({ key: 'status', label: queryParams.status === 1 ? '启用' : '停用' })
-    }
-    return chips
-  })
-
-  const activeFilterCount = computed(() => filterChips.value.length)
 
   const withRootOption = (nodes: UnitVO[]): UnitVO[] => [
     {
@@ -190,8 +215,13 @@ export function useUnitList() {
     if (queryParams.unitCode?.trim()) payload.unitCode = queryParams.unitCode.trim()
     if (queryParams.unitName?.trim()) payload.unitName = queryParams.unitName.trim()
     if (queryParams.unitType?.trim()) payload.unitType = queryParams.unitType.trim()
-    if (queryParams.parentId !== undefined && queryParams.parentId !== null && queryParams.parentId !== '') {
-      payload.parentId = queryParams.parentId === ROOT_PARENT_ID ? ROOT_PARENT_ID : queryParams.parentId
+    if (
+      queryParams.parentId !== undefined &&
+      queryParams.parentId !== null &&
+      queryParams.parentId !== ''
+    ) {
+      payload.parentId =
+        queryParams.parentId === ROOT_PARENT_ID ? ROOT_PARENT_ID : queryParams.parentId
     }
     if (queryParams.status !== undefined && queryParams.status !== null) {
       payload.status = queryParams.status
@@ -226,7 +256,10 @@ export function useUnitList() {
         data = filterUnitTree(data, (unit) => (unit.unitType || '').includes(type))
       }
       if (queryParams.parentId != null && queryParams.parentId !== '') {
-        data = filterUnitTree(data, (unit) => String(unit.parentId) === String(queryParams.parentId))
+        data = filterUnitTree(
+          data,
+          (unit) => String(unit.parentId) === String(queryParams.parentId),
+        )
       }
 
       treeData.value = data
@@ -313,21 +346,6 @@ export function useUnitList() {
     setRowsExpansion(treeData.value, false)
   }
 
-  const handleSearch = () => {
-    queryParams.pageNum = 1
-    void refreshCurrentView()
-  }
-
-  const handleReset = () => {
-    queryParams.unitCode = ''
-    queryParams.unitName = ''
-    queryParams.unitType = ''
-    queryParams.parentId = undefined
-    queryParams.status = undefined
-    queryParams.pageNum = 1
-    void refreshCurrentView()
-  }
-
   const applyStatusFilter = (status: number | undefined) => {
     queryParams.status = status
     queryParams.pageNum = 1
@@ -340,36 +358,13 @@ export function useUnitList() {
     void refreshCurrentView()
   }
 
-  const removeFilterChip = (key: string) => {
-    if (key === 'unitCode') queryParams.unitCode = ''
-    else if (key === 'unitName') queryParams.unitName = ''
-    else if (key === 'unitType') queryParams.unitType = ''
-    else if (key === 'parentId') queryParams.parentId = undefined
-    else if (key === 'status') queryParams.status = undefined
-    queryParams.pageNum = 1
-    void refreshCurrentView()
-  }
-
-  const resetUnitForm = () => {
-    Object.assign(unitForm, defaultUnitForm())
-  }
-
   const handleAdd = (parent?: UnitVO) => {
-    isCreate.value = true
+    crud.openCreate(parent ? { parentId: parent.id } : undefined)
     dialogTitle.value = parent ? `新增下级单位 - ${parent.unitName}` : '新增单位'
-    editingId.value = undefined
-    resetUnitForm()
-    if (parent) {
-      unitForm.parentId = parent.id
-    }
-    dialogVisible.value = true
   }
 
   const handleEdit = (row: UnitVO) => {
-    isCreate.value = false
-    dialogTitle.value = '编辑单位'
-    editingId.value = row.id
-    Object.assign(unitForm, {
+    crud.openEdit(row.id, {
       parentId: row.parentId && row.parentId !== ROOT_PARENT_ID ? row.parentId : undefined,
       unitCode: row.unitCode,
       unitName: row.unitName,
@@ -382,26 +377,10 @@ export function useUnitList() {
       status: row.status ?? UnitStatus.ENABLED,
       remark: row.remark || '',
     })
-    dialogVisible.value = true
   }
 
-  const handleDelete = async (row: UnitVO) => {
-    try {
-      await ElMessageBox.confirm(`确定删除单位「${row.unitName}」吗？`, '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-      await deleteUnitApi(row.id)
-      ElMessage.success('删除成功')
-      await fetchUnitTree()
-      await refreshCurrentView()
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除单位失败:', error)
-      }
-    }
-  }
+  /** 删除确认与刷新统一由 useCrudList 处理 */
+  const handleDelete = crud.handleDelete
 
   const normalizeParentId = (parentId?: number | string) => {
     if (parentId === undefined || parentId === null || parentId === '') {
@@ -458,10 +437,8 @@ export function useUnitList() {
     }
   }
 
-  const handleDialogClose = () => {
-    resetUnitForm()
-    editingId.value = undefined
-  }
+  /** 关闭弹窗：重置表单与编辑态（由 useCrudList 统一处理） */
+  const handleDialogClose = crud.handleDialogClose
 
   const initUnitList = async () => {
     await fetchUnitTree()
@@ -501,8 +478,8 @@ export function useUnitList() {
     switchView,
     tableIndexMethod,
     tableRowClassName,
-    handleSearch,
-    handleReset,
+    handleSearch: crud.handleSearch,
+    handleReset: crud.handleReset,
     applyStatusFilter,
     applyTypeFilter,
     removeFilterChip,

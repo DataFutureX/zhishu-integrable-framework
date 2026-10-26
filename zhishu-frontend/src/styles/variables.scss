@@ -40,7 +40,9 @@ $border-radius-xl: 16px;
 $box-shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
 $box-shadow-md: 0 3px 6px rgba(31, 35, 40, 0.04);
 $box-shadow-lg: 0 8px 24px rgba(31, 35, 40, 0.08);
-$box-shadow-primary: 0 1px 0 rgba(31, 35, 40, 0.04), 0 1px 3px rgba(9, 105, 218, 0.18);
+$box-shadow-primary:
+  0 1px 0 rgba(31, 35, 40, 0.04),
+  0 1px 3px rgba(9, 105, 218, 0.18);
 
 // 表单
 $form-label-color: #424a53;

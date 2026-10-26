@@ -7,12 +7,7 @@ export type WorkflowType = 'REACT' | 'SEQUENTIAL' | 'ROUTING' | 'GRAPH'
 export type SnowflakeId = number | string
 
 export type AgentCapabilityCode =
-  | 'RAG'
-  | 'MEMORY'
-  | 'WORKFLOW_GRAPH'
-  | 'MCP_TOOLS'
-  | 'KNOWLEDGE_GRAPH'
-  | 'BRIEFING'
+  'RAG' | 'MEMORY' | 'WORKFLOW_GRAPH' | 'MCP_TOOLS' | 'KNOWLEDGE_GRAPH' | 'BRIEFING'
 
 export interface AgentTraceEvent {
   type: string

@@ -157,7 +157,13 @@
       </el-table-column>
       <el-table-column label="操作" width="88" fixed="right" align="center">
         <template #default="{ row }">
-          <el-button link type="primary" size="small" :icon="View" @click="handleViewDetail(row as OperationLogVO)">
+          <el-button
+            link
+            type="primary"
+            size="small"
+            :icon="View"
+            @click="handleViewDetail(row as OperationLogVO)"
+          >
             详情
           </el-button>
         </template>
@@ -177,21 +183,26 @@
     </template>
 
     <template #extra>
-      <el-drawer
-        v-model="detailVisible"
-        title="操作日志详情"
-        size="520px"
-        destroy-on-close
-      >
+      <el-drawer v-model="detailVisible" title="操作日志详情" size="520px" destroy-on-close>
         <div v-loading="detailLoading" class="detail-panel">
           <template v-if="detailData">
             <el-descriptions :column="1" border size="small">
               <el-descriptions-item label="日志 ID">{{ detailData.id }}</el-descriptions-item>
-              <el-descriptions-item label="操作用户">{{ formatOperator(detailData) }}</el-descriptions-item>
-              <el-descriptions-item label="模块">{{ detailData.module || '—' }}</el-descriptions-item>
-              <el-descriptions-item label="操作">{{ detailData.operation || '—' }}</el-descriptions-item>
-              <el-descriptions-item label="请求方法">{{ detailData.method || '—' }}</el-descriptions-item>
-              <el-descriptions-item label="响应码">{{ detailData.responseCode ?? '—' }}</el-descriptions-item>
+              <el-descriptions-item label="操作用户">{{
+                formatOperator(detailData)
+              }}</el-descriptions-item>
+              <el-descriptions-item label="模块">{{
+                detailData.module || '—'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="操作">{{
+                detailData.operation || '—'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="请求方法">{{
+                detailData.method || '—'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="响应码">{{
+                detailData.responseCode ?? '—'
+              }}</el-descriptions-item>
               <el-descriptions-item label="耗时">
                 {{ detailData.durationMs != null ? `${detailData.durationMs} ms` : '—' }}
               </el-descriptions-item>
@@ -200,7 +211,9 @@
                   {{ detailData.status === 1 ? '成功' : '失败' }}
                 </el-tag>
               </el-descriptions-item>
-              <el-descriptions-item label="IP 地址">{{ detailData.ipAddress || '—' }}</el-descriptions-item>
+              <el-descriptions-item label="IP 地址">{{
+                detailData.ipAddress || '—'
+              }}</el-descriptions-item>
               <el-descriptions-item label="操作时间">
                 {{ detailData.createTime ? formatDateTime(detailData.createTime) : '—' }}
               </el-descriptions-item>
@@ -208,17 +221,23 @@
 
             <div v-if="detailData.errorMessage" class="detail-block">
               <div class="detail-block__title">失败原因</div>
-              <pre class="detail-block__content detail-block__content--error">{{ detailData.errorMessage }}</pre>
+              <pre class="detail-block__content detail-block__content--error">{{
+                detailData.errorMessage
+              }}</pre>
             </div>
 
             <div v-if="detailData.requestParams" class="detail-block">
               <div class="detail-block__title">请求参数</div>
-              <pre class="detail-block__content">{{ formatRequestParams(detailData.requestParams) }}</pre>
+              <pre class="detail-block__content">{{
+                formatRequestParams(detailData.requestParams)
+              }}</pre>
             </div>
 
             <div v-if="detailData.userAgent" class="detail-block">
               <div class="detail-block__title">User-Agent</div>
-              <pre class="detail-block__content detail-block__content--wrap">{{ detailData.userAgent }}</pre>
+              <pre class="detail-block__content detail-block__content--wrap">{{
+                detailData.userAgent
+              }}</pre>
             </div>
           </template>
         </div>
@@ -252,7 +271,9 @@ const defaultRangeTime: [Date, Date] = [
   new Date(2000, 0, 1, 23, 59, 59),
 ]
 
-const queryParams = reactive<Required<Pick<OperationLogQueryDTO, 'pageNum' | 'pageSize'>> & OperationLogQueryDTO>({
+const queryParams = reactive<
+  Required<Pick<OperationLogQueryDTO, 'pageNum' | 'pageSize'>> & OperationLogQueryDTO
+>({
   username: '',
   module: '',
   operation: '',
@@ -276,7 +297,13 @@ const pageSuccessRate = computed(() => {
 
 const heroMetrics = computed(() => [
   { key: 'total', label: '日志总数', value: total.value, icon: List, accent: 'primary' as const },
-  { key: 'success', label: '本页成功', value: pageSuccessCount.value, icon: CircleCheck, accent: 'success' as const },
+  {
+    key: 'success',
+    label: '本页成功',
+    value: pageSuccessCount.value,
+    icon: CircleCheck,
+    accent: 'success' as const,
+  },
 ])
 
 const activeFilterCount = computed(() => filterChips.value.length)

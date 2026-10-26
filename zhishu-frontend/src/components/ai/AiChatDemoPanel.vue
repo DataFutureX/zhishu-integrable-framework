@@ -19,7 +19,12 @@
       </div>
       <div class="ai-chat-demo__chrome-right">
         <span class="ai-chat-demo__badge">{{ badge }}</span>
-        <button type="button" class="ai-chat-demo__replay" :disabled="playing" @click="playDemo(true)">
+        <button
+          type="button"
+          class="ai-chat-demo__replay"
+          :disabled="playing"
+          @click="playDemo(true)"
+        >
           重播
         </button>
       </div>
@@ -54,7 +59,9 @@
               >
                 <span class="ai-chat-demo__progress-type">{{ progressTypeLabel(t.type) }}</span>
                 <span class="ai-chat-demo__progress-name">{{ t.name }}</span>
-                <span v-if="t.durationMs != null" class="ai-chat-demo__progress-ms">{{ t.durationMs }}ms</span>
+                <span v-if="t.durationMs != null" class="ai-chat-demo__progress-ms"
+                  >{{ t.durationMs }}ms</span
+                >
               </li>
             </ul>
           </div>
@@ -63,15 +70,23 @@
             <span class="ai-chat-demo__thinking-text">{{ msg.status || '正在思考…' }}</span>
           </div>
 
-          <div v-if="msg.typing || msg.html || (msg.lines?.length && !msg.thinking)" class="ai-chat-demo__answer">
+          <div
+            v-if="msg.typing || msg.html || (msg.lines?.length && !msg.thinking)"
+            class="ai-chat-demo__answer"
+          >
             <div v-if="msg.typing" class="ai-chat-demo__sse-row">
               <span class="ai-chat-demo__sse-tag is-message">SSE · message</span>
               <span class="ai-chat-demo__sse-hint">真流式输出中</span>
             </div>
-            <div v-if="msg.html && !msg.typing" class="ai-chat-demo__md markdown-body" v-html="msg.html" />
+            <div
+              v-if="msg.html && !msg.typing"
+              class="ai-chat-demo__md markdown-body"
+              v-html="msg.html"
+            />
             <template v-else>
               <p v-for="(line, li) in msg.lines" :key="li" class="ai-chat-demo__line">
-                {{ line.text }}<span
+                {{ line.text
+                }}<span
                   v-if="msg.typing && li === msg.lines.length - 1"
                   class="ai-chat-demo__cursor"
                   aria-hidden="true"
@@ -118,10 +133,10 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { ChatLineRound } from '@element-plus/icons-vue'
-import MarkdownIt from 'markdown-it'
 import { listPortalQaDemo } from '@/api/ai'
 import type { QaHistoryVO } from '@/types/qaHistory'
 import type { AgentTraceEvent } from '@/types/aiChat'
+import { renderPlainMarkdown } from '@/utils/markdown'
 import AgentTracePanel from '@/components/ai/AgentTracePanel.vue'
 
 type AiChatLine = { text: string }
@@ -160,8 +175,6 @@ const props = withDefaults(
     fill: false,
   },
 )
-
-const md = new MarkdownIt({ html: false, linkify: true, breaks: true })
 
 const DEMO_SCRIPT: AiChatMsg[] = [
   {
@@ -209,8 +222,11 @@ function ensureAssistantHtml(msg: AiChatMsg): AiChatMsg {
   const content = msg.content || ''
   return {
     ...msg,
-    lines: content.split(/\n/).filter(Boolean).map((text) => ({ text })),
-    html: msg.html || md.render(content),
+    lines: content
+      .split(/\n/)
+      .filter(Boolean)
+      .map((text) => ({ text })),
+    html: msg.html || renderPlainMarkdown(content),
   }
 }
 
@@ -227,7 +243,17 @@ function historyToScript(records: QaHistoryVO[]): AiChatMsg[] {
 }
 
 function progressTypeLabel(type: string): string {
-  return ({ NODE_START: '节点', NODE_END: '完成', TOOL_CALL: '工具', TOOL_RESULT: '结果', ROUTE: '路由' } as Record<string, string>)[type] || type
+  return (
+    (
+      {
+        NODE_START: '节点',
+        NODE_END: '完成',
+        TOOL_CALL: '工具',
+        TOOL_RESULT: '结果',
+        ROUTE: '路由',
+      } as Record<string, string>
+    )[type] || type
+  )
 }
 
 function progressTone(type: string): string {
@@ -239,7 +265,14 @@ function progressTone(type: string): string {
 
 function progressStepsFor(question: string): ProgressStep[] {
   const q = question.toLowerCase()
-  const mk = (type: string, name: string, status: string, delayMs: number, durationMs?: number, detail?: string): ProgressStep => ({
+  const mk = (
+    type: string,
+    name: string,
+    status: string,
+    delayMs: number,
+    durationMs?: number,
+    detail?: string,
+  ): ProgressStep => ({
     event: { type, name, detail, durationMs: durationMs ?? null, timestamp: Date.now() },
     status,
     delayMs,
@@ -248,7 +281,14 @@ function progressStepsFor(question: string): ProgressStep[] {
     return [
       mk('NODE_START', 'REACT · 理解意图', 'progress · 节点开始：理解意图', 480),
       mk('NODE_END', 'REACT · 理解意图', 'progress · 意图：查询水位与阈值', 360, 210),
-      mk('TOOL_CALL', 'getLatestElement', 'progress · 调用 getLatestElement…', 520, undefined, '{"station":"DEMO0001001"}'),
+      mk(
+        'TOOL_CALL',
+        'getLatestElement',
+        'progress · 调用 getLatestElement…',
+        520,
+        undefined,
+        '{"station":"DEMO0001001"}',
+      ),
       mk('TOOL_RESULT', 'getLatestElement', 'progress · 遥测回传完成', 480, 186),
       mk('TOOL_CALL', 'queryAlerts', 'progress · 调用 queryAlerts…', 420),
       mk('TOOL_RESULT', 'queryAlerts', 'progress · 告警结果回传', 420, 142),
@@ -451,7 +491,7 @@ async function simulateAssistantTurn(question: string, full: AiChatMsg) {
     liveTraces: undefined,
     traces: live.map((t) => ({ ...t })),
     showTrace: true,
-    html: full.html || md.render(content || '（无回答内容）'),
+    html: full.html || renderPlainMarkdown(content || '（无回答内容）'),
     lines: [],
     content,
   })
@@ -569,11 +609,19 @@ $cyan-bright: #22d3ee;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  &--r { background: #f87171; }
-  &--y { background: #fbbf24; }
-  &--g { background: #34d399; }
+  &--r {
+    background: #f87171;
+  }
+  &--y {
+    background: #fbbf24;
+  }
+  &--g {
+    background: #34d399;
+  }
 }
-.ai-chat-demo__title-icon { color: $primary; }
+.ai-chat-demo__title-icon {
+  color: $primary;
+}
 .ai-chat-demo__title {
   font-size: 13px;
   font-weight: 600;
@@ -588,7 +636,10 @@ $cyan-bright: #22d3ee;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  &:disabled { opacity: 0.45; cursor: not-allowed; }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
 }
 
 .ai-chat-demo__body {
@@ -609,7 +660,9 @@ $cyan-bright: #22d3ee;
   gap: 10px;
   margin-bottom: 14px;
   animation: aiChatMsgIn 0.35s ease both;
-  &--user { flex-direction: row-reverse; }
+  &--user {
+    flex-direction: row-reverse;
+  }
 }
 .ai-chat-demo__avatar {
   flex-shrink: 0;
@@ -628,8 +681,12 @@ $cyan-bright: #22d3ee;
   border-radius: 12px;
   font-size: 13px;
   line-height: 1.65;
-  &.is-thinking { min-width: 220px; }
-  &.is-streaming { min-width: min(420px, 86%); }
+  &.is-thinking {
+    min-width: 220px;
+  }
+  &.is-streaming {
+    min-width: min(420px, 86%);
+  }
 }
 .ai-chat-demo__msg--user .ai-chat-demo__bubble {
   background: linear-gradient(135deg, $primary, $primary-dark);
@@ -637,9 +694,21 @@ $cyan-bright: #22d3ee;
   border-bottom-right-radius: 4px;
 }
 
-.ai-chat-demo__progress { display: flex; flex-direction: column; gap: 8px; }
-.ai-chat-demo__progress-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ai-chat-demo__progress-status { font-size: 11.5px; opacity: 0.78; }
+.ai-chat-demo__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ai-chat-demo__progress-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ai-chat-demo__progress-status {
+  font-size: 11.5px;
+  opacity: 0.78;
+}
 .ai-chat-demo__sse-tag {
   display: inline-flex;
   padding: 1px 7px;
@@ -655,9 +724,24 @@ $cyan-bright: #22d3ee;
     border-color: rgba(64, 158, 255, 0.28);
   }
 }
-.ai-chat-demo__sse-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.ai-chat-demo__sse-hint { font-size: 11px; opacity: 0.7; }
-.ai-chat-demo__progress-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.ai-chat-demo__sse-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ai-chat-demo__sse-hint {
+  font-size: 11px;
+  opacity: 0.7;
+}
+.ai-chat-demo__progress-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .ai-chat-demo__progress-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -669,46 +753,108 @@ $cyan-bright: #22d3ee;
   border: 1px solid rgba(64, 158, 255, 0.12);
   font-size: 11.5px;
   animation: aiChatMsgIn 0.28s ease both;
-  &.is-tool { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); }
-  &.is-end { background: rgba(16, 185, 129, 0.07); border-color: rgba(16, 185, 129, 0.18); }
+  &.is-tool {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+  &.is-end {
+    background: rgba(16, 185, 129, 0.07);
+    border-color: rgba(16, 185, 129, 0.18);
+  }
 }
-.ai-chat-demo__progress-type { font-size: 10px; font-weight: 700; opacity: 0.72; }
-.ai-chat-demo__progress-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.ai-chat-demo__progress-ms { font-size: 10px; opacity: 0.55; }
-.ai-chat-demo__answer { min-width: 0; }
+.ai-chat-demo__progress-type {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.72;
+}
+.ai-chat-demo__progress-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.ai-chat-demo__progress-ms {
+  font-size: 10px;
+  opacity: 0.55;
+}
+.ai-chat-demo__answer {
+  min-width: 0;
+}
 .ai-chat-demo__progress + .ai-chat-demo__answer {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px dashed rgba(64, 158, 255, 0.18);
 }
 
-.ai-chat-demo__thinking { display: inline-flex; align-items: center; gap: 10px; }
-.ai-chat-demo__thinking-text { font-size: 12.5px; opacity: 0.88; }
+.ai-chat-demo__thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.ai-chat-demo__thinking-text {
+  font-size: 12.5px;
+  opacity: 0.88;
+}
 .ai-chat-demo__thinking-dots {
-  display: inline-flex; gap: 4px;
+  display: inline-flex;
+  gap: 4px;
   i {
-    width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.45;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.45;
     animation: aiChatThinkDot 1.1s ease-in-out infinite;
-    &:nth-child(2) { animation-delay: 0.15s; }
-    &:nth-child(3) { animation-delay: 0.3s; }
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
   }
 }
 .ai-chat-demo__line {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  + .ai-chat-demo__line { margin-top: 6px; }
+  + .ai-chat-demo__line {
+    margin-top: 6px;
+  }
 }
 .ai-chat-demo__md {
   font-size: 13px;
   line-height: 1.65;
   word-break: break-word;
-  :deep(p) { margin: 0 0 8px; &:last-child { margin-bottom: 0; } }
-  :deep(ul), :deep(ol) { margin: 0 0 8px; padding-left: 1.2em; }
-  :deep(table) { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12px; }
-  :deep(th), :deep(td) { border: 1px solid rgba(64, 158, 255, 0.2); padding: 4px 6px; }
-  :deep(th) { background: rgba(64, 158, 255, 0.08); }
-  :deep(code) { padding: 0 4px; border-radius: 4px; background: rgba(64, 158, 255, 0.08); }
+  :deep(p) {
+    margin: 0 0 8px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  :deep(ul),
+  :deep(ol) {
+    margin: 0 0 8px;
+    padding-left: 1.2em;
+  }
+  :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 12px;
+  }
+  :deep(th),
+  :deep(td) {
+    border: 1px solid rgba(64, 158, 255, 0.2);
+    padding: 4px 6px;
+  }
+  :deep(th) {
+    background: rgba(64, 158, 255, 0.08);
+  }
+  :deep(code) {
+    padding: 0 4px;
+    border-radius: 4px;
+    background: rgba(64, 158, 255, 0.08);
+  }
 }
 .ai-chat-demo__cursor {
   display: inline-block;
@@ -751,8 +897,12 @@ $cyan-bright: #22d3ee;
   font-weight: 600;
   color: #fff;
   background: #94a3b8;
-  &.is-active { background: linear-gradient(135deg, $primary, $primary-dark); }
-  &.is-pressed { transform: scale(0.96); }
+  &.is-active {
+    background: linear-gradient(135deg, $primary, $primary-dark);
+  }
+  &.is-pressed {
+    transform: scale(0.96);
+  }
 }
 .ai-chat-demo__live {
   display: inline-flex;
@@ -770,18 +920,42 @@ $cyan-bright: #22d3ee;
 }
 
 @keyframes aiChatMsgIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes aiChatThinkDot {
-  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
-  40% { transform: translateY(-3px); opacity: 1; }
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
 }
-@keyframes aiChatCaret { 50% { opacity: 0; } }
+@keyframes aiChatCaret {
+  50% {
+    opacity: 0;
+  }
+}
 @keyframes aiChatLivePulse {
-  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
-  70% { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(74, 222, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
 }
 
 .ai-chat-demo--portal {
@@ -790,14 +964,19 @@ $cyan-bright: #22d3ee;
   border-radius: 16px;
   background: #f7fbfe;
   border: 1px solid rgba(64, 158, 255, 0.18);
-  box-shadow: 0 16px 40px rgba(26, 86, 140, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 16px 40px rgba(26, 86, 140, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
   .ai-chat-demo__chrome {
     padding: 12px 16px;
     background: linear-gradient(180deg, #eef6fc 0%, #e6f1fa 100%);
     border-bottom: 1px solid rgba(64, 158, 255, 0.14);
   }
-  .ai-chat-demo__title { margin-left: 6px; color: #1f3a4d; }
+  .ai-chat-demo__title {
+    margin-left: 6px;
+    color: #1f3a4d;
+  }
   .ai-chat-demo__badge {
     color: #0e7490;
     background: rgba(8, 145, 178, 0.1);
@@ -816,7 +995,10 @@ $cyan-bright: #22d3ee;
       radial-gradient(ellipse at top right, rgba(64, 158, 255, 0.08), transparent 48%),
       linear-gradient(180deg, #f8fcff 0%, #f2f7fb 100%);
   }
-  .ai-chat-demo__placeholder { min-height: 280px; color: #7a93a8; }
+  .ai-chat-demo__placeholder {
+    min-height: 280px;
+    color: #7a93a8;
+  }
   .ai-chat-demo__msg--user .ai-chat-demo__avatar {
     background: rgba(64, 158, 255, 0.16);
     color: $primary-dark;
@@ -851,8 +1033,12 @@ $cyan-bright: #22d3ee;
     padding: 10px 14px;
     border-bottom: 1px solid rgba(103, 232, 249, 0.22);
   }
-  .ai-chat-demo__title { color: #fff; }
-  .ai-chat-demo__body { padding: 14px 12px 10px; }
+  .ai-chat-demo__title {
+    color: #fff;
+  }
+  .ai-chat-demo__body {
+    padding: 14px 12px 10px;
+  }
   .ai-chat-demo__msg--assistant .ai-chat-demo__bubble {
     background: rgba(255, 255, 255, 0.14);
     color: #f8fcff;

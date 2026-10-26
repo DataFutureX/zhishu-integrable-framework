@@ -1,11 +1,5 @@
 /** 门户文档 id，对应路径 `/docs/<id>` */
-export const PORTAL_DOC_IDS = [
-  'quickstart',
-  'sso',
-  'wanxiang',
-  'sso-sdk',
-  'openapi-sdk',
-] as const
+export const PORTAL_DOC_IDS = ['quickstart', 'sso', 'wanxiang', 'sso-sdk', 'openapi-sdk'] as const
 export type PortalDocId = (typeof PORTAL_DOC_IDS)[number]
 export const PORTAL_DOCS_BASE = '/docs'
 

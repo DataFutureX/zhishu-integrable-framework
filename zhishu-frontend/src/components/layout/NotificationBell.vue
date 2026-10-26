@@ -54,11 +54,7 @@
             @click.stop="handleAnnouncementClick(item, $event)"
           >
             <div class="notification-item__top">
-              <el-tag
-                :type="announcementPriorityType(item.priority)"
-                size="small"
-                effect="plain"
-              >
+              <el-tag :type="announcementPriorityType(item.priority)" size="small" effect="plain">
                 {{ announcementPriorityLabel(item.priority) }}
               </el-tag>
               <span class="notification-item__time">
@@ -210,7 +206,9 @@ async function handleDetailClosed() {
   border: none;
   background: transparent;
   color: #606266;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     color: var(--app-primary);

@@ -32,12 +32,36 @@
         <div class="gateway-page__header">
           <span class="gateway-page__title">调用台账</span>
           <div class="gateway-page__actions">
-            <el-input v-model="filters.username" size="small" placeholder="用户名" clearable style="width: 130px" />
-            <el-input v-model="filters.modelId" size="small" placeholder="模型 ID" clearable style="width: 170px" />
-            <el-select v-model="filters.channel" size="small" placeholder="通道" clearable style="width: 120px">
+            <el-input
+              v-model="filters.username"
+              size="small"
+              placeholder="用户名"
+              clearable
+              style="width: 130px"
+            />
+            <el-input
+              v-model="filters.modelId"
+              size="small"
+              placeholder="模型 ID"
+              clearable
+              style="width: 170px"
+            />
+            <el-select
+              v-model="filters.channel"
+              size="small"
+              placeholder="通道"
+              clearable
+              style="width: 120px"
+            >
               <el-option v-for="item in channels" :key="item" :label="item" :value="item" />
             </el-select>
-            <el-select v-model="filters.status" size="small" placeholder="状态" clearable style="width: 130px">
+            <el-select
+              v-model="filters.status"
+              size="small"
+              placeholder="状态"
+              clearable
+              style="width: 130px"
+            >
               <el-option v-for="item in statuses" :key="item" :label="item" :value="item" />
             </el-select>
             <el-date-picker
@@ -61,16 +85,23 @@
         <el-table-column prop="modelId" label="模型" min-width="180" show-overflow-tooltip />
         <el-table-column label="token" width="150" align="right">
           <template #default="{ row }">
-            {{ row.promptTokens ?? '—' }} / {{ row.completionTokens ?? '—' }} / {{ row.totalTokens ?? '—' }}
+            {{ row.promptTokens ?? '—' }} / {{ row.completionTokens ?? '—' }} /
+            {{ row.totalTokens ?? '—' }}
           </template>
         </el-table-column>
         <el-table-column label="耗时" width="120" align="right">
-          <template #default="{ row }">{{ row.latencyMs != null ? `${row.latencyMs} ms` : '—' }}</template>
+          <template #default="{ row }">{{
+            row.latencyMs != null ? `${row.latencyMs} ms` : '—'
+          }}</template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="130" align="center">
           <template #default="{ row }">
-            <el-tag :type="statusType(row.status)" size="small" effect="light">{{ row.status }}</el-tag>
-            <el-tag v-if="row.estimated" size="small" type="warning" effect="plain" class="ml-4">估算</el-tag>
+            <el-tag :type="statusType(row.status)" size="small" effect="light">{{
+              row.status
+            }}</el-tag>
+            <el-tag v-if="row.estimated" size="small" type="warning" effect="plain" class="ml-4"
+              >估算</el-tag
+            >
           </template>
         </el-table-column>
         <el-table-column prop="errorMessage" label="错误" min-width="160" show-overflow-tooltip />

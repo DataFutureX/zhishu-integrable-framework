@@ -17,8 +17,19 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        <el-button v-permission="PERMISSIONS.AI_AGENT_GRAPH" :loading="validating" @click="runValidate">校验</el-button>
-        <el-button v-permission="PERMISSIONS.AI_AGENT_GRAPH" type="primary" :loading="saving" @click="runSave">保存</el-button>
+        <el-button
+          v-permission="PERMISSIONS.AI_AGENT_GRAPH"
+          :loading="validating"
+          @click="runValidate"
+          >校验</el-button
+        >
+        <el-button
+          v-permission="PERMISSIONS.AI_AGENT_GRAPH"
+          type="primary"
+          :loading="saving"
+          @click="runSave"
+          >保存</el-button
+        >
       </div>
     </header>
 
@@ -39,8 +50,8 @@
 
       <div class="graph-editor__canvas" @drop="onDrop" @dragover.prevent>
         <VueFlow
-          :nodes="(nodes as any)"
-          :edges="(edges as any)"
+          :nodes="nodes as any"
+          :edges="edges as any"
           :node-types="nodeTypes"
           fit-view-on-init
           :default-viewport="{ zoom: 0.9 }"
@@ -98,7 +109,11 @@
               <el-input v-model="selectedNode.data.systemPrompt" type="textarea" :rows="6" />
             </el-form-item>
             <el-form-item v-if="selectedNodeType === 'CONDITIONAL'" label="匹配输入">
-              <el-select v-model="selectedNode.data.inputSource" style="width: 100%" placeholder="默认上一节点输出">
+              <el-select
+                v-model="selectedNode.data.inputSource"
+                style="width: 100%"
+                placeholder="默认上一节点输出"
+              >
                 <el-option label="上一节点输出 (lastOutput)" value="lastOutput" />
                 <el-option label="用户原文 (userMessage)" value="userMessage" />
               </el-select>
@@ -503,8 +518,8 @@ async function load() {
     agentName.value = agent.name
     capabilities.value = caps
     fromDto(graph)
-  } catch (e: any) {
-    ElMessage.error(e?.message || '加载编排失败')
+  } catch (e: unknown) {
+    console.error('加载编排失败:', e)
   } finally {
     loading.value = false
   }
@@ -515,8 +530,8 @@ async function applyTemplate(type: string) {
     const graph = await compileWorkflowTemplate(type, agentId.value)
     fromDto(graph)
     ElMessage.success(`已从 ${type} 生成 Graph，请保存`)
-  } catch (e: any) {
-    ElMessage.error(e?.message || '模板编译失败')
+  } catch (e: unknown) {
+    console.error('模板编译失败:', e)
   }
 }
 
@@ -529,8 +544,8 @@ async function runValidate() {
     } else {
       ElMessage.warning(result.errors?.join('；') || '校验失败')
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '校验失败')
+  } catch (e: unknown) {
+    console.error('编排校验失败:', e)
   } finally {
     validating.value = false
   }
@@ -546,8 +561,8 @@ async function runSave() {
     }
     await saveAgentGraph(agentId.value, toDto())
     ElMessage.success('编排已保存')
-  } catch (e: any) {
-    ElMessage.error(e?.message || '保存失败')
+  } catch (e: unknown) {
+    console.error('保存编排失败:', e)
   } finally {
     saving.value = false
   }

@@ -4,18 +4,14 @@
     <section class="dash-hero">
       <div class="dash-hero__text">
         <p class="dash-hero__eyebrow">{{ todayLabel }}</p>
-        <h1 class="dash-hero__title">
-          {{ greetingText }}，{{ displayUserName }}
-        </h1>
+        <h1 class="dash-hero__title">{{ greetingText }}，{{ displayUserName }}</h1>
         <p class="dash-hero__desc">
           {{ welcomeSubtitle }}
         </p>
       </div>
       <div class="dash-hero__aside">
         <span class="dash-hero__version">{{ APP_VERSION }}</span>
-        <el-button :icon="Refresh" :loading="loading" @click="loadDashboardData">
-          刷新
-        </el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="loadDashboardData"> 刷新 </el-button>
         <el-button
           v-if="canOpenMonitor"
           type="primary"
@@ -59,12 +55,7 @@
                 {{ healthLabel(systemStatus.status) }}
               </el-tag>
             </div>
-            <el-button
-              v-if="canOpenMonitor"
-              link
-              type="primary"
-              @click="goTo('/monitor/ops')"
-            >
+            <el-button v-if="canOpenMonitor" link type="primary" @click="goTo('/monitor/ops')">
               详情
             </el-button>
           </header>
@@ -100,11 +91,7 @@
               <div class="dash-health__item">
                 <span class="dash-health__label">最近检测</span>
                 <span class="dash-health__value">
-                  {{
-                    systemStatus.timestamp
-                      ? formatDateTime(systemStatus.timestamp)
-                      : '-'
-                  }}
+                  {{ systemStatus.timestamp ? formatDateTime(systemStatus.timestamp) : '-' }}
                 </span>
               </div>
             </div>
@@ -123,10 +110,7 @@
                   />
                 </div>
               </div>
-              <div
-                v-if="dbConnectionPercent != null"
-                class="dash-meter"
-              >
+              <div v-if="dbConnectionPercent != null" class="dash-meter">
                 <div class="dash-meter__head">
                   <span>数据库连接</span>
                   <span>
@@ -146,11 +130,7 @@
             </div>
           </div>
 
-          <el-empty
-            v-else
-            description="暂无运行状态数据"
-            :image-size="56"
-          />
+          <el-empty v-else description="暂无运行状态数据" :image-size="56" />
         </section>
       </el-col>
 
@@ -173,9 +153,7 @@
                 class="dash-badge"
               />
             </div>
-            <el-button link type="primary" @click="goTo('/system/announcement')">
-              全部
-            </el-button>
+            <el-button link type="primary" @click="goTo('/system/announcement')"> 全部 </el-button>
           </header>
 
           <div v-if="recentAnnouncements.length" class="dash-feed">
@@ -504,7 +482,7 @@ const countUnitNodes = (units: UnitVO[]): number => {
   return count
 }
 
-const safeFetch = async <T>(task: () => Promise<T>): Promise<T | null> => {
+const safeFetch = async <T,>(task: () => Promise<T>): Promise<T | null> => {
   try {
     return await task()
   } catch {
@@ -592,7 +570,11 @@ loadDashboardData()
   padding: 18px 20px;
   border-radius: var(--app-radius-lg, 12px);
   background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--app-primary) 14%, transparent), transparent 55%),
+    radial-gradient(
+      120% 140% at 0% 0%,
+      color-mix(in srgb, var(--app-primary) 14%, transparent),
+      transparent 55%
+    ),
     linear-gradient(180deg, #ffffff 0%, #f6f8fa 100%);
   border: 1px solid color-mix(in srgb, var(--app-primary) 10%, var(--app-border-color));
 
@@ -851,7 +833,11 @@ loadDashboardData()
     transition: width 0.35s ease;
 
     &--ok {
-      background: linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 65%, #67c23a));
+      background: linear-gradient(
+        90deg,
+        var(--app-primary),
+        color-mix(in srgb, var(--app-primary) 65%, #67c23a)
+      );
     }
 
     &--warn {

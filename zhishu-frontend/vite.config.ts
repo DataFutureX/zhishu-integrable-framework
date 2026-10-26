@@ -8,8 +8,14 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd())
+  const isDemo = env.VITE_DEMO_MODE === 'true'
 
   return {
+    // 把演示开关固化成构建期常量：Rollup 才能把 `if (isDemoMode)` 分支与 src/mock/** 一起剔除，
+    // 否则 mock 数据会被打进生产包（曾实测生产产物中含 mock 文案）。
+    define: {
+      __DEMO_MODE__: JSON.stringify(isDemo),
+    },
     plugins: [
       vue(),
       AutoImport({

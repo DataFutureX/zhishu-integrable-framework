@@ -81,7 +81,11 @@ const passwordForm = reactive({
   confirmPassword: '',
 })
 
-const validateConfirmPassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+const validateConfirmPassword = (
+  _rule: unknown,
+  value: string,
+  callback: (error?: Error) => void,
+) => {
   if (!value) {
     callback(new Error('请再次输入新密码'))
   } else if (value !== passwordForm.newPassword) {
@@ -128,8 +132,7 @@ const handleChangePassword = async () => {
         void logoutAndRedirect(router, { silent: true, notifyServer: false })
       }, 1500)
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : '密码修改失败'
-      ElMessage.error(message)
+      console.error('密码修改失败:', error)
     } finally {
       changingPassword.value = false
     }

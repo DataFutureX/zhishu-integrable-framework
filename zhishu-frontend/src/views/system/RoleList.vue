@@ -51,7 +51,12 @@
             />
           </el-form-item>
           <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="全部" clearable style="width: 120px">
+            <el-select
+              v-model="queryParams.status"
+              placeholder="全部"
+              clearable
+              style="width: 120px"
+            >
               <el-option label="启用" :value="1" />
               <el-option label="禁用" :value="0" />
             </el-select>
@@ -78,9 +83,7 @@
 
     <template #toolbar>
       <ListToolbar title="角色列表">
-        <template #hint>
-          配置系统角色与菜单/按钮权限
-        </template>
+        <template #hint> 配置系统角色与菜单/按钮权限 </template>
       </ListToolbar>
     </template>
 
@@ -98,7 +101,13 @@
         fixed="left"
         :index="tableIndexMethod"
       />
-      <el-table-column prop="roleName" label="角色名称" min-width="130" show-overflow-tooltip fixed="left">
+      <el-table-column
+        prop="roleName"
+        label="角色名称"
+        min-width="130"
+        show-overflow-tooltip
+        fixed="left"
+      >
         <template #default="{ row }">
           <div class="name-cell">
             <span
@@ -211,7 +220,12 @@
             />
           </el-form-item>
           <el-form-item label="排序">
-            <el-input-number v-model="formData.sort" :min="0" :max="9999" controls-position="right" />
+            <el-input-number
+              v-model="formData.sort"
+              :min="0"
+              :max="9999"
+              controls-position="right"
+            />
           </el-form-item>
           <el-form-item label="状态">
             <el-radio-group v-model="formData.status">
@@ -259,16 +273,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import type { ElTree } from 'element-plus'
-import {
-  Search,
-  Refresh,
-  Plus,
-  Edit,
-  Delete,
-  Key,
-  Menu,
-  Collection,
-} from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Edit, Delete, Key, Menu, Collection } from '@element-plus/icons-vue'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import StatusFilterStrip from '@/components/list-page/StatusFilterStrip.vue'
 import ListFilterPanel from '@/components/list-page/ListFilterPanel.vue'
@@ -315,7 +320,13 @@ const pageEnabledCount = computed(() => tableData.value.filter((row) => row.stat
 
 const heroMetrics = computed(() => [
   { key: 'total', label: '角色总数', value: total.value, icon: Key, accent: 'primary' as const },
-  { key: 'enabled', label: '本页启用', value: pageEnabledCount.value, icon: Collection, accent: 'success' as const },
+  {
+    key: 'enabled',
+    label: '本页启用',
+    value: pageEnabledCount.value,
+    icon: Collection,
+    accent: 'success' as const,
+  },
 ])
 
 const activeFilterCount = computed(() => filterChips.value.length)
@@ -520,10 +531,7 @@ const handleAssignMenus = async (row: RoleVO) => {
   menuDialogVisible.value = true
   menuTreeLoading.value = true
   try {
-    const [tree, menuIds] = await Promise.all([
-      getMenuTreeApi(),
-      getRoleMenuIdsApi(row.id),
-    ])
+    const [tree, menuIds] = await Promise.all([getMenuTreeApi(), getRoleMenuIdsApi(row.id)])
     menuTreeData.value = tree
     checkedMenuIds.value = menuIds || []
   } catch (error) {

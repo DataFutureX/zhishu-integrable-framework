@@ -3,9 +3,7 @@
     <section class="page-header">
       <div class="page-header__main">
         <h1 class="page-header__title">开放能力</h1>
-        <p class="page-header__desc">
-          知枢框架对外开放的 API 能力总览，供他方系统接入与集成使用
-        </p>
+        <p class="page-header__desc">知枢框架对外开放的 API 能力总览，供他方系统接入与集成使用</p>
       </div>
       <div class="page-header__stats">
         <div class="stat-card">
@@ -26,7 +24,9 @@
     <!-- 接入指南 -->
     <section class="guide-section">
       <header class="section-header">
-        <h2><el-icon><Connection /></el-icon> 接入说明</h2>
+        <h2>
+          <el-icon><Connection /></el-icon> 接入说明
+        </h2>
       </header>
       <div class="guide-cards">
         <div class="guide-card">
@@ -75,7 +75,10 @@
           </div>
           <div class="guide-card__body">
             <h3>桌面客户端接入</h3>
-            <p>面向 Electron / WPF / JavaFX 等桌面端软件提供专用登录通道（<code>/desktop/v1/auth</code>）：</p>
+            <p>
+              面向 Electron / WPF / JavaFX
+              等桌面端软件提供专用登录通道（<code>/desktop/v1/auth</code>）：
+            </p>
             <div class="code-block">
               <code>GET /desktop/v1/auth/public-key → POST /desktop/v1/auth/login</code>
             </div>
@@ -89,7 +92,10 @@
           </div>
           <div class="guide-card__body">
             <h3>基础信息</h3>
-            <p>Base URL：<code>/api/v1</code>（管理）· <code>/open/v1</code>（开放）· <code>/desktop/v1</code>（桌面端）</p>
+            <p>
+              Base URL：<code>/api/v1</code>（管理）· <code>/open/v1</code>（开放）·
+              <code>/desktop/v1</code>（桌面端）
+            </p>
             <p>数据格式：JSON · 字符编码：UTF-8</p>
             <p>接口文档：开发工具 → 接口文档（Swagger UI）</p>
           </div>
@@ -101,9 +107,9 @@
           <div class="guide-card__body">
             <h3>MCP 服务接入</h3>
             <p>
-              协议：<code>MCP Streamable HTTP</code> ·
-              端点：<code>/mcp</code> ·
-              鉴权：<code>X-API-Key: {your-api-key}</code>
+              协议：<code>MCP Streamable HTTP</code> · 端点：<code>/mcp</code> · 鉴权：<code
+                >X-API-Key: {your-api-key}</code
+              >
             </p>
             <p>API Key 由管理员在「智能中心 → MCP Hub」中配置，开发环境默认不鉴权。</p>
             <details class="mcp-code-details">
@@ -132,10 +138,16 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
     <section class="cred-section">
       <header class="section-header">
         <div>
-          <h2><el-icon><Key /></el-icon> Open API 接入凭证管理</h2>
+          <h2>
+            <el-icon><Key /></el-icon> Open API 接入凭证管理
+          </h2>
           <p class="section-header__desc">管理开放应用的 AK/SK 凭证与调用范围</p>
         </div>
-        <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="primary" @click="openCreateDialog">
+        <el-button
+          v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
+          type="primary"
+          @click="openCreateDialog"
+        >
           <el-icon><Plus /></el-icon> 新增应用
         </el-button>
       </header>
@@ -177,10 +189,21 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
         </el-table-column>
         <el-table-column label="操作" width="380" align="center">
           <template #default="{ row }">
-            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="primary" link size="small" @click="openEditDialog(row as OpenAppVO)">
+            <el-button
+              v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
+              type="primary"
+              link
+              size="small"
+              @click="openEditDialog(row as OpenAppVO)"
+            >
               编辑
             </el-button>
-            <el-button type="primary" link size="small" @click="handleGenerateAkSk(row as OpenAppVO)">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="handleGenerateAkSk(row as OpenAppVO)"
+            >
               {{ row.accessKey ? '重新生成 AK/SK' : '生成 AK/SK' }}
             </el-button>
             <el-button
@@ -193,7 +216,8 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             >
               轮换 SK
             </el-button>
-            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
+            <el-button
+              v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
               :type="row.status === 'ENABLED' ? 'danger' : 'success'"
               link
               size="small"
@@ -201,7 +225,13 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             >
               {{ row.status === 'ENABLED' ? '停用' : '启用' }}
             </el-button>
-            <el-button v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT" type="danger" link size="small" @click="handleDeleteApp(row as OpenAppVO)">
+            <el-button
+              v-permission="PERMISSIONS.SYSTEM_OPENAPI_EDIT"
+              type="danger"
+              link
+              size="small"
+              @click="handleDeleteApp(row as OpenAppVO)"
+            >
               移除
             </el-button>
           </template>
@@ -210,16 +240,14 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
     </section>
 
     <!-- AK/SK 生成结果弹窗 -->
-    <el-dialog v-model="akskDialogVisible" title="AK/SK 凭证" width="520px" :close-on-click-modal="false">
-      <el-alert
-        type="warning"
-        :closable="false"
-        show-icon
-        style="margin-bottom: 16px"
-      >
-        <template #title>
-          Secret Key 仅显示一次，请立即复制保存！关闭后将无法再次查看。
-        </template>
+    <el-dialog
+      v-model="akskDialogVisible"
+      title="AK/SK 凭证"
+      width="520px"
+      :close-on-click-modal="false"
+    >
+      <el-alert type="warning" :closable="false" show-icon style="margin-bottom: 16px">
+        <template #title> Secret Key 仅显示一次，请立即复制保存！关闭后将无法再次查看。 </template>
       </el-alert>
       <div class="aksk-field">
         <div class="aksk-field__label">Access Key</div>
@@ -284,16 +312,14 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
     <!-- API 分类列表 -->
     <section class="api-section">
       <header class="section-header">
-        <h2><el-icon><Grid /></el-icon> 能力分类</h2>
+        <h2>
+          <el-icon><Grid /></el-icon> 能力分类
+        </h2>
         <p class="section-header__desc">按业务域分类展示所有对外开放接口</p>
       </header>
 
       <el-tabs v-model="activeCategory" class="api-tabs" type="border-card">
-        <el-tab-pane
-          v-for="cat in categories"
-          :key="cat.key"
-          :name="cat.key"
-        >
+        <el-tab-pane v-for="cat in categories" :key="cat.key" :name="cat.key">
           <template #label>
             <div class="tab-label">
               <el-icon :size="14"><component :is="cat.icon" /></el-icon>
@@ -309,11 +335,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
             </p>
 
             <div class="api-list">
-              <div
-                v-for="(api, idx) in cat.endpoints"
-                :key="idx"
-                class="api-item"
-              >
+              <div v-for="(api, idx) in cat.endpoints" :key="idx" class="api-item">
                 <div class="api-item__header">
                   <el-tag
                     :type="methodTagType(api.method)"
@@ -333,13 +355,7 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
                   >
                     需认证
                   </el-tag>
-                  <el-tag
-                    v-else
-                    size="small"
-                    type="success"
-                    effect="plain"
-                    class="api-item__auth"
-                  >
+                  <el-tag v-else size="small" type="success" effect="plain" class="api-item__auth">
                     公开
                   </el-tag>
                 </div>
@@ -354,7 +370,9 @@ const result = await client.callTool({ name: "getSystemIntroduction", arguments:
     <!-- 他方接入流程 -->
     <section class="flow-section">
       <header class="section-header">
-        <h2><el-icon><Guide /></el-icon> 他方接入流程</h2>
+        <h2>
+          <el-icon><Guide /></el-icon> 他方接入流程
+        </h2>
       </header>
       <div class="flow-steps">
         <div class="flow-step">
@@ -438,12 +456,28 @@ const categories: ApiCategory[] = [
     key: 'ai-chat',
     title: 'AI 智能对话',
     icon: ChatLineRound,
-    description: '对外开放的 AI 对话能力，支持同步调用与 SSE 流式输出，他方可快速集成智能对话功能。',
+    description:
+      '对外开放的 AI 对话能力，支持同步调用与 SSE 流式输出，他方可快速集成智能对话功能。',
     basePath: '/open/v1',
     endpoints: [
-      { method: 'GET', path: '/open/v1/agents', summary: '获取可用智能体列表，外部简报请先选 Agent 再调对话接口', requiresAuth: true },
-      { method: 'POST', path: '/open/v1/chat', summary: '同步对话接口，适用于后台任务、简报生成等场景', requiresAuth: true },
-      { method: 'POST', path: '/open/v1/chat/stream', summary: '流式对话接口（SSE），适用于实时对话交互', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/open/v1/agents',
+        summary: '获取可用智能体列表，外部简报请先选 Agent 再调对话接口',
+        requiresAuth: true,
+      },
+      {
+        method: 'POST',
+        path: '/open/v1/chat',
+        summary: '同步对话接口，适用于后台任务、简报生成等场景',
+        requiresAuth: true,
+      },
+      {
+        method: 'POST',
+        path: '/open/v1/chat/stream',
+        summary: '流式对话接口（SSE），适用于实时对话交互',
+        requiresAuth: true,
+      },
     ],
   },
   {
@@ -453,7 +487,12 @@ const categories: ApiCategory[] = [
     description: '基于知识库文档的智能问答能力（RAG），他方可将自有知识库接入平台进行文档问答。',
     basePath: '/open/v1/knowledges/qa',
     endpoints: [
-      { method: 'POST', path: '/open/v1/knowledges/qa/stream', summary: '文档智能问答（SSE 流式），基于上传文档进行 RAG 检索与回答', requiresAuth: true },
+      {
+        method: 'POST',
+        path: '/open/v1/knowledges/qa/stream',
+        summary: '文档智能问答（SSE 流式），基于上传文档进行 RAG 检索与回答',
+        requiresAuth: true,
+      },
     ],
   },
   {
@@ -463,34 +502,87 @@ const categories: ApiCategory[] = [
     description: '支持他方系统推送工程节点、遥测站、告警等数据，实现知识图谱的同步与更新。',
     basePath: '/open/v1/kg',
     endpoints: [
-      { method: 'POST', path: '/open/v1/kg/upsert', summary: '接收万象等系统推送的工程/遥测站/告警节点，实现知识图谱数据同步', requiresAuth: true },
+      {
+        method: 'POST',
+        path: '/open/v1/kg/upsert',
+        summary: '接收万象等系统推送的工程/遥测站/告警节点，实现知识图谱数据同步',
+        requiresAuth: true,
+      },
     ],
   },
   {
     key: 'mcp',
     title: 'MCP 服务中枢',
     icon: Connection,
-    description: 'MCP（Model Context Protocol）服务能力，支持他方系统通过 MCP 协议调用平台智能工具，同时支持接入他方 MCP 工具。',
+    description:
+      'MCP（Model Context Protocol）服务能力，支持他方系统通过 MCP 协议调用平台智能工具，同时支持接入他方 MCP 工具。',
     basePath: '/mcp',
     endpoints: [
-      { method: 'POST', path: '/mcp', summary: 'MCP Streamable HTTP 端点（initialize / tools/list / tools/call），他方系统通过此端点调用平台 MCP 工具', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/mcp/overview', summary: 'MCP 中枢概览，展示客户端数量、上游数量等统计信息', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/mcp/catalog', summary: '对外能力与 Tool 目录，展示可用的 MCP 能力清单', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/mcp/clients', summary: '获取对外 MCP Client 列表', requiresAuth: true },
-      { method: 'POST', path: '/api/v1/mcp/clients', summary: '创建对外 MCP Client（apiKey 仅返回一次）', requiresAuth: true },
-      { method: 'PUT', path: '/api/v1/mcp/clients/{id}', summary: '更新对外 MCP Client 配置', requiresAuth: true },
-      { method: 'POST', path: '/api/v1/mcp/clients/{id}/rotate-key', summary: '轮换 API Key', requiresAuth: true },
-      { method: 'DELETE', path: '/api/v1/mcp/clients/{id}', summary: '删除对外 MCP Client', requiresAuth: true },
+      {
+        method: 'POST',
+        path: '/mcp',
+        summary:
+          'MCP Streamable HTTP 端点（initialize / tools/list / tools/call），他方系统通过此端点调用平台 MCP 工具',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/mcp/overview',
+        summary: 'MCP 中枢概览，展示客户端数量、上游数量等统计信息',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/mcp/catalog',
+        summary: '对外能力与 Tool 目录，展示可用的 MCP 能力清单',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/mcp/clients',
+        summary: '获取对外 MCP Client 列表',
+        requiresAuth: true,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/mcp/clients',
+        summary: '创建对外 MCP Client（apiKey 仅返回一次）',
+        requiresAuth: true,
+      },
+      {
+        method: 'PUT',
+        path: '/api/v1/mcp/clients/{id}',
+        summary: '更新对外 MCP Client 配置',
+        requiresAuth: true,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/mcp/clients/{id}/rotate-key',
+        summary: '轮换 API Key',
+        requiresAuth: true,
+      },
+      {
+        method: 'DELETE',
+        path: '/api/v1/mcp/clients/{id}',
+        summary: '删除对外 MCP Client',
+        requiresAuth: true,
+      },
     ],
   },
   {
     key: 'mcp-tools',
     title: 'MCP 可用工具',
     icon: Share,
-    description: '当前通过 MCP 协议对外提供的工具清单，他方系统可通过 tools/list 动态发现更多工具。',
+    description:
+      '当前通过 MCP 协议对外提供的工具清单，他方系统可通过 tools/list 动态发现更多工具。',
     basePath: '/mcp (tools/call)',
     endpoints: [
-      { method: 'POST', path: 'getSystemIntroduction', summary: '获取知枢可集成框架的系统介绍，包括系统名称、版本、核心功能与架构说明（无入参）', requiresAuth: true },
+      {
+        method: 'POST',
+        path: 'getSystemIntroduction',
+        summary: '获取知枢可集成框架的系统介绍，包括系统名称、版本、核心功能与架构说明（无入参）',
+        requiresAuth: true,
+      },
     ],
   },
   {
@@ -500,26 +592,82 @@ const categories: ApiCategory[] = [
     description: '用户认证、SSO 单点登录换票等接口，供他方系统集成登录能力使用。',
     basePath: '/api/v1/auth',
     endpoints: [
-      { method: 'GET', path: '/api/v1/auth/public-key', summary: '获取 RSA 公钥，用于前端加密用户名和密码', requiresAuth: false },
-      { method: 'GET', path: '/api/v1/auth/captcha', summary: '获取滑动验证码（背景图、滑块图及验证码标识）', requiresAuth: false },
-      { method: 'POST', path: '/api/v1/auth/captcha/verify', summary: '校验滑动验证码，成功后返回 captchaToken', requiresAuth: false },
-      { method: 'POST', path: '/api/v1/auth/login', summary: '用户登录，根据加密凭据获取 JWT Token', requiresAuth: false },
-      { method: 'POST', path: '/api/v1/auth/logout', summary: '退出登录，将当前 Token 加入黑名单', requiresAuth: true },
-      { method: 'POST', path: '/api/v1/auth/sso/exchange', summary: 'SSO 换票，校验伙伴签发的短期 Ticket 并签发业务 JWT', requiresAuth: false },
+      {
+        method: 'GET',
+        path: '/api/v1/auth/public-key',
+        summary: '获取 RSA 公钥，用于前端加密用户名和密码',
+        requiresAuth: false,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/auth/captcha',
+        summary: '获取滑动验证码（背景图、滑块图及验证码标识）',
+        requiresAuth: false,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/auth/captcha/verify',
+        summary: '校验滑动验证码，成功后返回 captchaToken',
+        requiresAuth: false,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/auth/login',
+        summary: '用户登录，根据加密凭据获取 JWT Token',
+        requiresAuth: false,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/auth/logout',
+        summary: '退出登录，将当前 Token 加入黑名单',
+        requiresAuth: true,
+      },
+      {
+        method: 'POST',
+        path: '/api/v1/auth/sso/exchange',
+        summary: 'SSO 换票，校验伙伴签发的短期 Ticket 并签发业务 JWT',
+        requiresAuth: false,
+      },
     ],
   },
   {
     key: 'desktop',
     title: '桌面客户端 API',
     icon: Cellphone,
-    description: '为桌面客户端（Electron / WPF / JavaFX / 移动端等）提供专用的登录、服务发现接口；与控制台同构的 RSA + JWT 认证，不要求滑动验证码。',
+    description:
+      '为桌面客户端（Electron / WPF / JavaFX / 移动端等）提供专用的登录、服务发现接口；与控制台同构的 RSA + JWT 认证，不要求滑动验证码。',
     basePath: '/desktop/v1',
     endpoints: [
-      { method: 'GET', path: '/desktop/v1/health', summary: '健康检查（无需鉴权，桌面端启动或心跳探测）', requiresAuth: false },
-      { method: 'GET', path: '/desktop/v1/auth/public-key', summary: '获取 RSA 公钥，用于加密用户名和密码', requiresAuth: false },
-      { method: 'POST', path: '/desktop/v1/auth/login', summary: '桌面端登录（不验证验证码），返回 JWT Token 及用户基本信息', requiresAuth: false },
-      { method: 'POST', path: '/desktop/v1/auth/logout', summary: '退出登录，将当前 Token 加入黑名单', requiresAuth: true },
-      { method: 'GET', path: '/desktop/v1/info', summary: '桌面端服务能力清单（需 X-Desktop-Key）', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/desktop/v1/health',
+        summary: '健康检查（无需鉴权，桌面端启动或心跳探测）',
+        requiresAuth: false,
+      },
+      {
+        method: 'GET',
+        path: '/desktop/v1/auth/public-key',
+        summary: '获取 RSA 公钥，用于加密用户名和密码',
+        requiresAuth: false,
+      },
+      {
+        method: 'POST',
+        path: '/desktop/v1/auth/login',
+        summary: '桌面端登录（不验证验证码），返回 JWT Token 及用户基本信息',
+        requiresAuth: false,
+      },
+      {
+        method: 'POST',
+        path: '/desktop/v1/auth/logout',
+        summary: '退出登录，将当前 Token 加入黑名单',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/desktop/v1/info',
+        summary: '桌面端服务能力清单（需 X-Desktop-Key）',
+        requiresAuth: true,
+      },
     ],
   },
   {
@@ -529,12 +677,42 @@ const categories: ApiCategory[] = [
     description: '系统运行状态、公告推送等接口，供他方系统获取平台运行信息与实时通知。',
     basePath: '/api/v1',
     endpoints: [
-      { method: 'GET', path: '/api/v1/system/health', summary: '系统健康检查（公开接口，无需认证）', requiresAuth: false },
-      { method: 'GET', path: '/api/v1/system/status', summary: '系统运行状态详情（需认证）', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/announcements/stream', summary: '公告 SSE 实时推送流', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/announcements/unread-count', summary: '获取未读公告数量', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/announcements/recent', summary: '获取最近公告列表', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/announcements/published/page', summary: '已发布公告分页查询', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/api/v1/system/health',
+        summary: '系统健康检查（公开接口，无需认证）',
+        requiresAuth: false,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/system/status',
+        summary: '系统运行状态详情（需认证）',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/announcements/stream',
+        summary: '公告 SSE 实时推送流',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/announcements/unread-count',
+        summary: '获取未读公告数量',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/announcements/recent',
+        summary: '获取最近公告列表',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/announcements/published/page',
+        summary: '已发布公告分页查询',
+        requiresAuth: true,
+      },
     ],
   },
   {
@@ -546,23 +724,41 @@ const categories: ApiCategory[] = [
     endpoints: [
       { method: 'GET', path: '/api/v1/users/page', summary: '用户分页查询', requiresAuth: true },
       { method: 'GET', path: '/api/v1/roles/page', summary: '角色分页查询', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/roles/list', summary: '查询全部启用角色（下拉选择用）', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/api/v1/roles/list',
+        summary: '查询全部启用角色（下拉选择用）',
+        requiresAuth: true,
+      },
       { method: 'GET', path: '/api/v1/menus/tree', summary: '获取菜单树结构', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/menus/current-user', summary: '获取当前用户菜单', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/menus/current-user/permissions', summary: '获取当前用户权限列表', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/api/v1/menus/current-user',
+        summary: '获取当前用户菜单',
+        requiresAuth: true,
+      },
+      {
+        method: 'GET',
+        path: '/api/v1/menus/current-user/permissions',
+        summary: '获取当前用户权限列表',
+        requiresAuth: true,
+      },
       { method: 'GET', path: '/api/v1/units/tree', summary: '获取单位树结构', requiresAuth: true },
-      { method: 'GET', path: '/api/v1/operation-logs/page', summary: '操作日志分页查询', requiresAuth: true },
+      {
+        method: 'GET',
+        path: '/api/v1/operation-logs/page',
+        summary: '操作日志分页查询',
+        requiresAuth: true,
+      },
     ],
   },
 ]
 
-const totalApiCount = computed(() =>
-  categories.reduce((sum, cat) => sum + cat.endpoints.length, 0),
-)
+const totalApiCount = computed(() => categories.reduce((sum, cat) => sum + cat.endpoints.length, 0))
 
 const openApiCount = computed(() =>
   categories
-    .filter(cat => cat.basePath.startsWith('/open'))
+    .filter((cat) => cat.basePath.startsWith('/open'))
     .reduce((sum, cat) => sum + cat.endpoints.length, 0),
 )
 
@@ -988,7 +1184,9 @@ const handleDeleteApp = async (row: OpenAppVO) => {
   border-radius: 8px;
   border: 1px solid var(--app-border-color, #e5e7eb);
   background: var(--app-surface-bg, #fff);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 
   &:hover {
     border-color: #409eff;

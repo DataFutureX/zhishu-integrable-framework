@@ -2,7 +2,8 @@
   <div v-if="isDemoMode && visible" class="demo-banner" role="status">
     <el-icon class="demo-banner__icon"><InfoFilled /></el-icon>
     <span class="demo-banner__text">
-      当前为<strong>演示模式</strong>，接口行为对齐正式环境，数据均为模拟。账号：<code>demo</code> / <code>demo123</code>
+      当前为<strong>演示模式</strong>，接口行为对齐正式环境，数据均为模拟。账号：<code>demo</code> /
+      <code>demo123</code>
     </span>
     <span class="demo-banner__countdown">{{ remaining }}s 后隐藏</span>
   </div>

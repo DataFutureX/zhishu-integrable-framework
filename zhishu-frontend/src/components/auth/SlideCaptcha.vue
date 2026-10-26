@@ -11,10 +11,7 @@
       </div>
 
       <template v-else-if="captcha && imageReady">
-        <div
-          class="slide-captcha__canvas"
-          :style="canvasStyle"
-        >
+        <div class="slide-captcha__canvas" :style="canvasStyle">
           <img
             :src="backgroundSrc"
             alt="验证码背景"
@@ -34,31 +31,25 @@
           />
         </div>
         <Transition name="fade">
-          <div v-if="verifyStatus === 'success'" class="slide-captcha__status slide-captcha__status--success">
+          <div
+            v-if="verifyStatus === 'success'"
+            class="slide-captcha__status slide-captcha__status--success"
+          >
             <el-icon><CircleCheck /></el-icon>
             <span>验证成功</span>
           </div>
-          <div v-else-if="verifyStatus === 'fail'" class="slide-captcha__status slide-captcha__status--fail">
+          <div
+            v-else-if="verifyStatus === 'fail'"
+            class="slide-captcha__status slide-captcha__status--fail"
+          >
             <el-icon><CircleClose /></el-icon>
             <span>验证失败，请重试</span>
           </div>
         </Transition>
       </template>
 
-      <img
-        v-show="false"
-        v-if="captcha"
-        :src="backgroundSrc"
-        alt=""
-        @load="handleBackgroundLoad"
-      />
-      <img
-        v-show="false"
-        v-if="captcha"
-        :src="sliderSrc"
-        alt=""
-        @load="handleSliderLoad"
-      />
+      <img v-show="false" v-if="captcha" :src="backgroundSrc" alt="" @load="handleBackgroundLoad" />
+      <img v-show="false" v-if="captcha" :src="sliderSrc" alt="" @load="handleSliderLoad" />
 
       <div v-if="!loading && !captcha" class="slide-captcha__empty">
         <span>验证码加载失败</span>
@@ -78,12 +69,20 @@
 
     <div
       class="slide-captcha__track"
+      role="slider"
+      tabindex="0"
+      aria-label="拖动或使用左右方向键完成验证码"
+      :aria-valuemin="0"
+      :aria-valuemax="Math.round(maxSlideX)"
+      :aria-valuenow="Math.round(slideX)"
+      :aria-disabled="loading || verifying || verifyStatus === 'success'"
       :style="{ width: `${displayWidth}px` }"
       :class="{
         'is-dragging': dragging,
         'is-success': verifyStatus === 'success',
         'is-fail': verifyStatus === 'fail',
       }"
+      @keydown="handleKeydown"
     >
       <div class="slide-captcha__track-fill" :style="{ width: `${slideX}px` }" />
       <div
@@ -96,7 +95,9 @@
         <el-icon v-else-if="verifyStatus === 'success'"><CircleCheck /></el-icon>
         <el-icon v-else><DArrowRight /></el-icon>
       </div>
-      <span v-if="slideX === 0 && !verifying" class="slide-captcha__hint">向右拖动滑块完成验证</span>
+      <span v-if="slideX === 0 && !verifying" class="slide-captcha__hint"
+        >向右拖动滑块完成验证</span
+      >
     </div>
   </div>
 </template>
@@ -141,7 +142,9 @@ const toImageSrc = (value: string) => {
 const backgroundSrc = computed(() => toImageSrc(captcha.value?.backgroundImage ?? ''))
 const sliderSrc = computed(() => toImageSrc(captcha.value?.sliderImage ?? ''))
 
-const imageReady = computed(() => backgroundLoaded.value && sliderLoaded.value && naturalWidth.value > 0)
+const imageReady = computed(
+  () => backgroundLoaded.value && sliderLoaded.value && naturalWidth.value > 0,
+)
 
 const scale = computed(() => {
   if (!naturalWidth.value) return 1
@@ -245,6 +248,13 @@ const onDragEnd = async () => {
 
   if (!captcha.value || slideX.value <= 0 || verifying.value) return
 
+  await submitVerify()
+}
+
+/** 提交校验（鼠标拖拽松开 / 键盘确认共用） */
+const submitVerify = async () => {
+  if (!captcha.value || slideX.value <= 0 || verifying.value) return
+
   verifying.value = true
   try {
     const result = await verifyCaptchaApi({
@@ -262,6 +272,37 @@ const onDragEnd = async () => {
   } finally {
     verifying.value = false
   }
+}
+
+/**
+ * 键盘操作：保证不使用鼠标的用户也能完成登录。
+ * ←/→ 步进 4px，Home/End 到两端，Enter/空格 提交校验。
+ */
+const handleKeydown = (event: KeyboardEvent) => {
+  if (loading.value || verifying.value || verifyStatus.value === 'success' || !captcha.value) return
+
+  const step = event.shiftKey ? 16 : 4
+  switch (event.key) {
+    case 'ArrowRight':
+      slideX.value = Math.min(slideX.value + step, maxSlideX.value)
+      break
+    case 'ArrowLeft':
+      slideX.value = Math.max(slideX.value - step, 0)
+      break
+    case 'Home':
+      slideX.value = 0
+      break
+    case 'End':
+      slideX.value = maxSlideX.value
+      break
+    case 'Enter':
+    case ' ':
+      void submitVerify()
+      break
+    default:
+      return
+  }
+  event.preventDefault()
 }
 
 const handleMouseMove = (event: MouseEvent) => {
@@ -287,7 +328,7 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
   verifyStatus.value = 'idle'
   dragging.value = true
   dragStartSlideX = slideX.value
-  dragStartX = 'touches' in event ? event.touches[0]?.clientX ?? 0 : event.clientX
+  dragStartX = 'touches' in event ? (event.touches[0]?.clientX ?? 0) : event.clientX
 
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
@@ -438,6 +479,12 @@ defineExpose({
 
   &.is-fail {
     border-color: #f56c6c;
+  }
+
+  // 键盘焦点可见（无障碍：不能用鼠标的用户靠 tab 进入后方向键操作）
+  &:focus-visible {
+    outline: 2px solid var(--app-primary);
+    outline-offset: 2px;
   }
 }
 

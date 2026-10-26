@@ -1,25 +1,25 @@
 <template>
   <ElementPlusRoot>
-  <div class="sso-callback">
-    <div class="sso-callback__card">
-      <template v-if="phase === 'loading'">
-        <el-icon class="sso-callback__spinner is-loading" :size="36">
-          <Loading />
-        </el-icon>
-        <h1 class="sso-callback__title">正在登录</h1>
-        <p class="sso-callback__desc">正在校验单点登录票据，请稍候…</p>
-      </template>
+    <div class="sso-callback">
+      <div class="sso-callback__card">
+        <template v-if="phase === 'loading'">
+          <el-icon class="sso-callback__spinner is-loading" :size="36">
+            <Loading />
+          </el-icon>
+          <h1 class="sso-callback__title">正在登录</h1>
+          <p class="sso-callback__desc">正在校验单点登录票据，请稍候…</p>
+        </template>
 
-      <template v-else-if="phase === 'error'">
-        <div class="sso-callback__code">SSO</div>
-        <h1 class="sso-callback__title">单点登录失败</h1>
-        <p class="sso-callback__desc">{{ errorMessage }}</p>
-        <div class="sso-callback__actions">
-          <el-button type="primary" @click="goLogin">返回登录页</el-button>
-        </div>
-      </template>
+        <template v-else-if="phase === 'error'">
+          <div class="sso-callback__code">SSO</div>
+          <h1 class="sso-callback__title">单点登录失败</h1>
+          <p class="sso-callback__desc">{{ errorMessage }}</p>
+          <div class="sso-callback__actions">
+            <el-button type="primary" @click="goLogin">返回登录页</el-button>
+          </div>
+        </template>
+      </div>
     </div>
-  </div>
   </ElementPlusRoot>
 </template>
 
@@ -98,7 +98,12 @@ onMounted(async () => {
   } catch (error: unknown) {
     console.error('SSO 换票失败:', error)
     phase.value = 'error'
-    if (error && typeof error === 'object' && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
       errorMessage.value = (error as { message: string }).message || errorMessage.value
     } else {
       errorMessage.value = '单点登录失败，请返回登录页重试'

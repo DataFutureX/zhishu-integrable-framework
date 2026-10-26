@@ -42,7 +42,12 @@
             />
           </el-form-item>
           <el-form-item label="优先级">
-            <el-select v-model="queryParams.priority" placeholder="全部" clearable style="width: 120px">
+            <el-select
+              v-model="queryParams.priority"
+              placeholder="全部"
+              clearable
+              style="width: 120px"
+            >
               <el-option label="普通" :value="0" />
               <el-option label="重要" :value="1" />
               <el-option label="紧急" :value="2" />
@@ -95,7 +100,9 @@
             查看
           </el-button>
           <el-button
-            v-if="row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED"
+            v-if="
+              row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED
+            "
             v-permission="PERMISSIONS.SYSTEM_ANNOUNCEMENT_EDIT"
             type="primary"
             link
@@ -105,7 +112,9 @@
             编辑
           </el-button>
           <el-button
-            v-if="row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED"
+            v-if="
+              row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED
+            "
             v-permission="PERMISSIONS.SYSTEM_ANNOUNCEMENT_PUBLISH"
             type="success"
             link
@@ -125,7 +134,9 @@
             撤回
           </el-button>
           <el-button
-            v-if="row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED"
+            v-if="
+              row.status === AnnouncementStatus.DRAFT || row.status === AnnouncementStatus.REVOKED
+            "
             v-permission="PERMISSIONS.SYSTEM_ANNOUNCEMENT_REMOVE"
             type="danger"
             link
@@ -162,7 +173,12 @@
   >
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="88px">
       <el-form-item label="标题" prop="title">
-        <el-input v-model="formData.title" placeholder="请输入公告标题" maxlength="200" show-word-limit />
+        <el-input
+          v-model="formData.title"
+          placeholder="请输入公告标题"
+          maxlength="200"
+          show-word-limit
+        />
       </el-form-item>
       <el-form-item label="优先级" prop="priority">
         <el-radio-group v-model="formData.priority">
@@ -185,7 +201,9 @@
     <template #footer>
       <el-button @click="formDialogVisible = false">取消</el-button>
       <el-button :loading="submitting" @click="submitForm(false)">保存草稿</el-button>
-      <el-button type="primary" :loading="submitting" @click="submitForm(true)">保存并发布</el-button>
+      <el-button type="primary" :loading="submitting" @click="submitForm(true)"
+        >保存并发布</el-button
+      >
     </template>
   </el-dialog>
 
@@ -207,7 +225,9 @@
           {{ statusLabel(detailItem.status) }}
         </el-tag>
         <span v-if="detailItem.publisherName">发布人：{{ detailItem.publisherName }}</span>
-        <span v-if="detailItem.publishTime">发布时间：{{ formatDateTime(detailItem.publishTime) }}</span>
+        <span v-if="detailItem.publishTime"
+          >发布时间：{{ formatDateTime(detailItem.publishTime) }}</span
+        >
       </div>
       <div class="announcement-detail__content">{{ detailItem.content }}</div>
     </div>
@@ -246,7 +266,9 @@ const tableData = ref<AnnouncementVO[]>([])
 const total = ref(0)
 const publishedCount = ref(0)
 
-const queryParams = reactive<Required<Pick<AnnouncementQueryDTO, 'pageNum' | 'pageSize'>> & AnnouncementQueryDTO>({
+const queryParams = reactive<
+  Required<Pick<AnnouncementQueryDTO, 'pageNum' | 'pageSize'>> & AnnouncementQueryDTO
+>({
   pageNum: 1,
   pageSize: 20,
   title: '',
@@ -270,7 +292,13 @@ const activeFilterCount = computed(() => {
 
 const heroMetrics = computed(() => [
   { key: 'total', label: '公告总数', value: total.value, icon: List, accent: 'primary' as const },
-  { key: 'published', label: '已发布', value: publishedCount.value, icon: CircleCheck, accent: 'success' as const },
+  {
+    key: 'published',
+    label: '已发布',
+    value: publishedCount.value,
+    icon: CircleCheck,
+    accent: 'success' as const,
+  },
 ])
 
 const formDialogVisible = ref(false)

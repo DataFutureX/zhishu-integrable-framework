@@ -9,7 +9,15 @@ export function ensureElementPlus(): Promise<void> {
   if (readyPromise) return readyPromise
 
   readyPromise = (async () => {
-    await import('element-plus/dist/index.css')
+    // 模板里的 el-* 组件样式由 unplugin-vue-components 的 ElementPlusResolver 按需注入，
+    // 这里只补「无法被模板静态识别」的程序式调用组件（ElMessage / MessageBox / Notification /
+    // ElLoading 以及 v-loading 指令），避免再引入 352KB 的 element-plus/dist/index.css。
+    await Promise.all([
+      import('element-plus/es/components/message/style/css'),
+      import('element-plus/es/components/message-box/style/css'),
+      import('element-plus/es/components/notification/style/css'),
+      import('element-plus/es/components/loading/style/css'),
+    ])
 
     const icons = await import('@element-plus/icons-vue')
     const app = getAppInstance()

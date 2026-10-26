@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { MenuVO } from '@/types/menu'
-import {
-  filterVisibleMenus,
-  findFirstMenuPath,
-  menusToRoutes,
-} from '@/router/dynamicRoutes'
+import { filterVisibleMenus, findFirstMenuPath, menusToRoutes } from '@/router/dynamicRoutes'
 import { resolveViewComponent } from '@/router/dynamicRouteViews'
 
 function menu(partial: Partial<MenuVO> & Pick<MenuVO, 'id' | 'title' | 'menuType'>): MenuVO {
@@ -56,8 +52,20 @@ describe('filterVisibleMenus / reserved paths', () => {
           menu({ id: 5, title: '不可见', menuType: 'MENU', path: '/permission/x', visible: 0 }),
         ],
       }),
-      menu({ id: 6, title: '登录冲突', menuType: 'MENU', path: '/login', component: 'views/login/Login.vue' }),
-      menu({ id: 7, title: '403冲突', menuType: 'MENU', path: '/403', component: 'views/error/Forbidden.vue' }),
+      menu({
+        id: 6,
+        title: '登录冲突',
+        menuType: 'MENU',
+        path: '/login',
+        component: 'views/login/Login.vue',
+      }),
+      menu({
+        id: 7,
+        title: '403冲突',
+        menuType: 'MENU',
+        path: '/403',
+        component: 'views/error/Forbidden.vue',
+      }),
     ]
 
     const visible = filterVisibleMenus(menus)
@@ -177,7 +185,13 @@ describe('menusToRoutes', () => {
   it('findFirstMenuPath skips reserved and prefers redirect', () => {
     expect(
       findFirstMenuPath([
-        menu({ id: 1, title: '登录', menuType: 'MENU', path: '/login', component: 'views/login/Login.vue' }),
+        menu({
+          id: 1,
+          title: '登录',
+          menuType: 'MENU',
+          path: '/login',
+          component: 'views/login/Login.vue',
+        }),
         menu({
           id: 2,
           title: '系统',

@@ -285,7 +285,10 @@ export function mockCreateMcpUpstream(data: McpUpstreamUpsertDTO): Promise<McpUp
   return Promise.resolve(clone(created))
 }
 
-export function mockUpdateMcpUpstream(id: number, data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
+export function mockUpdateMcpUpstream(
+  id: number,
+  data: McpUpstreamUpsertDTO,
+): Promise<McpUpstreamVO> {
   const found = upstreams.find((item) => item.id === id)
   if (!found) return Promise.reject(new Error('上游不存在'))
   Object.assign(found, {

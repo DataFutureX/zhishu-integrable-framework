@@ -24,7 +24,9 @@ export const findActiveTopMenu = (menus: MenuVO[], currentPath: string): MenuVO 
 }
 
 const getVisibleMenuChildren = (menus: MenuVO[] = []) =>
-  menus.filter((menu) => menu.visible !== 0 && menu.menuType !== 'PAGE' && menu.menuType !== 'BUTTON')
+  menus.filter(
+    (menu) => menu.visible !== 0 && menu.menuType !== 'PAGE' && menu.menuType !== 'BUTTON',
+  )
 
 export function useLayoutMenu() {
   const route = useRoute()

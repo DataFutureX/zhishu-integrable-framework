@@ -175,12 +175,15 @@ describe('postAiSse 事件解析', () => {
   it('HTTP 错误响应触发 onError 并抛出后端消息', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => ({
-        ok: false,
-        status: 500,
-        body: null,
-        text: async () => '{"message":"后端异常"}',
-      }) as unknown as Response),
+      vi.fn(
+        async () =>
+          ({
+            ok: false,
+            status: 500,
+            body: null,
+            text: async () => '{"message":"后端异常"}',
+          }) as unknown as Response,
+      ),
     )
     const onError = vi.fn()
 
@@ -199,12 +202,7 @@ describe('postAiSse 超时守护', () => {
     const onError = vi.fn()
 
     const error = await settlePromise(
-      postAiSse(
-        '/chat/stream',
-        {},
-        { onError },
-        { firstByteTimeoutMs: 20, idleTimeoutMs: 5000 },
-      ),
+      postAiSse('/chat/stream', {}, { onError }, { firstByteTimeoutMs: 20, idleTimeoutMs: 5000 }),
     )
 
     expect(error).toBeInstanceOf(AiSseAbortError)
@@ -219,12 +217,7 @@ describe('postAiSse 超时守护', () => {
     const onError = vi.fn()
 
     const pending = settlePromise(
-      postAiSse(
-        '/chat/stream',
-        {},
-        { onError },
-        { firstByteTimeoutMs: 5000, idleTimeoutMs: 20 },
-      ),
+      postAiSse('/chat/stream', {}, { onError }, { firstByteTimeoutMs: 5000, idleTimeoutMs: 20 }),
     )
     await sleep(1)
     ctx.stream?.push('data: 首段\n\n')

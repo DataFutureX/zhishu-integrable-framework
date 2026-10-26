@@ -14,11 +14,7 @@ export function resolveMatchedLayoutType(
 ): PageLayoutType {
   for (let i = matched.length - 1; i >= 0; i--) {
     const meta = matched[i].meta
-    if (
-      meta.layout === 'default' ||
-      meta.layout === 'dashboard' ||
-      meta.layout === 'fullscreen'
-    ) {
+    if (meta.layout === 'default' || meta.layout === 'dashboard' || meta.layout === 'fullscreen') {
       return meta.layout as PageLayoutType
     }
   }

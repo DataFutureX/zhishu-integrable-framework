@@ -1,24 +1,4 @@
-// 通用响应类型
-export interface ApiResponse<T = any> {
-  code: number
-  message: string
-  data: T
-}
-
-// 分页参数
-export interface PaginationParams {
-  page: number
-  pageSize: number
-}
-
-// 分页响应
-export interface PaginationResponse<T> {
-  list: T[]
-  total: number
-  page: number
-  pageSize: number
-}
-
+// 通用响应 / 分页类型统一在 types/common.ts
 // 用户状态枚举
 export enum UserStatus {
   ACTIVE = 1,

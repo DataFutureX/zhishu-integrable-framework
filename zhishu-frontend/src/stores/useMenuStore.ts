@@ -30,9 +30,7 @@ export const useMenuStore = defineStore('menu', () => {
   const profileMenu = computed(() => sidebarMenus.value.find((menu) => isProfileMenu(menu)))
 
   const fetchAndRegisterRoutes = async (router: Router) => {
-    const menus = applyTerminologyToMenus(
-      await getCurrentUserMenusApi({ skipErrorMessage: true }),
-    )
+    const menus = applyTerminologyToMenus(await getCurrentUserMenusApi({ skipErrorMessage: true }))
     menuTree.value = menus
     defaultPath.value = findFirstMenuPath(menus) || HOME_DASHBOARD_PATH
     addDynamicRoutes(router, menus)

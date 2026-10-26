@@ -55,7 +55,9 @@
 .el-select__wrapper,
 .el-textarea__inner {
   border-radius: $border-radius-md !important;
-  transition: box-shadow 0.3s, border-color 0.3s;
+  transition:
+    box-shadow 0.3s,
+    border-color 0.3s;
 }
 
 .el-input__wrapper,

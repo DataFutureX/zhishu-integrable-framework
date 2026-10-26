@@ -15,12 +15,7 @@ import {
   UserFilled,
 } from '@element-plus/icons-vue'
 
-export type DashboardQuickActionAccent =
-  | 'primary'
-  | 'success'
-  | 'warning'
-  | 'info'
-  | 'danger'
+export type DashboardQuickActionAccent = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 
 export interface DashboardQuickActionDef {
   key: string

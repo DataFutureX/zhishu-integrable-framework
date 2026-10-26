@@ -55,7 +55,6 @@ function buildRouteMeta(menu: MenuVO): Record<string, unknown> {
     icon: menu.icon,
     requiresAuth: menu.requiresAuth !== 0,
     menuId: menu.id,
-    ...(permissions.length ? { permissions } : {}),
     ...parseMenuMeta(menu),
     // 显式 permissions 覆盖 meta JSON 中可能存在的同名字段（保持数组）
     ...(permissions.length ? { permissions } : {}),

@@ -8,7 +8,8 @@
     :hero-enable-rate="pageEnableRate"
   >
     <template #heroDescription>
-      共 <strong>{{ totalMenuCount }}</strong> 个菜单项，启用率 <strong>{{ pageEnableRate }}%</strong>
+      共 <strong>{{ totalMenuCount }}</strong> 个菜单项，启用率
+      <strong>{{ pageEnableRate }}%</strong>
       <span class="page-hero__types">· 覆盖 {{ menuTypeCount }} 种菜单类型</span>
     </template>
     <template #heroActions>
@@ -51,7 +52,9 @@
               <component :is="getMenuTypeIcon(type.value)" />
             </el-icon>
             {{ type.label }}
-            <span v-if="typeCountMap[type.value]" class="type-chip__count">{{ typeCountMap[type.value] }}</span>
+            <span v-if="typeCountMap[type.value]" class="type-chip__count">{{
+              typeCountMap[type.value]
+            }}</span>
           </button>
         </div>
 
@@ -148,7 +151,10 @@
               <component :is="getMenuTypeIcon(row.menuType)" />
             </el-icon>
             <span class="menu-title-text">{{ row.title }}</span>
-            <span class="type-badge type-badge--inline" :class="`type-badge--${getMenuTypeKey(row.menuType)}`">
+            <span
+              class="type-badge type-badge--inline"
+              :class="`type-badge--${getMenuTypeKey(row.menuType)}`"
+            >
               {{ getMenuTypeText(row.menuType) }}
             </span>
           </div>
@@ -169,7 +175,9 @@
       <el-table-column prop="icon" label="图标" width="88" align="center">
         <template #default="{ row }">
           <div v-if="row.icon" class="icon-cell" :title="row.icon">
-            <el-icon class="icon-cell__glyph"><component :is="resolveMenuIcon(row.icon)" /></el-icon>
+            <el-icon class="icon-cell__glyph"
+              ><component :is="resolveMenuIcon(row.icon)"
+            /></el-icon>
           </div>
           <span v-else class="text-muted">—</span>
         </template>
@@ -325,8 +333,20 @@ const statusFilterOptions = [
 ]
 
 const heroMetrics = computed(() => [
-  { key: 'total', label: '菜单总数', value: totalMenuCount.value, icon: Menu, accent: 'primary' as const },
-  { key: 'enabled', label: '已启用', value: enabledMenuCount.value, icon: FolderOpened, accent: 'success' as const },
+  {
+    key: 'total',
+    label: '菜单总数',
+    value: totalMenuCount.value,
+    icon: Menu,
+    accent: 'primary' as const,
+  },
+  {
+    key: 'enabled',
+    label: '已启用',
+    value: enabledMenuCount.value,
+    icon: FolderOpened,
+    accent: 'success' as const,
+  },
 ])
 
 useRouteActivate(() => {
@@ -372,7 +392,10 @@ useRouteActivate(() => {
   color: var(--app-text-regular);
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 
   &__icon {
     font-size: 13px;

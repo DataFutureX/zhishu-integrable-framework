@@ -62,9 +62,7 @@
               <path fill="currentColor" :d="repo.iconPath" />
             </svg>
           </a>
-          <button type="button" class="portal-header__cta" @click="goLogin">
-            在线体验
-          </button>
+          <button type="button" class="portal-header__cta" @click="goLogin">在线体验</button>
           <button
             type="button"
             class="portal-header__menu"

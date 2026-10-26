@@ -1,14 +1,14 @@
 <template>
   <ElementPlusRoot>
-  <div class="error-page">
-    <div class="error-page__code">403</div>
-    <h1 class="error-page__title">无权访问</h1>
-    <p class="error-page__desc">当前账号没有访问该页面的权限，请联系管理员开通后重试。</p>
-    <div class="error-page__actions">
-      <el-button type="primary" @click="goHome">返回首页</el-button>
-      <el-button @click="goBack">返回上一页</el-button>
+    <div class="error-page">
+      <div class="error-page__code">403</div>
+      <h1 class="error-page__title">无权访问</h1>
+      <p class="error-page__desc">当前账号没有访问该页面的权限，请联系管理员开通后重试。</p>
+      <div class="error-page__actions">
+        <el-button type="primary" @click="goHome">返回首页</el-button>
+        <el-button @click="goBack">返回上一页</el-button>
+      </div>
     </div>
-  </div>
   </ElementPlusRoot>
 </template>
 

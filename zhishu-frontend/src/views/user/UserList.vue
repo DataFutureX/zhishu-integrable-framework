@@ -23,7 +23,9 @@
       >
         新增用户
       </el-button>
-      <el-button size="small" :icon="Refresh" :loading="loading" @click="fetchUserList">刷新</el-button>
+      <el-button size="small" :icon="Refresh" :loading="loading" @click="fetchUserList"
+        >刷新</el-button
+      >
     </template>
 
     <template #strip>
@@ -86,7 +88,12 @@
             />
           </el-form-item>
           <el-form-item label="角色">
-            <el-select v-model="queryParams.roleId" placeholder="全部角色" clearable style="width: 160px">
+            <el-select
+              v-model="queryParams.roleId"
+              placeholder="全部角色"
+              clearable
+              style="width: 160px"
+            >
               <el-option
                 v-for="role in roleOptions"
                 :key="role.id"
@@ -96,7 +103,12 @@
             </el-select>
           </el-form-item>
           <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="全部" clearable style="width: 120px">
+            <el-select
+              v-model="queryParams.status"
+              placeholder="全部"
+              clearable
+              style="width: 120px"
+            >
               <el-option label="启用" :value="1" />
               <el-option label="禁用" :value="0" />
             </el-select>
@@ -147,7 +159,13 @@
         fixed="left"
         :index="tableIndexMethod"
       />
-      <el-table-column prop="username" label="用户名" min-width="130" show-overflow-tooltip fixed="left">
+      <el-table-column
+        prop="username"
+        label="用户名"
+        min-width="130"
+        show-overflow-tooltip
+        fixed="left"
+      >
         <template #default="{ row }">
           <div class="name-cell">
             <span
@@ -184,7 +202,9 @@
             inline-prompt
             active-text="启用"
             inactive-text="禁用"
-            @change="(newStatus: number | string | boolean) => handleStatusChange(row as UserVO, newStatus)"
+            @change="
+              (newStatus: number | string | boolean) => handleStatusChange(row as UserVO, newStatus)
+            "
           />
         </template>
       </el-table-column>
@@ -342,7 +362,13 @@ const heroMetrics = computed(() => {
     tableData.value.map((row) => row.roleId ?? row.roleName).filter(Boolean),
   ).size
   return [
-    { key: 'total', label: '用户总数', value: total.value, icon: UserFilled, accent: 'primary' as const },
+    {
+      key: 'total',
+      label: '用户总数',
+      value: total.value,
+      icon: UserFilled,
+      accent: 'primary' as const,
+    },
     { key: 'roles', label: '本页角色', value: roleCount, icon: Collection },
   ]
 })
@@ -386,7 +412,10 @@ useRouteActivate(async () => {
   color: var(--app-text-regular);
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: color-mix(in srgb, var(--app-primary) 35%, var(--app-border-color));

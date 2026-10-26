@@ -1,14 +1,14 @@
 <template>
   <ElementPlusRoot>
-  <div class="error-page">
-    <div class="error-page__code">404</div>
-    <h1 class="error-page__title">页面不存在</h1>
-    <p class="error-page__desc">请检查地址是否正确，或从菜单重新进入目标页面。</p>
-    <div class="error-page__actions">
-      <el-button type="primary" @click="goHome">返回首页</el-button>
-      <el-button @click="goBack">返回上一页</el-button>
+    <div class="error-page">
+      <div class="error-page__code">404</div>
+      <h1 class="error-page__title">页面不存在</h1>
+      <p class="error-page__desc">请检查地址是否正确，或从菜单重新进入目标页面。</p>
+      <div class="error-page__actions">
+        <el-button type="primary" @click="goHome">返回首页</el-button>
+        <el-button @click="goBack">返回上一页</el-button>
+      </div>
     </div>
-  </div>
   </ElementPlusRoot>
 </template>
 

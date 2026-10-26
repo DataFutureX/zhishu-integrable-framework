@@ -142,13 +142,13 @@
             <el-empty description="选择或新建检索记录后提问，支持多轮与流式回答" />
           </div>
 
-          <div
-            v-for="(msg, index) in messages"
-            :key="index"
-            :class="['message-item', msg.role]"
-          >
+          <div v-for="(msg, index) in messages" :key="index" :class="['message-item', msg.role]">
             <div class="message-avatar">
-              <el-avatar v-if="msg.role === 'user'" :size="40" :style="{ backgroundColor: userAvatarColor }">
+              <el-avatar
+                v-if="msg.role === 'user'"
+                :size="40"
+                :style="{ backgroundColor: userAvatarColor }"
+              >
                 {{ userInitial }}
               </el-avatar>
               <el-avatar v-else :size="40" style="background-color: var(--el-color-primary)">
@@ -177,10 +177,7 @@
                 </div>
               </template>
               <div v-else class="message-user-block">
-                <div
-                  class="message-text"
-                  :class="{ 'is-editing': editingIndex === index }"
-                >
+                <div class="message-text" :class="{ 'is-editing': editingIndex === index }">
                   {{ msg.content }}
                 </div>
                 <div class="message-actions">
@@ -216,9 +213,7 @@
               </el-avatar>
             </div>
             <div class="message-content">
-              <div class="typing-indicator">
-                <span /><span /><span />
-              </div>
+              <div class="typing-indicator"><span /><span /><span /></div>
             </div>
           </div>
         </div>
@@ -279,7 +274,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'AIDocumentQA' })
 
-import { computed, nextTick, reactive, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { ElMessage, ElMessageBox, type InputInstance } from 'element-plus'
 import {
   Delete,
@@ -294,7 +289,6 @@ import {
   ScaleToOriginal,
   VideoPause,
 } from '@element-plus/icons-vue'
-import MarkdownIt from 'markdown-it'
 import {
   createChatSession,
   deleteChatSession,
@@ -312,7 +306,11 @@ import { useUserStore } from '@/stores/useUserStore'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { usePanelMaximize } from '@/composables/usePanelMaximize'
 import { useAiStream } from '@/composables/useAiStream'
+import { useChatSession } from '@/composables/useChatSession'
+import { useUserAvatar } from '@/composables/useUserAvatar'
 import { isAiSseTimeout, isAiSseUserAbort } from '@/utils/aiSse'
+import { renderPlainMarkdown } from '@/utils/markdown'
+import { isMessageBoxCancel } from '@/utils/uiMessage'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -328,19 +326,22 @@ const { isMaximized, toggleMaximize } = usePanelMaximize()
 /** 按会话维度管理 SSE 中断，组件卸载时自动断流 */
 const aiStream = useAiStream()
 
-const md = new MarkdownIt({
-  html: false,
-  linkify: true,
-  breaks: true,
-})
-
 const userStore = useUserStore()
 const sessions = ref<ChatSessionVO[]>([])
 const sessionsLoading = ref(false)
-const conversationId = ref<string | undefined>(undefined)
-const messageCache = reactive<Record<string, Message[]>>({})
-const loadingByCid = reactive<Record<string, boolean>>({})
-const streamingByCid = reactive<Record<string, boolean>>({})
+/** 多会话消息/流式状态（与 AIChat 共用 useChatSession） */
+const {
+  conversationId,
+  messages,
+  loading: asking,
+  streamingStarted,
+  loadingByCid,
+  streamingByCid,
+  messageCache,
+  ensureMessageList,
+  clearSessionRuntime,
+  isSessionPending,
+} = useChatSession<Message>()
 
 const inputMessage = ref('')
 const editingIndex = ref<number | null>(null)
@@ -357,39 +358,15 @@ const messagesRef = ref<HTMLElement>()
 
 const documentOptions = computed(() => documents.value)
 
-const messages = computed(() => {
-  const cid = conversationId.value
-  if (!cid) return []
-  return messageCache[cid] ?? []
-})
-
-const asking = computed(() => {
-  const cid = conversationId.value
-  return !!cid && !!loadingByCid[cid]
-})
-
-const streamingStarted = computed(() => {
-  const cid = conversationId.value
-  return !!cid && !!streamingByCid[cid]
-})
-
 const currentSessionTitle = computed(() => {
   const cid = conversationId.value
   if (!cid) return ''
   return sessions.value.find((s) => s.conversationId === cid)?.title || '新检索'
 })
 
-const userInitial = computed(() => {
-  const name = userStore.userName || '管理员'
-  return name.charAt(0).toUpperCase()
-})
-
-const userAvatarColor = computed(() => {
-  const name = userStore.userName || 'admin'
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  const hue = Math.abs(hash) % 360
-  return `hsl(${hue}, 65%, 45%)`
+const { initial: userInitial, color: userAvatarColor } = useUserAvatar({
+  saturation: 65,
+  lightness: 45,
 })
 
 const scopeLabel = computed(() => {
@@ -398,22 +375,7 @@ const scopeLabel = computed(() => {
   return doc?.fileName || `文档 #${selectedDocumentId.value}`
 })
 
-function ensureMessageList(cid: string): Message[] {
-  if (!messageCache[cid]) messageCache[cid] = []
-  return messageCache[cid]
-}
-
-function clearSessionRuntime(cid: string) {
-  delete messageCache[cid]
-  delete loadingByCid[cid]
-  delete streamingByCid[cid]
-}
-
-function isSessionPending(cid: string) {
-  return !!loadingByCid[cid]
-}
-
-const renderMarkdown = (content: string) => md.render(content || '')
+const renderMarkdown = (content: string) => renderPlainMarkdown(content)
 
 const toDate = (value?: string | Date) => {
   if (!value) return new Date()
@@ -521,7 +483,6 @@ const loadSessionMessages = async (cid: string, opts?: { force?: boolean }) => {
   } catch (error) {
     console.error('加载检索消息失败:', error)
     if (!messageCache[cid]?.length) applyWelcome(cid)
-    ElMessage.error('加载检索消息失败')
   } finally {
     historyLoading.value = false
   }
@@ -551,7 +512,6 @@ const handleCreateSession = async (opts?: { title?: string; silent?: boolean }) 
     await scrollToBottom()
   } catch (error) {
     console.error('新建检索失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '新建检索失败')
   }
 }
 
@@ -571,8 +531,8 @@ const handleRenameSession = async (session: ChatSessionVO) => {
   try {
     await renameSessionById(session.conversationId, session.title)
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error instanceof Error ? error.message : '重命名失败')
+    if (!isMessageBoxCancel(error)) {
+      console.error('重命名检索失败:', error)
     }
   }
 }
@@ -583,8 +543,8 @@ const handleRenameCurrentSession = async () => {
   try {
     await renameSessionById(cid, currentSessionTitle.value)
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error instanceof Error ? error.message : '重命名失败')
+    if (!isMessageBoxCancel(error)) {
+      console.error('重命名检索失败:', error)
     }
   }
 }
@@ -616,7 +576,6 @@ const handleDeleteSession = async (session: ChatSessionVO) => {
     ElMessage.success('已删除')
   } catch (error) {
     console.error('删除检索失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '删除失败')
   }
 }
 
@@ -624,11 +583,15 @@ const handleClear = async () => {
   const cid = conversationId.value
   if (!cid) return
   try {
-    await ElMessageBox.confirm('确认清空当前检索会话？将删除本会话记录并新建空白检索。', '清空本会话', {
-      type: 'warning',
-      confirmButtonText: '清空',
-      cancelButtonText: '取消',
-    })
+    await ElMessageBox.confirm(
+      '确认清空当前检索会话？将删除本会话记录并新建空白检索。',
+      '清空本会话',
+      {
+        type: 'warning',
+        confirmButtonText: '清空',
+        cancelButtonText: '取消',
+      },
+    )
   } catch {
     return
   }
@@ -640,7 +603,6 @@ const handleClear = async () => {
     ElMessage.success('已清空并新建检索')
   } catch (error) {
     console.error('清空检索失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '清空失败')
   }
 }
 
@@ -669,8 +631,7 @@ const startEdit = async (index: number, content?: string) => {
   await nextTick()
   const inst = composerInputRef.value
   const textarea =
-    inst?.textarea ??
-    (inst?.$el instanceof HTMLElement ? inst.$el.querySelector('textarea') : null)
+    inst?.textarea ?? (inst?.$el instanceof HTMLElement ? inst.$el.querySelector('textarea') : null)
   inst?.focus()
   if (textarea) {
     if (textarea.value !== text) {
@@ -832,7 +793,6 @@ const loadPage = async () => {
     await scrollToBottom()
   } catch (error) {
     console.error('初始化知识检索失败:', error)
-    ElMessage.error('加载检索记录失败')
   } finally {
     sessionsLoading.value = false
   }

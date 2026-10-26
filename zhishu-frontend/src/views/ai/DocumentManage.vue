@@ -21,14 +21,31 @@
     <template #heroActions>
       <template v-if="inDocsView">
         <el-button size="small" :icon="ArrowLeft" @click="backToCatalog">返回知识库</el-button>
-        <el-button v-permission="PERMISSIONS.AI_DOCUMENT_ADD" type="primary" size="small" :icon="Upload" @click="openUploadDialog">
+        <el-button
+          v-permission="PERMISSIONS.AI_DOCUMENT_ADD"
+          type="primary"
+          size="small"
+          :icon="Upload"
+          @click="openUploadDialog"
+        >
           上传文档
         </el-button>
-        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
+        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll"
+          >刷新</el-button
+        >
       </template>
       <template v-else>
-        <el-button v-permission="PERMISSIONS.AI_CATEGORY_EDIT" type="primary" size="small" :icon="Plus" @click="openCreateCategory">新建知识库</el-button>
-        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
+        <el-button
+          v-permission="PERMISSIONS.AI_CATEGORY_EDIT"
+          type="primary"
+          size="small"
+          :icon="Plus"
+          @click="openCreateCategory"
+          >新建知识库</el-button
+        >
+        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll"
+          >刷新</el-button
+        >
       </template>
     </template>
 
@@ -44,8 +61,18 @@
             />
           </el-form-item>
           <el-form-item label="类型">
-            <el-select v-model="queryParams.fileType" placeholder="全部" clearable style="width: 120px">
-              <el-option v-for="type in fileTypeOptions" :key="type" :label="type.toUpperCase()" :value="type" />
+            <el-select
+              v-model="queryParams.fileType"
+              placeholder="全部"
+              clearable
+              style="width: 120px"
+            >
+              <el-option
+                v-for="type in fileTypeOptions"
+                :key="type"
+                :label="type.toUpperCase()"
+                :value="type"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="向量化">
@@ -82,10 +109,18 @@
       <el-empty
         v-if="!filteredCatalog.length"
         class="kb-empty"
-        :description="catalogKeyword || catalogStatus !== 'ALL' ? '没有匹配的知识库' : '暂无知识库，请先新建'"
+        :description="
+          catalogKeyword || catalogStatus !== 'ALL' ? '没有匹配的知识库' : '暂无知识库，请先新建'
+        "
         :image-size="88"
       >
-        <el-button v-if="!catalogKeyword && catalogStatus === 'ALL'" v-permission="PERMISSIONS.AI_CATEGORY_EDIT" type="primary" :icon="Plus" @click="openCreateCategory">
+        <el-button
+          v-if="!catalogKeyword && catalogStatus === 'ALL'"
+          v-permission="PERMISSIONS.AI_CATEGORY_EDIT"
+          type="primary"
+          :icon="Plus"
+          @click="openCreateCategory"
+        >
           新建知识库
         </el-button>
       </el-empty>
@@ -186,8 +221,11 @@
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link size="small" @click="openDetail(row as DocumentVO)">查看</el-button>
-          <el-button v-permission="PERMISSIONS.AI_DOCUMENT_EDIT"
+          <el-button type="primary" link size="small" @click="openDetail(row as DocumentVO)"
+            >查看</el-button
+          >
+          <el-button
+            v-permission="PERMISSIONS.AI_DOCUMENT_EDIT"
             type="warning"
             link
             size="small"
@@ -196,7 +234,14 @@
           >
             重新处理
           </el-button>
-          <el-button v-permission="PERMISSIONS.AI_DOCUMENT_REMOVE" type="danger" link size="small" @click="handleDelete(row as DocumentVO)">删除</el-button>
+          <el-button
+            v-permission="PERMISSIONS.AI_DOCUMENT_REMOVE"
+            type="danger"
+            link
+            size="small"
+            @click="handleDelete(row as DocumentVO)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -242,7 +287,9 @@
               <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
               <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
               <template #tip>
-                <div class="el-upload__tip">支持 pdf / doc / docx / txt / md / xlsx 等，建议不超过 50MB</div>
+                <div class="el-upload__tip">
+                  支持 pdf / doc / docx / txt / md / xlsx 等，建议不超过 50MB
+                </div>
               </template>
             </el-upload>
           </el-form-item>
@@ -268,13 +315,22 @@
           label-width="80px"
         >
           <el-form-item v-if="!categoryForm.id" label="编码" prop="code">
-            <el-input v-model="categoryForm.code" placeholder="英文/数字，如 hydrology" maxlength="64" />
+            <el-input
+              v-model="categoryForm.code"
+              placeholder="英文/数字，如 hydrology"
+              maxlength="64"
+            />
           </el-form-item>
           <el-form-item label="名称" prop="name">
             <el-input v-model="categoryForm.name" placeholder="知识库名称" maxlength="128" />
           </el-form-item>
           <el-form-item label="描述">
-            <el-input v-model="categoryForm.description" type="textarea" :rows="2" maxlength="500" />
+            <el-input
+              v-model="categoryForm.description"
+              type="textarea"
+              :rows="2"
+              maxlength="500"
+            />
           </el-form-item>
           <el-form-item label="排序">
             <el-input-number v-model="categoryForm.sortOrder" :min="0" :max="9999" />
@@ -288,7 +344,9 @@
         </el-form>
         <template #footer>
           <el-button @click="categoryFormVisible = false">取消</el-button>
-          <el-button type="primary" :loading="categorySaving" @click="submitCategory">保存</el-button>
+          <el-button type="primary" :loading="categorySaving" @click="submitCategory"
+            >保存</el-button
+          >
         </template>
       </el-dialog>
 
@@ -355,7 +413,8 @@
                 <div class="summary-card__content">
                   <span class="summary-card__label">类型 / 大小</span>
                   <span class="summary-card__value">
-                    {{ (detailDoc.fileType || '-').toUpperCase() }} · {{ formatFileSize(detailDoc.fileSize ?? 0) }}
+                    {{ (detailDoc.fileType || '-').toUpperCase() }} ·
+                    {{ formatFileSize(detailDoc.fileSize ?? 0) }}
                   </span>
                 </div>
               </div>
@@ -365,7 +424,9 @@
                 </div>
                 <div class="summary-card__content">
                   <span class="summary-card__label">上传时间</span>
-                  <span class="summary-card__value">{{ formatDateTime(detailDoc.uploadTime) }}</span>
+                  <span class="summary-card__value">{{
+                    formatDateTime(detailDoc.uploadTime)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -379,9 +440,15 @@
               <el-descriptions :column="1" border class="drawer-descriptions">
                 <el-descriptions-item label="文档 ID">{{ detailDoc.id }}</el-descriptions-item>
                 <el-descriptions-item label="文件名">{{ detailDoc.fileName }}</el-descriptions-item>
-                <el-descriptions-item label="知识库">{{ detailDoc.categoryName || '未分类' }}</el-descriptions-item>
+                <el-descriptions-item label="知识库">{{
+                  detailDoc.categoryName || '未分类'
+                }}</el-descriptions-item>
                 <el-descriptions-item label="向量化">
-                  <el-tag :type="detailDoc.processed ? 'success' : 'warning'" size="small" effect="plain">
+                  <el-tag
+                    :type="detailDoc.processed ? 'success' : 'warning'"
+                    size="small"
+                    effect="plain"
+                  >
                     {{ detailDoc.processed ? '已处理' : '处理中' }}
                   </el-tag>
                 </el-descriptions-item>
@@ -393,7 +460,11 @@
                 <div class="section-card-header">
                   <span class="section-card-title">文本内容</span>
                   <span class="section-meta">
-                    {{ detailDoc.content ? `${detailDoc.content.length.toLocaleString()} 字` : '暂无解析内容' }}
+                    {{
+                      detailDoc.content
+                        ? `${detailDoc.content.length.toLocaleString()} 字`
+                        : '暂无解析内容'
+                    }}
                   </span>
                 </div>
               </template>
@@ -516,9 +587,7 @@ const categoryRules: FormRules = {
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
 }
 
-const enabledCategories = computed(() =>
-  categories.value.filter((c) => c.status === 'ENABLED'),
-)
+const enabledCategories = computed(() => categories.value.filter((c) => c.status === 'ENABLED'))
 
 const catalogCategories = computed(() =>
   [...categories.value].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
@@ -630,8 +699,12 @@ const activeFilterCount = computed(() => {
 const displayData = computed(() => {
   const keyword = queryParams.keyword.trim().toLowerCase()
   return tableData.value.filter((item) => {
-    if (processedFilter.value !== undefined && item.processed !== processedFilter.value) return false
-    if (queryParams.fileType && item.fileType?.toLowerCase() !== queryParams.fileType.toLowerCase()) {
+    if (processedFilter.value !== undefined && item.processed !== processedFilter.value)
+      return false
+    if (
+      queryParams.fileType &&
+      item.fileType?.toLowerCase() !== queryParams.fileType.toLowerCase()
+    ) {
       return false
     }
     if (keyword && !item.fileName?.toLowerCase().includes(keyword)) return false
@@ -961,13 +1034,18 @@ useRouteActivate(refreshAll)
   color: inherit;
   outline: none;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 
   &:hover,
   &:focus-visible {
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--kb-accent) 35%, transparent);
-    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05), 0 12px 24px rgba(15, 23, 42, 0.07);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.05),
+      0 12px 24px rgba(15, 23, 42, 0.07);
 
     .kb-collection__enter {
       color: var(--kb-accent);
@@ -1086,7 +1164,9 @@ useRouteActivate(refreshAll)
     margin-left: auto;
     font-size: 16px;
     color: var(--kb-muted);
-    transition: color 0.15s ease, transform 0.15s ease;
+    transition:
+      color 0.15s ease,
+      transform 0.15s ease;
   }
 }
 
@@ -1170,8 +1250,7 @@ useRouteActivate(refreshAll)
   min-height: 100%;
   padding: 16px 20px 24px;
   background:
-    radial-gradient(ellipse at top right, rgba(64, 158, 255, 0.06) 0%, transparent 55%),
-    $bg-color;
+    radial-gradient(ellipse at top right, rgba(64, 158, 255, 0.06) 0%, transparent 55%), $bg-color;
 }
 
 .drawer-summary {

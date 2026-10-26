@@ -8,7 +8,9 @@
       :enable-rate="pageEnableRate"
     >
       <template #description>
-        共 <strong>{{ allUnitCount }}</strong> 个单位，{{ viewMode === 'tree' ? '当前树' : '本页' }}启用率
+        共 <strong>{{ allUnitCount }}</strong> 个单位，{{
+          viewMode === 'tree' ? '当前树' : '本页'
+        }}启用率
         <strong>{{ pageEnableRate }}%</strong>
         <span v-if="unitTypeOptions.length" class="page-hero__types">
           · 覆盖 {{ unitTypeOptions.length }} 种单位类型
@@ -24,7 +26,9 @@
         >
           新增单位
         </el-button>
-        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshCurrentView">刷新</el-button>
+        <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshCurrentView"
+          >刷新</el-button
+        >
       </template>
     </PageHero>
 
@@ -143,7 +147,12 @@
                 />
               </el-form-item>
               <el-form-item label="状态">
-                <el-select v-model="queryParams.status" placeholder="全部" clearable style="width: 120px">
+                <el-select
+                  v-model="queryParams.status"
+                  placeholder="全部"
+                  clearable
+                  style="width: 120px"
+                >
                   <el-option label="启用" :value="1" />
                   <el-option label="停用" :value="0" />
                 </el-select>
@@ -228,10 +237,7 @@
                   <component :is="getUnitNodeIcon(row as UnitVO)" />
                 </el-icon>
                 <span class="unit-name-text">{{ row.unitName }}</span>
-                <span
-                  v-if="row.unitType"
-                  class="type-badge type-badge--inline"
-                >
+                <span v-if="row.unitType" class="type-badge type-badge--inline">
                   {{ row.unitType }}
                 </span>
               </div>
@@ -325,7 +331,13 @@
               fixed="left"
               :index="tableIndexMethod"
             />
-            <el-table-column prop="unitName" label="单位名称" min-width="140" show-overflow-tooltip fixed="left">
+            <el-table-column
+              prop="unitName"
+              label="单位名称"
+              min-width="140"
+              show-overflow-tooltip
+              fixed="left"
+            >
               <template #default="{ row }">
                 <div class="name-cell">
                   <span
@@ -341,7 +353,12 @@
                 <span class="unit-code">{{ row.unitCode || '—' }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="parentName" label="上级单位" min-width="140" show-overflow-tooltip>
+            <el-table-column
+              prop="parentName"
+              label="上级单位"
+              min-width="140"
+              show-overflow-tooltip
+            >
               <template #default="{ row }">{{ row.parentName || '—' }}</template>
             </el-table-column>
             <el-table-column prop="unitType" label="单位类型" width="120" show-overflow-tooltip>
@@ -511,8 +528,20 @@ const getUnitNodeIcon = (row: UnitVO) => {
 }
 
 const heroMetrics = computed<PageHeroMetric[]>(() => [
-  { key: 'total', label: '单位总数', value: allUnitCount.value, icon: OfficeBuilding, accent: 'primary' },
-  { key: 'enabled', label: '当前启用', value: pageEnabledCount.value, icon: Collection, accent: 'success' },
+  {
+    key: 'total',
+    label: '单位总数',
+    value: allUnitCount.value,
+    icon: OfficeBuilding,
+    accent: 'primary',
+  },
+  {
+    key: 'enabled',
+    label: '当前启用',
+    value: pageEnabledCount.value,
+    icon: Collection,
+    accent: 'success',
+  },
 ])
 
 useRouteActivate(async () => {
@@ -564,7 +593,10 @@ useRouteActivate(async () => {
   color: $text-regular;
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: $border-color;
@@ -630,7 +662,10 @@ useRouteActivate(async () => {
   color: $text-regular;
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: $border-color;

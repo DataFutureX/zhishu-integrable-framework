@@ -1,8 +1,9 @@
-import { computed, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus'
+import { computed, ref } from 'vue'
+import { ElMessage, type FormRules } from 'element-plus'
 import { Folder, Document, Link, Key } from '@element-plus/icons-vue'
 import { getMenuTreeApi, createMenuApi, updateMenuApi, deleteMenuApi } from '@/api/menu'
 import type { MenuVO, MenuCreateDTO, MenuUpdateDTO } from '@/types/menu'
+import { useCrudList, type FilterChip } from '@/composables/useCrudList'
 
 export interface MenuFormModel {
   parentId: number | string
@@ -48,23 +49,15 @@ function stripButtonNodes(nodes: MenuVO[]): MenuVO[] {
     }))
 }
 
+export interface MenuQuery {
+  title: string
+  path: string
+  menuType: string
+  status?: number
+}
+
 export function useMenuList() {
-  const loading = ref(false)
-  const submitLoading = ref(false)
   const rawTableData = ref<MenuVO[]>([])
-  const tableRef = ref<TableInstance>()
-
-  const queryParams = reactive({
-    title: '',
-    path: '',
-    menuType: '' as string,
-    status: undefined as number | undefined,
-  })
-
-  const dialogVisible = ref(false)
-  const dialogTitle = ref('新增菜单')
-  const isCreate = ref(true)
-  const editingId = ref<number | string>()
 
   const defaultForm = (parentId: number | string = 0): MenuFormModel => ({
     parentId,
@@ -82,7 +75,49 @@ export function useMenuList() {
     status: 1,
   })
 
-  const menuForm = reactive<MenuFormModel>(defaultForm())
+  // 菜单是树形前端过滤：分页/弹窗/删除确认等骨架统一交给 useCrudList
+  const crud = useCrudList<MenuVO, MenuFormModel, MenuQuery>({
+    defaultQuery: () => ({ title: '', path: '', menuType: '', status: undefined }),
+    defaultForm: () => defaultForm(),
+    createTitle: '新增菜单',
+    editTitle: '编辑菜单',
+    reload: () => fetchTree(),
+    deleteApi: (id) => deleteMenuApi(id),
+    rowLabel: (row) => row.title,
+    deleteConfirmText: (row) => `确定删除菜单「${row.title}」吗？`,
+    onDeleted: () => ElMessage.success('删除成功'),
+    clientSideFiltering: true,
+    chipBuilder: (query): FilterChip[] => {
+      const chips: FilterChip[] = []
+      if (query.title?.trim()) chips.push({ key: 'title', label: `名称：${query.title.trim()}` })
+      if (query.path?.trim()) chips.push({ key: 'path', label: `路径：${query.path.trim()}` })
+      if (query.menuType) {
+        const type = menuTypes.find((item) => item.value === query.menuType)
+        chips.push({ key: 'menuType', label: `类型：${type?.label || query.menuType}` })
+      }
+      if (query.status === 0 || query.status === 1) {
+        chips.push({ key: 'status', label: query.status === 1 ? '启用' : '禁用' })
+      }
+      return chips
+    },
+  })
+
+  const {
+    loading,
+    submitLoading,
+    tableRef,
+    queryParams,
+    form: menuForm,
+    dialogVisible,
+    dialogTitle,
+    isCreate,
+    editingId,
+    filterChips,
+    activeFilterCount,
+    removeFilterChip,
+    handleSearch,
+    handleReset,
+  } = crud
 
   const formRules = computed<FormRules>(() => ({
     parentId: [{ required: true, message: '请选择上级菜单', trigger: 'change' }],
@@ -101,7 +136,8 @@ export function useMenuList() {
     }
     if (queryParams.menuType && node.menuType !== queryParams.menuType) return false
     if (queryParams.title?.trim() && !node.title.includes(queryParams.title.trim())) return false
-    if (queryParams.path?.trim() && !(node.path || '').includes(queryParams.path.trim())) return false
+    if (queryParams.path?.trim() && !(node.path || '').includes(queryParams.path.trim()))
+      return false
     return true
   }
 
@@ -154,7 +190,9 @@ export function useMenuList() {
     return Math.round((enabled / allMenus.value.length) * 100)
   })
 
-  const enabledMenuCount = computed(() => allMenus.value.filter((node) => (node.status ?? 1) === 1).length)
+  const enabledMenuCount = computed(
+    () => allMenus.value.filter((node) => (node.status ?? 1) === 1).length,
+  )
 
   const typeCountMap = computed(() => {
     const map: Record<string, number> = {}
@@ -165,26 +203,6 @@ export function useMenuList() {
     })
     return map
   })
-
-  const filterChips = computed(() => {
-    const chips: { key: string; label: string }[] = []
-    if (queryParams.title?.trim()) {
-      chips.push({ key: 'title', label: `名称：${queryParams.title.trim()}` })
-    }
-    if (queryParams.path?.trim()) {
-      chips.push({ key: 'path', label: `路径：${queryParams.path.trim()}` })
-    }
-    if (queryParams.menuType) {
-      const type = menuTypes.find((item) => item.value === queryParams.menuType)
-      chips.push({ key: 'menuType', label: `类型：${type?.label || queryParams.menuType}` })
-    }
-    if (queryParams.status === 0 || queryParams.status === 1) {
-      chips.push({ key: 'status', label: queryParams.status === 1 ? '启用' : '禁用' })
-    }
-    return chips
-  })
-
-  const activeFilterCount = computed(() => filterChips.value.length)
 
   const hasActiveFilter = computed(() => activeFilterCount.value > 0)
 
@@ -252,28 +270,6 @@ export function useMenuList() {
     queryParams.status = status
   }
 
-  function removeFilterChip(key: string) {
-    if (key === 'title') queryParams.title = ''
-    else if (key === 'path') queryParams.path = ''
-    else if (key === 'menuType') queryParams.menuType = ''
-    else if (key === 'status') queryParams.status = undefined
-  }
-
-  const handleSearch = () => {
-    // 筛选由 computed 响应式驱动，此处保留交互一致性
-  }
-
-  const handleReset = () => {
-    queryParams.title = ''
-    queryParams.path = ''
-    queryParams.menuType = ''
-    queryParams.status = undefined
-  }
-
-  const resetForm = (parentId: number | string = 0) => {
-    Object.assign(menuForm, defaultForm(parentId))
-  }
-
   const fetchTree = async () => {
     loading.value = true
     try {
@@ -286,24 +282,19 @@ export function useMenuList() {
   }
 
   const handleAdd = (parent?: MenuVO) => {
-    isCreate.value = true
+    crud.openCreate({ parentId: parent?.id ?? 0 })
     dialogTitle.value = parent
       ? `新增${parent.menuType === 'MENU' ? '权限' : '子菜单'} - ${parent.title}`
       : '新增菜单'
-    editingId.value = undefined
-    resetForm(parent?.id ?? 0)
+    // 给菜单挂按钮时默认按权限项初始化（隐藏且类型为 BUTTON）
     if (parent?.menuType === 'MENU') {
       menuForm.menuType = 'BUTTON'
       menuForm.visible = 0
     }
-    dialogVisible.value = true
   }
 
   const handleEdit = (row: MenuVO) => {
-    isCreate.value = false
-    dialogTitle.value = '编辑菜单'
-    editingId.value = row.id
-    Object.assign(menuForm, {
+    crud.openEdit(row.id, {
       parentId: row.parentId ?? 0,
       title: row.title,
       menuType: row.menuType,
@@ -318,25 +309,9 @@ export function useMenuList() {
       requiresAuth: row.requiresAuth ?? 1,
       status: row.status ?? 1,
     })
-    dialogVisible.value = true
   }
 
-  const handleDelete = async (row: MenuVO) => {
-    try {
-      await ElMessageBox.confirm(`确定删除菜单「${row.title}」吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-      await deleteMenuApi(row.id)
-      ElMessage.success('删除成功')
-      fetchTree()
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除菜单失败:', error)
-      }
-    }
-  }
+  const handleDelete = crud.handleDelete
 
   const buildPayloadFields = () => {
     const isButton = menuForm.menuType === 'BUTTON'
@@ -381,9 +356,8 @@ export function useMenuList() {
     }
   }
 
-  const handleDialogClose = () => {
-    resetForm()
-  }
+  /** 关闭弹窗：重置表单与编辑态（由 useCrudList 统一处理） */
+  const handleDialogClose = crud.handleDialogClose
 
   return {
     loading,

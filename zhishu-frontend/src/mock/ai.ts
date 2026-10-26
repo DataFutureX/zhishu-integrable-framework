@@ -170,7 +170,7 @@ function buildChatReply(message: string, enableRag?: boolean): string {
       '```sql\n' +
       'SELECT terminal_name, actual_value, threshold_value, status\n' +
       'FROM t_terminal_alert\n' +
-      "WHERE status = 0\n" +
+      'WHERE status = 0\n' +
       'ORDER BY create_time DESC\n' +
       'LIMIT 20;\n' +
       '```\n\n' +
@@ -416,7 +416,13 @@ function buildDemoProgressEvents(message: string): Array<{
   if (/巡检|计划|任务|打卡|检查点|异常闭环/.test(q)) {
     return [
       {
-        event: { type: 'NODE_START', name: 'SEQUENTIAL · 澄清', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'SEQUENTIAL · 澄清',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 320,
       },
       {
@@ -450,7 +456,13 @@ function buildDemoProgressEvents(message: string): Array<{
         delayMs: 520,
       },
       {
-        event: { type: 'NODE_START', name: 'LLM · 润色', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'LLM · 润色',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 280,
       },
     ]
@@ -458,7 +470,13 @@ function buildDemoProgressEvents(message: string): Array<{
   if (/图谱|拓扑|邻居|影响面|关联路径|知识图谱|GraphRAG/.test(q)) {
     return [
       {
-        event: { type: 'NODE_START', name: 'GraphRAG · 实体提示', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'GraphRAG · 实体提示',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 280,
       },
       {
@@ -502,7 +520,13 @@ function buildDemoProgressEvents(message: string): Array<{
         delayMs: 480,
       },
       {
-        event: { type: 'NODE_START', name: 'LLM · 生成回答', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'LLM · 生成回答',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 260,
       },
     ]
@@ -510,7 +534,13 @@ function buildDemoProgressEvents(message: string): Array<{
   if (/NL2SQL|自然语言查数|执行.?SQL|白名单.?SQL/.test(q)) {
     return [
       {
-        event: { type: 'NODE_START', name: 'NL2SQL · 理解意图', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'NL2SQL · 理解意图',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 300,
       },
       {
@@ -554,7 +584,13 @@ function buildDemoProgressEvents(message: string): Array<{
         delayMs: 420,
       },
       {
-        event: { type: 'NODE_START', name: 'LLM · 生成回答', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'LLM · 生成回答',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 260,
       },
     ]
@@ -562,7 +598,13 @@ function buildDemoProgressEvents(message: string): Array<{
   if (/告警|报警|阈值|预警|水位|雨量|流量|站点|遥测|青溪|碧湖|在线|离线/.test(q)) {
     return [
       {
-        event: { type: 'NODE_START', name: 'REACT · 理解意图', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'REACT · 理解意图',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 300,
       },
       {
@@ -616,7 +658,13 @@ function buildDemoProgressEvents(message: string): Array<{
         delayMs: 380,
       },
       {
-        event: { type: 'NODE_START', name: 'LLM · 生成回答', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'LLM · 生成回答',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 260,
       },
     ]
@@ -624,7 +672,13 @@ function buildDemoProgressEvents(message: string): Array<{
   if (/协议|报文|规约|知识|手册|怎么|如何/.test(q)) {
     return [
       {
-        event: { type: 'NODE_START', name: 'Hybrid RAG', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'Hybrid RAG',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 360,
       },
       {
@@ -638,14 +692,26 @@ function buildDemoProgressEvents(message: string): Array<{
         delayMs: 480,
       },
       {
-        event: { type: 'NODE_START', name: 'LLM · 生成回答', detail: null, durationMs: null, timestamp: ts() },
+        event: {
+          type: 'NODE_START',
+          name: 'LLM · 生成回答',
+          detail: null,
+          durationMs: null,
+          timestamp: ts(),
+        },
         delayMs: 260,
       },
     ]
   }
   return [
     {
-      event: { type: 'NODE_START', name: 'REACT · 理解意图', detail: null, durationMs: null, timestamp: ts() },
+      event: {
+        type: 'NODE_START',
+        name: 'REACT · 理解意图',
+        detail: null,
+        durationMs: null,
+        timestamp: ts(),
+      },
       delayMs: 300,
     },
     {
@@ -659,7 +725,13 @@ function buildDemoProgressEvents(message: string): Array<{
       delayMs: 360,
     },
     {
-      event: { type: 'NODE_START', name: 'LLM · 生成回答', detail: null, durationMs: null, timestamp: ts() },
+      event: {
+        type: 'NODE_START',
+        name: 'LLM · 生成回答',
+        detail: null,
+        durationMs: null,
+        timestamp: ts(),
+      },
       delayMs: 260,
     },
   ]
@@ -941,7 +1013,10 @@ export async function mockDocumentQaStream(
   handlers.onDone?.(conversationId)
 }
 
-export async function mockListQaHistory(scene: QaHistoryScene, limit = 200): Promise<QaHistoryVO[]> {
+export async function mockListQaHistory(
+  scene: QaHistoryScene,
+  limit = 200,
+): Promise<QaHistoryVO[]> {
   await delay(200)
   return demoHistory
     .filter((item) => item.scene === scene)
@@ -1062,7 +1137,10 @@ export async function mockDeleteKnowledgesCategory(id: string): Promise<void> {
   })
 }
 
-export async function mockBindDocumentCategory(id: string, categoryId: string): Promise<DocumentVO> {
+export async function mockBindDocumentCategory(
+  id: string,
+  categoryId: string,
+): Promise<DocumentVO> {
   await delay()
   const doc = demoDocuments.find((item) => item.id === id)
   if (!doc) throw new Error('文档不存在')

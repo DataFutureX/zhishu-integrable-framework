@@ -8,7 +8,11 @@ export const notFoundRoute: RouteRecordRaw = {
   meta: { title: '页面不存在', requiresAuth: false },
 }
 
-export function ensureNotFoundRoute(router: { hasRoute: (name: string) => boolean; removeRoute: (name: string) => void; addRoute: (route: RouteRecordRaw) => void }) {
+export function ensureNotFoundRoute(router: {
+  hasRoute: (name: string) => boolean
+  removeRoute: (name: string) => void
+  addRoute: (route: RouteRecordRaw) => void
+}) {
   if (router.hasRoute('NotFound')) {
     router.removeRoute('NotFound')
   }

@@ -11,24 +11,49 @@
       查看智能体执行历史、性能指标（TTFT / TPOT）与执行轨迹详情。
     </template>
     <template #heroActions>
-      <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll">刷新</el-button>
+      <el-button size="small" :icon="Refresh" :loading="loading" @click="refreshAll"
+        >刷新</el-button
+      >
     </template>
 
     <template #strip>
       <div class="monitor-strip">
-        <el-select v-model="query.status" clearable placeholder="状态" class="monitor-strip__select">
+        <el-select
+          v-model="query.status"
+          clearable
+          placeholder="状态"
+          class="monitor-strip__select"
+        >
           <el-option label="成功" value="SUCCESS" />
           <el-option label="失败" value="FAILED" />
           <el-option label="运行中" value="RUNNING" />
         </el-select>
-        <el-select v-model="query.runType" clearable placeholder="执行类型" class="monitor-strip__select">
+        <el-select
+          v-model="query.runType"
+          clearable
+          placeholder="执行类型"
+          class="monitor-strip__select"
+        >
           <el-option label="正式对话" value="CHAT" />
           <el-option label="试运行" value="TRIAL" />
         </el-select>
-        <el-select v-model="query.agentId" clearable filterable placeholder="全部智能体" class="monitor-strip__select">
+        <el-select
+          v-model="query.agentId"
+          clearable
+          filterable
+          placeholder="全部智能体"
+          class="monitor-strip__select"
+        >
           <el-option v-for="a in agentOptions" :key="a.id" :label="a.name" :value="a.id" />
         </el-select>
-        <el-input v-model="query.keyword" clearable placeholder="搜索用户输入…" :prefix-icon="Search" class="monitor-strip__search" @keyup.enter="fetchList" />
+        <el-input
+          v-model="query.keyword"
+          clearable
+          placeholder="搜索用户输入…"
+          :prefix-icon="Search"
+          class="monitor-strip__search"
+          @keyup.enter="fetchList"
+        />
         <el-button :icon="Search" @click="fetchList">查询</el-button>
       </div>
     </template>
@@ -39,7 +64,12 @@
       </ListToolbar>
     </template>
 
-    <el-table :data="tableData" class="modern-table" empty-text="暂无执行记录" @row-click="handleRowClick">
+    <el-table
+      :data="tableData"
+      class="modern-table"
+      empty-text="暂无执行记录"
+      @row-click="handleRowClick"
+    >
       <el-table-column prop="agentName" label="智能体" min-width="120" show-overflow-tooltip>
         <template #default="{ row }">
           <span class="agent-name">{{ row.agentName }}</span>
@@ -83,7 +113,9 @@
       </el-table-column>
       <el-table-column prop="runType" label="类型" width="80" align="center">
         <template #default="{ row }">
-          <el-tag size="small" effect="plain" round>{{ row.runType === 'TRIAL' ? '试运行' : '对话' }}</el-tag>
+          <el-tag size="small" effect="plain" round>{{
+            row.runType === 'TRIAL' ? '试运行' : '对话'
+          }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="时间" width="120">
@@ -93,7 +125,9 @@
       </el-table-column>
       <el-table-column label="操作" width="80" fixed="right" align="center">
         <template #default="{ row }">
-          <el-button link type="primary" size="small" @click.stop="handleDetailClick(row)">详情</el-button>
+          <el-button link type="primary" size="small" @click.stop="handleDetailClick(row)"
+            >详情</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -194,9 +228,15 @@
             </template>
             <el-descriptions :column="1" border class="drawer-descriptions">
               <el-descriptions-item label="智能体">{{ detail.agentName }}</el-descriptions-item>
-              <el-descriptions-item label="模型">{{ detail.modelName || '—' }}</el-descriptions-item>
-              <el-descriptions-item label="TPOT">{{ formatMs(detail.tpotMs) }}</el-descriptions-item>
-              <el-descriptions-item label="执行类型">{{ detail.runType === 'TRIAL' ? '试运行' : '正式对话' }}</el-descriptions-item>
+              <el-descriptions-item label="模型">{{
+                detail.modelName || '—'
+              }}</el-descriptions-item>
+              <el-descriptions-item label="TPOT">{{
+                formatMs(detail.tpotMs)
+              }}</el-descriptions-item>
+              <el-descriptions-item label="执行类型">{{
+                detail.runType === 'TRIAL' ? '试运行' : '正式对话'
+              }}</el-descriptions-item>
             </el-descriptions>
           </el-card>
 
@@ -217,11 +257,17 @@
                 <span class="section-card-title">响应摘要</span>
               </div>
             </template>
-            <pre class="doc-content-text doc-content-text--response">{{ detail.responseSummary }}</pre>
+            <pre class="doc-content-text doc-content-text--response">{{
+              detail.responseSummary
+            }}</pre>
           </el-card>
 
           <!-- 错误信息 -->
-          <el-card v-if="detail.errorMessage" shadow="never" class="drawer-section-card drawer-section-card--error">
+          <el-card
+            v-if="detail.errorMessage"
+            shadow="never"
+            class="drawer-section-card drawer-section-card--error"
+          >
             <template #header>
               <div class="section-card-header">
                 <span class="section-card-title">错误信息</span>
@@ -231,7 +277,11 @@
           </el-card>
 
           <!-- 执行轨迹 -->
-          <el-card v-if="detail.traces && detail.traces.length" shadow="never" class="drawer-section-card">
+          <el-card
+            v-if="detail.traces && detail.traces.length"
+            shadow="never"
+            class="drawer-section-card"
+          >
             <template #header>
               <div class="section-card-header">
                 <span class="section-card-title">执行轨迹</span>
@@ -239,12 +289,18 @@
               </div>
             </template>
             <div class="trace-timeline">
-              <div v-for="(trace, idx) in detail.traces" :key="idx" :class="['trace-item', `trace-item--${traceTone(trace.type)}`]">
+              <div
+                v-for="(trace, idx) in detail.traces"
+                :key="idx"
+                :class="['trace-item', `trace-item--${traceTone(trace.type)}`]"
+              >
                 <div class="trace-item__dot" />
                 <div class="trace-item__body">
                   <div class="trace-item__head">
                     <span class="trace-item__name">{{ trace.name }}</span>
-                    <span v-if="trace.durationMs" class="trace-item__duration">{{ trace.durationMs }}ms</span>
+                    <span v-if="trace.durationMs" class="trace-item__duration"
+                      >{{ trace.durationMs }}ms</span
+                    >
                   </div>
                   <div v-if="trace.detail" class="trace-item__detail">{{ trace.detail }}</div>
                 </div>
@@ -260,7 +316,16 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { Monitor, Refresh, Search, DataLine, CircleCheck, Timer, TrendCharts, Clock } from '@element-plus/icons-vue'
+import {
+  Monitor,
+  Refresh,
+  Search,
+  DataLine,
+  CircleCheck,
+  Timer,
+  TrendCharts,
+  Clock,
+} from '@element-plus/icons-vue'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import ListToolbar from '@/components/list-page/ListToolbar.vue'
 import type { PageHeroMetric } from '@/components/list-page/PageHero.vue'
@@ -300,8 +365,20 @@ const heroMetrics = computed<PageHeroMetric[]>(() => {
   if (!s) return []
   return [
     { key: 'total', label: '总执行', value: s.totalCount, icon: DataLine, accent: 'primary' },
-    { key: 'rate', label: '成功率', value: `${s.successRate}%`, icon: CircleCheck, accent: 'success' },
-    { key: 'avg', label: '平均耗时', value: formatDuration(s.avgDurationMs), icon: Timer, accent: 'primary' },
+    {
+      key: 'rate',
+      label: '成功率',
+      value: `${s.successRate}%`,
+      icon: CircleCheck,
+      accent: 'success',
+    },
+    {
+      key: 'avg',
+      label: '平均耗时',
+      value: formatDuration(s.avgDurationMs),
+      icon: Timer,
+      accent: 'primary',
+    },
     { key: 'today', label: '今日执行', value: s.todayCount, icon: TrendCharts, accent: 'primary' },
   ]
 })
@@ -313,11 +390,19 @@ onMounted(() => {
 })
 
 async function fetchAgents() {
-  try { agentOptions.value = await listAgents() } catch { /* ignore */ }
+  try {
+    agentOptions.value = await listAgents()
+  } catch {
+    /* ignore */
+  }
 }
 
 async function fetchStats() {
-  try { stats.value = await getAgentMonitorStats('TODAY') } catch { /* ignore */ }
+  try {
+    stats.value = await getAgentMonitorStats('TODAY')
+  } catch {
+    /* ignore */
+  }
 }
 
 async function fetchList() {
@@ -334,7 +419,10 @@ async function fetchList() {
   }
 }
 
-function refreshAll() { fetchList(); fetchStats() }
+function refreshAll() {
+  fetchList()
+  fetchStats()
+}
 
 function handleRowClick(row: AgentExecutionVO) {
   openDetail(row)
@@ -347,7 +435,11 @@ function handleDetailClick(row: unknown) {
 async function openDetail(row: AgentExecutionVO) {
   drawerVisible.value = true
   detail.value = null
-  try { detail.value = await getAgentExecutionDetail(row.id) } catch { detail.value = null }
+  try {
+    detail.value = await getAgentExecutionDetail(row.id)
+  } catch {
+    detail.value = null
+  }
 }
 
 function formatDuration(ms: number | null | undefined): string {
@@ -365,7 +457,12 @@ function formatTime(t: string | null | undefined): string {
   if (!t) return '—'
   const d = new Date(t)
   if (isNaN(d.getTime())) return t
-  return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function statusLabel(s: string): string {
@@ -395,11 +492,18 @@ function traceTone(type: string): string {
   border-bottom: 1px solid $border-lighter;
   flex-wrap: wrap;
 
-  &__select { width: 140px; }
-  &__search { width: 220px; }
+  &__select {
+    width: 140px;
+  }
+  &__search {
+    width: 220px;
+  }
 }
 
-.agent-name { font-weight: 500; color: $text-primary; }
+.agent-name {
+  font-weight: 500;
+  color: $text-primary;
+}
 
 .status-chip {
   &--success {
@@ -442,7 +546,10 @@ function traceTone(type: string): string {
   font-weight: 600;
   text-transform: uppercase;
 }
-.perf-sep { color: $border-color; margin: 0 1px; }
+.perf-sep {
+  color: $border-color;
+  margin: 0 1px;
+}
 
 /* ── Drawer header ── */
 .drawer-header {
@@ -486,7 +593,9 @@ function traceTone(type: string): string {
   }
 }
 
-.drawer-header-text { min-width: 0; }
+.drawer-header-text {
+  min-width: 0;
+}
 
 .drawer-eyebrow {
   font-size: 11px;
@@ -532,8 +641,7 @@ function traceTone(type: string): string {
   min-height: 100%;
   padding: 16px 20px 24px;
   background:
-    radial-gradient(ellipse at top right, rgba(64, 158, 255, 0.06) 0%, transparent 55%),
-    $bg-color;
+    radial-gradient(ellipse at top right, rgba(64, 158, 255, 0.06) 0%, transparent 55%), $bg-color;
 }
 
 /* ── Summary cards ── */
@@ -605,7 +713,9 @@ function traceTone(type: string): string {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 
-  &:last-child { margin-bottom: 0; }
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   :deep(.el-card__header) {
     padding: 12px 16px;
@@ -717,7 +827,9 @@ function traceTone(type: string): string {
   position: relative;
   padding-bottom: 16px;
 
-  &:last-child { padding-bottom: 0; }
+  &:last-child {
+    padding-bottom: 0;
+  }
 
   &__dot {
     position: absolute;
@@ -730,11 +842,22 @@ function traceTone(type: string): string {
     background: $bg-white;
   }
 
-  &--start &__dot { border-color: $primary-color; background: $primary-color; }
-  &--end &__dot   { border-color: $success-color; background: $success-color; }
-  &--tool &__dot  { border-color: $warning-color; background: $warning-color; }
+  &--start &__dot {
+    border-color: $primary-color;
+    background: $primary-color;
+  }
+  &--end &__dot {
+    border-color: $success-color;
+    background: $success-color;
+  }
+  &--tool &__dot {
+    border-color: $warning-color;
+    background: $warning-color;
+  }
 
-  &__body { min-width: 0; }
+  &__body {
+    min-width: 0;
+  }
 
   &__head {
     display: flex;
@@ -743,7 +866,11 @@ function traceTone(type: string): string {
     flex-wrap: wrap;
   }
 
-  &__name { font-size: 13px; font-weight: 500; color: $text-primary; }
+  &__name {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-primary;
+  }
 
   &__duration {
     font-size: 11px;

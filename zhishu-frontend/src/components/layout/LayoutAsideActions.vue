@@ -32,12 +32,7 @@
 
     <div class="aside-actions__row">
       <el-tooltip content="产品门户" :placement="tooltipPlacement" :show-after="400">
-        <button
-          type="button"
-          class="aside-action-btn"
-          aria-label="Portal"
-          @click="goPortal"
-        >
+        <button type="button" class="aside-action-btn" aria-label="Portal" @click="goPortal">
           <el-icon :size="16"><HomeFilled /></el-icon>
         </button>
       </el-tooltip>

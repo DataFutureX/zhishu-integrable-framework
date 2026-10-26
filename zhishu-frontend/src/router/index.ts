@@ -1,10 +1,16 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+  type RouteLocationMatched,
+  type RouteRecordRaw,
+} from 'vue-router'
 
 import { LAYOUT_ROUTE_NAME } from '@/router/layoutRoute'
 import { notFoundRoute } from '@/router/notFoundRoute'
 import { collectRoutePermissions, matchPermissions } from '@/utils/permission'
 import { isPortalPublicPath } from '@/utils/portalPublicRoute'
 import { clearStoredSession, getValidToken } from '@/utils/session'
+import { setRouteTitle } from '@/utils/documentTitle'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -134,9 +140,7 @@ function preloadPortalPreview() {
 }
 
 function canAccessRoute(
-  matched: RouteRecordRaw['children'] extends infer _T
-    ? typeof router.currentRoute.value.matched
-    : never,
+  matched: RouteLocationMatched[],
   userStore: { permissions: string[]; isAdmin: boolean },
 ) {
   const required = collectRoutePermissions(matched)
@@ -161,116 +165,92 @@ function tryRecoverFromNotFound(fullPath: string) {
   return null
 }
 
-// 路由守卫
-router.beforeEach(async (to, _from, next) => {
+// 路由守卫：按「公共页 → 登录页 → 鉴权 → 动态路由 → 权限」顺序串联，
+// 返回值即导航目标（vue-router 4 推荐写法，避免 next() 嵌套跳转遗漏）
+router.beforeEach(async (to) => {
   if (!isPortalPublicPath(to.path)) {
-    await import('@/plugins/elementPlus').then(({ ensureElementPlus }) => ensureElementPlus())
+    const { ensureElementPlus } = await import('@/plugins/elementPlus')
+    await ensureElementPlus()
   }
 
   const token = getValidToken()
 
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
-
+  // 门户 / 文档：完全公开
   if (to.path === '/portal' || to.name === 'Portal') {
     preloadPortalPreview()
-    next()
-    return
+    return true
   }
-
   if (to.path.startsWith('/docs') || to.name === 'PortalDocs') {
-    next()
-    return
+    return true
   }
 
+  // 登录页：已登录则回后台
   if (to.path === '/login' || to.name === 'Login') {
-    if (token) {
-      next('/')
-    } else {
-      next()
-    }
-    return
+    return token ? { path: '/' } : true
   }
-
   if (to.path === '/sso/callback' || to.name === 'SsoCallback') {
-    next()
-    return
+    return true
   }
 
   // 深链刷新会先命中静态 NotFound（requiresAuth=false），仍需按有 token 走菜单加载
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth !== false)
   const needsAuthGate = requiresAuth || (Boolean(token) && to.name === 'NotFound')
 
   if (needsAuthGate && !token) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
-    return
+    return { name: 'Login', query: { redirect: to.fullPath } }
   }
 
-  if (token) {
-    const [{ useMenuStore }, { useUserStore }] = await Promise.all([
-      import('@/stores/useMenuStore'),
-      import('@/stores/useUserStore'),
-    ])
-    const menuStore = useMenuStore()
-    const userStore = useUserStore()
-    userStore.initUserInfo()
+  if (!token) return true
 
-    if (!menuStore.routesLoaded) {
-      try {
-        await Promise.all([
-          menuStore.fetchAndRegisterRoutes(router),
-          userStore.fetchUserPermissions({ silent: true }),
-        ])
+  const [{ useMenuStore }, { useUserStore }] = await Promise.all([
+    import('@/stores/useMenuStore'),
+    import('@/stores/useUserStore'),
+  ])
+  const menuStore = useMenuStore()
+  const userStore = useUserStore()
+  userStore.initUserInfo()
 
-        if (to.path === '/' || to.path === '') {
-          next({ path: menuStore.defaultPath, replace: true })
-          return
-        }
-
-        // 必须用 path 重匹配：首次命中 NotFound 时 to.name 仍是 NotFound，
-        // next({ ...to }) 会按 name 导航，导致刷新后一直 404
-        next(rematchByPath(to.fullPath))
-        return
-      } catch (error) {
-        console.error('加载用户菜单失败:', error)
-
-        clearStoredSession()
-
-        menuStore.reset(router)
-
-        next({ name: 'Login', query: { redirect: to.fullPath } })
-        return
-      }
+  if (!menuStore.routesLoaded) {
+    try {
+      await Promise.all([
+        menuStore.fetchAndRegisterRoutes(router),
+        userStore.fetchUserPermissions({ silent: true }),
+      ])
+    } catch (error) {
+      console.error('加载用户菜单失败:', error)
+      clearStoredSession()
+      menuStore.reset(router)
+      return { name: 'Login', query: { redirect: to.fullPath } }
     }
 
     if (to.path === '/' || to.path === '') {
-      next({ path: menuStore.defaultPath, replace: true })
-      return
+      return { path: menuStore.defaultPath, replace: true }
     }
 
-    if (to.name === 'NotFound') {
-      const recovered = tryRecoverFromNotFound(to.fullPath)
-      if (recovered) {
-        next(recovered)
-        return
-      }
-      next()
-      return
-    }
+    // 必须用 path 重匹配：首次命中 NotFound 时 to.name 仍是 NotFound，
+    // 按 name 导航会导致刷新后一直 404
+    return rematchByPath(to.fullPath)
+  }
 
-    if (to.name !== 'Forbidden' && !canAccessRoute(to.matched, userStore)) {
-      next({ name: 'Forbidden', replace: true })
-      return
-    }
-
-    next()
-    return
+  if (to.path === '/' || to.path === '') {
+    return { path: menuStore.defaultPath, replace: true }
   }
 
   if (to.name === 'NotFound') {
-    next()
-    return
+    return tryRecoverFromNotFound(to.fullPath) ?? true
   }
 
-  next()
+  if (to.name !== 'Forbidden' && !canAccessRoute(to.matched, userStore)) {
+    return { name: 'Forbidden', replace: true }
+  }
+
+  return true
+})
+
+// 路由级标题：`页面标题 · 系统名`（系统名由 systemConfigStore 通过 setDocumentSystemName 同步）
+router.afterEach((to) => {
+  const routeTitle = typeof to.meta?.title === 'string' ? to.meta.title : ''
+  if (routeTitle) setRouteTitle(routeTitle)
 })
 
 export default router

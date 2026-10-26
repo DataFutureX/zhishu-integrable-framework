@@ -5,7 +5,9 @@
         <div class="trace-panel__head">
           <span class="trace-panel__title">执行轨迹</span>
           <el-tag size="small" type="info" effect="plain" round>{{ traces!.length }} 步</el-tag>
-          <span v-if="totalDurationMs != null" class="trace-panel__sum">合计 {{ formatMs(totalDurationMs) }}</span>
+          <span v-if="totalDurationMs != null" class="trace-panel__sum"
+            >合计 {{ formatMs(totalDurationMs) }}</span
+          >
         </div>
       </template>
 
@@ -25,8 +27,12 @@
                 {{ typeLabel(t.type) }}
               </el-tag>
               <strong class="trace-step__name" :title="t.name">{{ t.name || '—' }}</strong>
-              <span v-if="t.durationMs != null" class="trace-step__ms">{{ formatMs(t.durationMs) }}</span>
-              <span v-if="t.timestamp" class="trace-step__time">{{ formatClock(t.timestamp) }}</span>
+              <span v-if="t.durationMs != null" class="trace-step__ms">{{
+                formatMs(t.durationMs)
+              }}</span>
+              <span v-if="t.timestamp" class="trace-step__time">{{
+                formatClock(t.timestamp)
+              }}</span>
             </div>
             <div v-if="t.detail" class="trace-step__detail">
               <pre class="trace-step__pre">{{ formatDetail(t.detail) }}</pre>
@@ -109,7 +115,12 @@ function formatMs(ms: number): string {
 function formatClock(ts: number): string {
   const d = new Date(ts)
   if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  return d.toLocaleTimeString('zh-CN', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
 }
 
 /** 尝试把 JSON 详情美化，失败则原样返回 */

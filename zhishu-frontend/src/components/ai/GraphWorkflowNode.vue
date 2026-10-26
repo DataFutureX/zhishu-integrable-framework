@@ -1,5 +1,8 @@
 <template>
-  <div class="wf-node" :class="[`wf-node--${nodeType.toLowerCase()}`, { 'wf-node--selected': selected }]">
+  <div
+    class="wf-node"
+    :class="[`wf-node--${nodeType.toLowerCase()}`, { 'wf-node--selected': selected }]"
+  >
     <Handle type="target" :position="Position.Left" class="wf-handle" />
     <div class="wf-node__head">
       <span class="wf-node__type">{{ typeLabel }}</span>

@@ -67,14 +67,14 @@ export function markAllAnnouncementsReadApi() {
   return put<number>('/announcements/read-all')
 }
 
-/** 构建公告 SSE 订阅地址 */
-export function buildAnnouncementStreamUrl(token: string): string {
-  const encodedToken = encodeURIComponent(token)
-  if (import.meta.env.DEV) {
-    return `/api/v1/announcements/stream?token=${encodedToken}`
-  }
+/**
+ * 公告 SSE 订阅地址（不再拼接 token：调用方用 Authorization 头鉴权，
+ * 避免 JWT 出现在 URL 里被 Nginx access log / 历史记录 / Referer 带走）。
+ */
+export function buildAnnouncementStreamUrl(): string {
+  if (import.meta.env.DEV) return '/api/v1/announcements/stream'
   const base = import.meta.env.VITE_API_BASE_URL || ''
-  return `${base}/v1/announcements/stream?token=${encodedToken}`
+  return `${base}/v1/announcements/stream`
 }
 
 export type { AnnouncementVO }

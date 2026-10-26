@@ -10,7 +10,10 @@ export interface ParsedMcpUpstreamSnippet {
 
 function slugFromHost(host: string): string {
   const raw = host.split('.')[0] || 'mcp'
-  const slug = raw.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
+  const slug = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
   const code = slug.replace(/^[^a-z]+/, '') || 'mcp'
   return code.slice(0, 32)
 }
@@ -45,9 +48,7 @@ export function parseMcpUpstreamSnippet(raw: string): ParsedMcpUpstreamSnippet |
   }
   const endpoint = url.pathname && url.pathname !== '/' ? url.pathname : '/mcp'
   const baseUrl = `${url.protocol}//${url.host}`
-  const auth =
-    extractHeader(text, 'Authorization') ||
-    extractHeader(text, 'authorization')
+  const auth = extractHeader(text, 'Authorization') || extractHeader(text, 'authorization')
   const protocol = /sse/i.test(endpoint) || /sse/i.test(text) ? 'SSE' : 'STREAMABLE_HTTP'
   const code = slugFromHost(url.hostname)
   return {

@@ -1,4 +1,7 @@
 import { get, post, put, del } from '@/utils/request'
+import type { PageResult } from '@/types/common'
+
+export type { PageResult }
 
 // ==================== 认证相关类型 ====================
 
@@ -61,15 +64,6 @@ export interface UserQueryDTO {
   status?: number
   pageNum?: number
   pageSize?: number
-}
-
-// 分页结果
-export interface PageResult<T> {
-  current: number
-  size: number
-  total: number
-  pages: number
-  records: T[]
 }
 
 // ==================== 创建/更新相关类型 ====================

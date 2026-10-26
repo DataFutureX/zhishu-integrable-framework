@@ -1,28 +1,9 @@
-import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import { isDemoMode } from '@/config/demo'
-import {
-  mockAiChat,
-  mockAiDiagnose,
-  mockAiHealth,
-  mockChatStream,
-  mockChatStructured,
-  mockClearQaHistory,
-  mockDocumentDelete,
-  mockDocumentDetail,
-  mockDocumentList,
-  mockDocumentQa,
-  mockDocumentQaStream,
-  mockDocumentReprocess,
-  mockDocumentUpload,
-  mockListQaHistory,
-  mockTruncateChatSession,
-} from '@/mock/ai'
-import type {
-  ChatRequestDTO,
-  ChatResponseVO,
-  ChatStructuredRequestDTO,
-} from '@/types/aiChat'
+/**
+ * 演示分支的两个约定：
+ * 1) 用构建期常量 `__DEMO_MODE__` 判断，Rollup 才能看到 `if (false)` 并剔除分支；
+ * 2) mock 模块一律惰性 import，避免 src/mock/** 进生产包（曾静态 import 导致演示数据随包发布）。
+ */
+import type { ChatRequestDTO, ChatResponseVO, ChatStructuredRequestDTO } from '@/types/aiChat'
 import type {
   AgentCreateDTO,
   AgentPromptDraftDTO,
@@ -45,35 +26,9 @@ import type {
   DocumentVO,
 } from '@/types/aiDocument'
 import type { QaHistoryScene, QaHistoryVO } from '@/types/qaHistory'
-import type {
-  ChatSessionCreateDTO,
-  ChatSessionTitleDTO,
-  ChatSessionVO,
-} from '@/types/chatSession'
-import type {
-  KgHealthVO,
-  KgNeighborResult,
-  KgPathResult,
-  KgSearchHit,
-  KgStatsVO,
-  KgSubgraphVO,
-  KgSyncResult,
-  KgSyncStatusVO,
-  KgTopologySummary,
-} from '@/types/knowledgeGraph'
-import type {
-  McpCallLogVO,
-  McpClientCreateDTO,
-  McpClientUpdateDTO,
-  McpClientVO,
-  McpOverviewVO,
-  McpUpstreamToolVO,
-  McpUpstreamUpsertDTO,
-  McpUpstreamVO,
-} from '@/types/mcp'
+import type { ChatSessionCreateDTO, ChatSessionTitleDTO, ChatSessionVO } from '@/types/chatSession'
 import { postAiSse, type AiSseHandlers, type AiSseOptions } from '@/utils/aiSse'
-import { resolveAiUserId } from '@/utils/aiUser'
-import { parseJsonWithBigInt } from '@/utils/parseJson'
+import { aiService } from '@/api/aiClient'
 import type {
   AgentExecutionVO,
   AgentExecutionDetailVO,
@@ -89,95 +44,12 @@ export type { ChatRequestDTO, ChatResponseVO, ChatStructuredRequestDTO }
  * AI 助手相关接口（聊天 / 知识管理 / 知识问答）
  */
 
-const aiService = axios.create({
-  baseURL: import.meta.env.DEV ? '/api/v1' : import.meta.env.VITE_API_BASE_URL + '/v1',
-  timeout: 120000,
-  headers: {
-    'Content-Type': 'application/json;charset=UTF-8',
-  },
-  // 雪花 ID 超出 JS 安全整数，需在 JSON.parse 前转为字符串（与主站 request 一致）
-  transformResponse: [
-    (data) => {
-      if (typeof data === 'object' && data !== null) {
-        return data
-      }
-      if (typeof data === 'string') {
-        return parseJsonWithBigInt(data) ?? data
-      }
-      return data
-    },
-  ],
-})
-
-aiService.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.set?.('Authorization', `Bearer ${token}`)
-      if (!config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-    }
-    const userId = resolveAiUserId()
-    if (userId) {
-      config.headers.set?.('X-User-Id', userId)
-      if (!config.headers['X-User-Id']) {
-        config.headers['X-User-Id'] = userId
-      }
-    } else {
-      console.warn('[AI] 缺少用户 ID，问答历史将无法按用户记录/加载')
-    }
-    return config
-  },
-  (error) => {
-    console.error('Request error:', error)
-    return Promise.reject(error)
-  },
-)
-
-aiService.interceptors.response.use(
-  (response) => {
-    const res = response.data
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
-    }
-    return res.data
-  },
-  (error) => {
-    console.error('Response error:', error)
-    let message = '网络错误'
-    if (error.response) {
-      switch (error.response.status) {
-        case 400:
-          message = '请求参数错误'
-          break
-        case 401:
-          message = '未授权，请重新登录'
-          break
-        case 403:
-          message = '拒绝访问'
-          break
-        case 404:
-          message = '请求地址不存在'
-          break
-        case 500:
-          message = '服务器错误'
-          break
-        default:
-          message = `连接错误${error.response.status}`
-      }
-    } else {
-      message = '网络连接异常'
-    }
-    ElMessage.error(message)
-    return Promise.reject(error)
-  },
-)
+/** 演示数据惰性加载：生产构建不会把 src/mock/ai.ts 编进任何 chunk */
+const loadAiMock = () => import('@/mock/ai')
 
 /** 同步聊天（多轮请传 conversationId） */
 export function chat(data: ChatRequestDTO): Promise<ChatResponseVO> {
-  if (isDemoMode) return mockAiChat(data)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockAiChat(data))
   return aiService.post('/chat', data)
 }
 
@@ -187,29 +59,30 @@ export function chatStream(
   handlers: AiSseHandlers,
   options?: AiSseOptions,
 ): Promise<void> {
-  if (isDemoMode) return mockChatStream(data, handlers, options?.signal)
+  if (__DEMO_MODE__)
+    return loadAiMock().then((m) => m.mockChatStream(data, handlers, options?.signal))
   return postAiSse('/chat/stream', data, handlers, options)
 }
 
 /** 结构化输出（对比 / 趋势 / 告警） */
 export function chatStructured(data: ChatStructuredRequestDTO): Promise<ChatResponseVO> {
-  if (isDemoMode) return mockChatStructured(data)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockChatStructured(data))
   return aiService.post('/chat/structured', data)
 }
 
 export function healthCheck(): Promise<string> {
-  if (isDemoMode) return mockAiHealth()
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockAiHealth())
   return aiService.get('/chat/health')
 }
 
 export function diagnose(): Promise<string> {
-  if (isDemoMode) return mockAiDiagnose()
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockAiDiagnose())
   return aiService.get('/chat/diagnose')
 }
 
 /** 对话运行指标快照 */
 export function chatMetrics(): Promise<Record<string, unknown>> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({ totalCalls: 0, successCalls: 0, failCalls: 0, demo: true })
   }
   return aiService.get('/chat/metrics')
@@ -217,7 +90,7 @@ export function chatMetrics(): Promise<Record<string, unknown>> {
 
 /** Memory / Vector / Hybrid 冒烟评测 */
 export function chatEval(): Promise<Record<string, unknown>> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({
       passed: true,
       passedCount: 3,
@@ -232,8 +105,10 @@ export function chatEval(): Promise<Record<string, unknown>> {
   return aiService.get('/chat/eval')
 }
 
-export function getKnowledgesCategoryList(includeDisabled = false): Promise<KnowledgesCategoryVO[]> {
-  if (isDemoMode) {
+export function getKnowledgesCategoryList(
+  includeDisabled = false,
+): Promise<KnowledgesCategoryVO[]> {
+  if (__DEMO_MODE__) {
     return import('@/mock/ai').then((m) => m.mockListKnowledgesCategories())
   }
   return aiService.get('/knowledges-categories', { params: { includeDisabled } })
@@ -242,8 +117,10 @@ export function getKnowledgesCategoryList(includeDisabled = false): Promise<Know
 /** @deprecated 使用 getKnowledgesCategoryList */
 export const getDocumentCategoryList = getKnowledgesCategoryList
 
-export function createKnowledgesCategory(data: KnowledgesCategoryCreateDTO): Promise<KnowledgesCategoryVO> {
-  if (isDemoMode) {
+export function createKnowledgesCategory(
+  data: KnowledgesCategoryCreateDTO,
+): Promise<KnowledgesCategoryVO> {
+  if (__DEMO_MODE__) {
     return import('@/mock/ai').then((m) => m.mockCreateKnowledgesCategory(data))
   }
   return aiService.post('/knowledges-categories', data)
@@ -256,7 +133,7 @@ export function updateKnowledgesCategory(
   id: string,
   data: KnowledgesCategoryUpdateDTO,
 ): Promise<KnowledgesCategoryVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return import('@/mock/ai').then((m) => m.mockUpdateKnowledgesCategory(id, data))
   }
   return aiService.put(`/knowledges-categories/${encodeURIComponent(id)}`, data)
@@ -266,7 +143,7 @@ export function updateKnowledgesCategory(
 export const updateDocumentCategory = updateKnowledgesCategory
 
 export function deleteKnowledgesCategory(id: string): Promise<void> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return import('@/mock/ai').then((m) => m.mockDeleteKnowledgesCategory(id))
   }
   return aiService.delete(`/knowledges-categories/${encodeURIComponent(id)}`)
@@ -276,19 +153,19 @@ export function deleteKnowledgesCategory(id: string): Promise<void> {
 export const deleteDocumentCategory = deleteKnowledgesCategory
 
 export function getDocumentList(categoryId?: string): Promise<DocumentVO[]> {
-  if (isDemoMode) return mockDocumentList(categoryId)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentList(categoryId))
   return aiService.get('/knowledges', {
     params: categoryId ? { categoryId } : undefined,
   })
 }
 
 export function getDocumentDetail(id: string): Promise<DocumentVO> {
-  if (isDemoMode) return mockDocumentDetail(id)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentDetail(id))
   return aiService.get(`/knowledges/${encodeURIComponent(id)}`)
 }
 
 export function uploadDocument(params: DocumentUploadParams): Promise<DocumentVO> {
-  if (isDemoMode) return mockDocumentUpload(params)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentUpload(params))
   const formData = new FormData()
   formData.append('file', params.file)
   return aiService.post('/knowledges/upload', formData, {
@@ -301,28 +178,29 @@ export function uploadDocument(params: DocumentUploadParams): Promise<DocumentVO
   })
 }
 
-export function updateDocumentCategoryBinding(
-  id: string,
-  categoryId: string,
-): Promise<DocumentVO> {
-  if (isDemoMode) {
+export function updateDocumentCategoryBinding(id: string, categoryId: string): Promise<DocumentVO> {
+  if (__DEMO_MODE__) {
     return import('@/mock/ai').then((m) => m.mockBindDocumentCategory(id, categoryId))
   }
-  return aiService.put(`/knowledges/${encodeURIComponent(id)}/category`, { categoryId: Number(categoryId) })
+  return aiService.put(`/knowledges/${encodeURIComponent(id)}/category`, {
+    categoryId: Number(categoryId),
+  })
 }
 
 export function deleteDocument(id: string): Promise<void> {
-  if (isDemoMode) return mockDocumentDelete(id)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentDelete(id))
   return aiService.delete(`/knowledges/${encodeURIComponent(id)}`)
 }
 
 export function reprocessDocument(id: string): Promise<DocumentVO> {
-  if (isDemoMode) return mockDocumentReprocess(id)
-  return aiService.post(`/knowledges/${encodeURIComponent(id)}/reprocess`, null, { timeout: 120000 })
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentReprocess(id))
+  return aiService.post(`/knowledges/${encodeURIComponent(id)}/reprocess`, null, {
+    timeout: 120000,
+  })
 }
 
 export function documentQa(data: DocumentQueryDTO): Promise<ChatResponseVO> {
-  if (isDemoMode) return mockDocumentQa(data)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockDocumentQa(data))
   return aiService.post('/knowledges/qa', data, { timeout: 120000 })
 }
 
@@ -332,22 +210,23 @@ export function documentQaStream(
   handlers: AiSseHandlers,
   options?: AiSseOptions,
 ): Promise<void> {
-  if (isDemoMode) return mockDocumentQaStream(data, handlers, options?.signal)
+  if (__DEMO_MODE__)
+    return loadAiMock().then((m) => m.mockDocumentQaStream(data, handlers, options?.signal))
   return postAiSse('/knowledges/qa/stream', data, handlers, options)
 }
 
 export function listQaHistory(scene: QaHistoryScene, limit = 200): Promise<QaHistoryVO[]> {
-  if (isDemoMode) return mockListQaHistory(scene, limit)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockListQaHistory(scene, limit))
   return aiService.get('/qa-history', { params: { scene, limit } })
 }
 
 export function clearQaHistory(scene: QaHistoryScene): Promise<void> {
-  if (isDemoMode) return mockClearQaHistory(scene)
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockClearQaHistory(scene))
   return aiService.delete('/qa-history', { params: { scene } })
 }
 
 export function listChatSessions(scene: QaHistoryScene = 'CHAT'): Promise<ChatSessionVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve(
       demoChatSessions
         .filter((s) => s.scene === scene)
@@ -359,7 +238,7 @@ export function listChatSessions(scene: QaHistoryScene = 'CHAT'): Promise<ChatSe
 }
 
 export function createChatSession(data?: ChatSessionCreateDTO): Promise<ChatSessionVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const created: DemoChatSession = {
       conversationId: `demo-session-${Date.now()}`,
       scene: data?.scene || 'CHAT',
@@ -378,7 +257,7 @@ export function renameChatSession(
   conversationId: string,
   data: ChatSessionTitleDTO,
 ): Promise<ChatSessionVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const found = demoChatSessions.find((s) => s.conversationId === conversationId)
     if (!found) return Promise.reject(new Error('会话不存在'))
     found.title = data.title
@@ -389,7 +268,7 @@ export function renameChatSession(
 }
 
 export function deleteChatSession(conversationId: string): Promise<void> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const idx = demoChatSessions.findIndex((s) => s.conversationId === conversationId)
     if (idx >= 0) demoChatSessions.splice(idx, 1)
     return Promise.resolve()
@@ -401,8 +280,8 @@ export function truncateChatSessionMessages(
   conversationId: string,
   keepUserTurns: number,
 ): Promise<void> {
-  if (isDemoMode) {
-    return mockTruncateChatSession(conversationId, keepUserTurns)
+  if (__DEMO_MODE__) {
+    return loadAiMock().then((m) => m.mockTruncateChatSession(conversationId, keepUserTurns))
   }
   return aiService.post(`/chat-sessions/${encodeURIComponent(conversationId)}/truncate`, {
     keepUserTurns,
@@ -413,13 +292,19 @@ export function listChatSessionMessages(
   conversationId: string,
   limit = 200,
 ): Promise<QaHistoryVO[]> {
-  if (isDemoMode) {
-    return mockListQaHistory('DOCUMENT_QA', 500).then((docRows) =>
-      mockListQaHistory('CHAT', 500).then((chatRows) =>
-        [...docRows, ...chatRows]
-          .filter((r) => r.conversationId === conversationId)
-          .slice(0, limit),
-      ),
+  if (__DEMO_MODE__) {
+    return loadAiMock().then((m) =>
+      m
+        .mockListQaHistory('DOCUMENT_QA', 500)
+        .then((docRows) =>
+          m
+            .mockListQaHistory('CHAT', 500)
+            .then((chatRows) =>
+              [...docRows, ...chatRows]
+                .filter((r) => r.conversationId === conversationId)
+                .slice(0, limit),
+            ),
+        ),
     )
   }
   return aiService.get(`/chat-sessions/${encodeURIComponent(conversationId)}/messages`, {
@@ -428,8 +313,11 @@ export function listChatSessionMessages(
 }
 
 /** 门户演示：智能问答最近 N 条历史（公开，默认 2） */
-export function listPortalQaDemo(limit = 2, scene: QaHistoryScene = 'CHAT'): Promise<QaHistoryVO[]> {
-  if (isDemoMode) return mockListQaHistory(scene, limit)
+export function listPortalQaDemo(
+  limit = 2,
+  scene: QaHistoryScene = 'CHAT',
+): Promise<QaHistoryVO[]> {
+  if (__DEMO_MODE__) return loadAiMock().then((m) => m.mockListQaHistory(scene, limit))
   return aiService.get('/qa-history/portal-demo', { params: { scene, limit } })
 }
 
@@ -440,10 +328,7 @@ const demoAgents: AgentVO[] = [
     name: '水利监测智能体',
     description: '演示默认监测智能体：遥测、多站对比、在线、工程与告警趋势',
     systemPrompt: '你是水利监测智能体，基于只读监测 Tools 回答水雨情与告警问题。',
-    capabilities: [
-      'RAG',
-      'MCP_TOOLS',
-    ],
+    capabilities: ['RAG', 'MCP_TOOLS'],
     workflowType: 'REACT',
     enableMemory: true,
     status: 'ENABLED',
@@ -456,10 +341,7 @@ const demoAgents: AgentVO[] = [
     name: '巡检智能体',
     description: '演示巡检只读智能体：计划、任务、异常与巡检摘要',
     systemPrompt: '你是巡检智能体，基于只读巡检 Tools 回答计划、任务与异常问题。',
-    capabilities: [
-      'MCP_TOOLS',
-      'RAG',
-    ],
+    capabilities: ['MCP_TOOLS', 'RAG'],
     workflowType: 'SEQUENTIAL',
     enableMemory: true,
     status: 'ENABLED',
@@ -524,16 +406,14 @@ const demoChatSessions: DemoChatSession[] = [
 ]
 
 export function listAgents(status?: string): Promise<AgentVO[]> {
-  if (isDemoMode) {
-    return Promise.resolve(
-      status ? demoAgents.filter((a) => a.status === status) : [...demoAgents],
-    )
+  if (__DEMO_MODE__) {
+    return Promise.resolve(status ? demoAgents.filter((a) => a.status === status) : [...demoAgents])
   }
   return aiService.get('/agents', { params: status ? { status } : undefined })
 }
 
 export function getAgent(id: number): Promise<AgentVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const found = demoAgents.find((a) => a.id === id)
     if (!found) return Promise.reject(new Error('智能体不存在'))
     return Promise.resolve(found)
@@ -542,7 +422,7 @@ export function getAgent(id: number): Promise<AgentVO> {
 }
 
 export function createAgent(data: AgentCreateDTO): Promise<AgentVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const created: AgentVO = {
       id: Date.now(),
       ...data,
@@ -559,7 +439,7 @@ export function createAgent(data: AgentCreateDTO): Promise<AgentVO> {
 }
 
 export function updateAgent(id: number, data: AgentUpdateDTO): Promise<AgentVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const idx = demoAgents.findIndex((a) => a.id === id)
     if (idx < 0) return Promise.reject(new Error('智能体不存在'))
     demoAgents[idx] = { ...demoAgents[idx], ...data }
@@ -569,7 +449,7 @@ export function updateAgent(id: number, data: AgentUpdateDTO): Promise<AgentVO> 
 }
 
 export function draftAgentSystemPrompt(data: AgentPromptDraftDTO): Promise<AgentPromptDraftVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const name = data.name?.trim() || '智能助手'
     const desc = data.description?.trim()
     const caps = (data.capabilities || []).join('、') || '未勾选'
@@ -588,7 +468,7 @@ export function draftAgentSystemPrompt(data: AgentPromptDraftDTO): Promise<Agent
 }
 
 export function deleteAgent(id: number): Promise<void> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const idx = demoAgents.findIndex((a) => a.id === id)
     if (idx >= 0) demoAgents.splice(idx, 1)
     return Promise.resolve()
@@ -597,7 +477,7 @@ export function deleteAgent(id: number): Promise<void> {
 }
 
 export function setDefaultAgent(id: number): Promise<void> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     demoAgents.forEach((a) => {
       a.defaultAgent = a.id === id
     })
@@ -607,7 +487,7 @@ export function setDefaultAgent(id: number): Promise<void> {
 }
 
 export function listAgentCapabilities(): Promise<CapabilityVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve([
       {
         code: 'RAG',
@@ -650,7 +530,7 @@ export function listAgentCapabilities(): Promise<CapabilityVO[]> {
 }
 
 export function listWorkflowTemplates(): Promise<WorkflowTemplateVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve([
       { code: 'REACT', label: '单智能体 ReAct', description: '推理-行动循环' },
       { code: 'SEQUENTIAL', label: '顺序多步', description: '澄清 → 执行 → 润色' },
@@ -662,7 +542,7 @@ export function listWorkflowTemplates(): Promise<WorkflowTemplateVO[]> {
 }
 
 export function trialAgent(id: number, data: AgentTrialDTO): Promise<ChatResponseVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({
       content: `【演示】智能体 ${id} 收到：${data.message}`,
       timestamp: new Date().toISOString(),
@@ -670,7 +550,13 @@ export function trialAgent(id: number, data: AgentTrialDTO): Promise<ChatRespons
       agentId: id,
       conversationId: data.conversationId || `demo-${Date.now()}`,
       traces: [
-        { type: 'NODE_START', name: 'REACT', detail: 'TOOL_AGENT', durationMs: null, timestamp: Date.now() },
+        {
+          type: 'NODE_START',
+          name: 'REACT',
+          detail: 'TOOL_AGENT',
+          durationMs: null,
+          timestamp: Date.now(),
+        },
         { type: 'NODE_END', name: 'REACT', detail: '完成', durationMs: 12, timestamp: Date.now() },
       ],
     })
@@ -679,7 +565,7 @@ export function trialAgent(id: number, data: AgentTrialDTO): Promise<ChatRespons
 }
 
 export function getAgentGraph(id: number): Promise<WorkflowGraphDTO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({
       version: 1,
       nodes: [
@@ -704,24 +590,24 @@ export function getAgentGraph(id: number): Promise<WorkflowGraphDTO> {
 }
 
 export function saveAgentGraph(id: number, graph: WorkflowGraphDTO): Promise<WorkflowGraphDTO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve(graph)
   }
   return aiService.put(`/agents/${id}/graph`, graph)
 }
 
-export function validateAgentGraph(id: number, graph: WorkflowGraphDTO): Promise<GraphValidationResult> {
-  if (isDemoMode) {
+export function validateAgentGraph(
+  id: number,
+  graph: WorkflowGraphDTO,
+): Promise<GraphValidationResult> {
+  if (__DEMO_MODE__) {
     return Promise.resolve({ valid: true, errors: [] })
   }
   return aiService.post(`/agents/${id}/graph/validate`, graph)
 }
 
-export function compileWorkflowTemplate(
-  type: string,
-  agentId?: number,
-): Promise<WorkflowGraphDTO> {
-  if (isDemoMode) {
+export function compileWorkflowTemplate(type: string, agentId?: number): Promise<WorkflowGraphDTO> {
+  if (__DEMO_MODE__) {
     return getAgentGraph(agentId || 1)
   }
   return aiService.post(`/agents/workflow-templates/${type}/compile`, null, {
@@ -730,7 +616,7 @@ export function compileWorkflowTemplate(
 }
 
 export function listAgentRuns(id: number, limit = 10): Promise<AgentRunVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve(
       [
         {
@@ -749,201 +635,15 @@ export function listAgentRuns(id: number, limit = 10): Promise<AgentRunVO[]> {
 }
 
 export function getAgentRuntimeHealth(): Promise<Record<string, unknown>> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({ configured: 'chatclient', active: 'chatclient', engines: [] })
   }
   return aiService.get('/agents/runtime-health')
 }
 
-// ==================== 知识图谱 Knowledge Graph ====================
-
-export function getKgHealth(): Promise<KgHealthVO> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgHealth())
-  }
-  return aiService.get('/kg/health')
-}
-
-export function getKgStats(): Promise<KgStatsVO> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgStats())
-  }
-  return aiService.get('/kg/stats')
-}
-
-export function getKgSubgraph(params: {
-  projectId?: number
-  depth?: number
-  types?: string
-}): Promise<KgSubgraphVO> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgSubgraph(params))
-  }
-  return aiService.get('/kg/subgraph', { params })
-}
-
-export function searchKgEntities(q: string, limit = 20): Promise<KgSearchHit[]> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgSearch(q, limit))
-  }
-  return aiService.get('/kg/search', { params: { q, limit } })
-}
-
-export function getKgNeighbors(
-  label: string,
-  bizId: number | string,
-  depth = 1,
-): Promise<KgNeighborResult> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgNeighbors(label, bizId, depth))
-  }
-  return aiService.get(`/kg/neighbors/${encodeURIComponent(label)}/${bizId}`, {
-    params: { depth },
-  })
-}
-
-export function getKgPath(params: {
-  fromLabel: string
-  fromBizId: number | string
-  toLabel: string
-  toBizId: number | string
-}): Promise<KgPathResult> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgPath(params))
-  }
-  return aiService.get('/kg/path', { params })
-}
-
-export function getKgTopology(projectId: number | string): Promise<KgTopologySummary> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgTopology(projectId))
-  }
-  return aiService.get(`/kg/topology/${projectId}`)
-}
-
-export function getKgAlertImpact(bizId: number | string, depth = 2): Promise<KgNeighborResult> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgAlertImpact(bizId, depth))
-  }
-  return aiService.get(`/kg/impact/alert/${bizId}`, { params: { depth } })
-}
-
-export function triggerKgSync(full = false): Promise<KgSyncResult> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgSync(full))
-  }
-  return aiService.post('/kg/sync', null, { params: { full } })
-}
-
-export function getKgSyncStatus(): Promise<KgSyncStatusVO> {
-  if (isDemoMode) {
-    return import('@/mock/kg').then((m) => m.mockKgSyncStatus())
-  }
-  return aiService.get('/kg/sync/status')
-}
-
-export function getMcpOverview(): Promise<McpOverviewVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockGetMcpOverview())
-  }
-  return aiService.get('/mcp/overview')
-}
-
-export function listMcpClients(): Promise<McpClientVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockListMcpClients())
-  }
-  return aiService.get('/mcp/clients')
-}
-
-export function createMcpClient(data: McpClientCreateDTO): Promise<McpClientVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockCreateMcpClient(data))
-  }
-  return aiService.post('/mcp/clients', data)
-}
-
-export function updateMcpClient(id: number, data: McpClientUpdateDTO): Promise<McpClientVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockUpdateMcpClient(id, data))
-  }
-  return aiService.put(`/mcp/clients/${id}`, data)
-}
-
-export function rotateMcpClientKey(id: number): Promise<McpClientVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockRotateMcpClientKey(id))
-  }
-  return aiService.post(`/mcp/clients/${id}/rotate-key`)
-}
-
-export function deleteMcpClient(id: number): Promise<void> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockDeleteMcpClient(id))
-  }
-  return aiService.delete(`/mcp/clients/${id}`)
-}
-
-export function listMcpUpstreams(): Promise<McpUpstreamVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockListMcpUpstreams())
-  }
-  return aiService.get('/mcp/upstreams')
-}
-
-export function createMcpUpstream(data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockCreateMcpUpstream(data))
-  }
-  return aiService.post('/mcp/upstreams', data)
-}
-
-export function updateMcpUpstream(id: number, data: McpUpstreamUpsertDTO): Promise<McpUpstreamVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockUpdateMcpUpstream(id, data))
-  }
-  return aiService.put(`/mcp/upstreams/${id}`, data)
-}
-
-export function deleteMcpUpstream(id: number): Promise<void> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockDeleteMcpUpstream(id))
-  }
-  return aiService.delete(`/mcp/upstreams/${id}`)
-}
-
-export function probeMcpUpstream(id: number): Promise<McpUpstreamVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockProbeMcpUpstream(id))
-  }
-  return aiService.post(`/mcp/upstreams/${id}/probe`)
-}
-
-export function listMcpUpstreamTools(id: number): Promise<McpUpstreamToolVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockListMcpUpstreamTools(id))
-  }
-  return aiService.get(`/mcp/upstreams/${id}/tools`)
-}
-
-export function patchMcpUpstreamTool(
-  id: number,
-  data: { originalName: string; enabled: boolean },
-): Promise<McpUpstreamToolVO> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockPatchMcpUpstreamTool(id, data))
-  }
-  return aiService.put(`/mcp/upstreams/${id}/tools`, data)
-}
-
-export function listMcpCalls(direction?: string, limit = 50): Promise<McpCallLogVO[]> {
-  if (isDemoMode) {
-    return import('@/mock/mcp').then((m) => m.mockListMcpCalls(direction, limit))
-  }
-  return aiService.get('/mcp/calls', { params: { direction, limit } })
-}
-
-
+// 知识图谱 / MCP 已按域拆分，此处保留 re-export 兼容既有 import 路径
+export * from '@/api/kg'
+export * from '@/api/mcp'
 
 const demoAgentExecutions: AgentExecutionVO[] = [
   {
@@ -983,8 +683,10 @@ const demoAgentExecutions: AgentExecutionVO[] = [
 ]
 
 /** 执行历史列表（分页） */
-export function getAgentExecutions(params: AgentMonitorQuery): Promise<PageResult<AgentExecutionVO>> {
-  if (isDemoMode) {
+export function getAgentExecutions(
+  params: AgentMonitorQuery,
+): Promise<PageResult<AgentExecutionVO>> {
+  if (__DEMO_MODE__) {
     const page = params.page || 1
     const size = params.size || 10
     let filtered = [...demoAgentExecutions]
@@ -1003,7 +705,7 @@ export function getAgentExecutions(params: AgentMonitorQuery): Promise<PageResul
 
 /** 执行详情（含轨迹） */
 export function getAgentExecutionDetail(id: number): Promise<AgentExecutionDetailVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     const exec = demoAgentExecutions.find((e) => e.id === id)
     if (!exec) return Promise.reject(new Error('执行记录不存在'))
     return Promise.resolve({
@@ -1018,7 +720,7 @@ export function getAgentExecutionDetail(id: number): Promise<AgentExecutionDetai
 
 /** 统计概览 */
 export function getAgentMonitorStats(period: string = 'TODAY'): Promise<AgentMonitorStatsVO> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve({
       totalCount: demoAgentExecutions.length,
       successCount: demoAgentExecutions.filter((e) => e.status === 'SUCCESS').length,
@@ -1034,10 +736,24 @@ export function getAgentMonitorStats(period: string = 'TODAY'): Promise<AgentMon
 
 /** 按智能体聚合统计 */
 export function getAgentStatsByAgent(): Promise<AgentStatsByAgentVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve([
-      { agentId: 1, agentName: '演示默认监测智能体', totalCount: 1, successCount: 1, successRate: 100, avgDurationMs: 1520 },
-      { agentId: 2, agentName: '巡检智能体', totalCount: 1, successCount: 1, successRate: 100, avgDurationMs: 980 },
+      {
+        agentId: 1,
+        agentName: '演示默认监测智能体',
+        totalCount: 1,
+        successCount: 1,
+        successRate: 100,
+        avgDurationMs: 1520,
+      },
+      {
+        agentId: 2,
+        agentName: '巡检智能体',
+        totalCount: 1,
+        successCount: 1,
+        successRate: 100,
+        avgDurationMs: 980,
+      },
     ])
   }
   return aiService.get('/agent-monitor/stats/agents')
@@ -1045,7 +761,7 @@ export function getAgentStatsByAgent(): Promise<AgentStatsByAgentVO[]> {
 
 /** 当前运行中的执行 */
 export function getAgentRunningExecutions(): Promise<AgentExecutionVO[]> {
-  if (isDemoMode) {
+  if (__DEMO_MODE__) {
     return Promise.resolve(demoAgentExecutions.filter((e) => e.status === 'RUNNING'))
   }
   return aiService.get('/agent-monitor/running')

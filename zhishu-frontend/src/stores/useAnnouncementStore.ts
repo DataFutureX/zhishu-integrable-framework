@@ -9,11 +9,8 @@ import {
   buildAnnouncementStreamUrl,
 } from '@/api/announcement'
 import type { AnnouncementVO } from '@/types/announcement'
-import {
-  ANNOUNCEMENT_PRIORITY_LABEL,
-  AnnouncementStatus,
-} from '@/types/announcement'
-import { parseJsonWithBigInt } from '@/utils/parseJson'
+import { ANNOUNCEMENT_PRIORITY_LABEL, AnnouncementStatus } from '@/types/announcement'
+import { openSseStream } from '@/utils/sseStream'
 
 const RECENT_LIMIT = 20
 const RECONNECT_DELAY_MS = 5000
@@ -25,7 +22,7 @@ export const useAnnouncementStore = defineStore('announcement', () => {
   const streamConnected = ref(false)
   const loadingRecent = ref(false)
 
-  let eventSource: EventSource | null = null
+  let streamAbort: AbortController | null = null
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let initialized = false
 
@@ -104,14 +101,22 @@ export const useAnnouncementStore = defineStore('announcement', () => {
     }
   }
 
-  function handleSseMessage(event: MessageEvent<string>) {
-    const parsed = parseJsonWithBigInt<unknown>(event.data)
-    const announcement = normalizePayload(parsed)
-    if (announcement) {
-      handleIncomingAnnouncement(announcement)
+  function handleSsePayload(data: string) {
+    try {
+      const parsed = JSON.parse(data) as unknown
+      const announcement = normalizePayload(parsed)
+      if (announcement) {
+        handleIncomingAnnouncement(announcement)
+      }
+    } catch (error) {
+      console.warn('解析公告事件失败:', error)
     }
   }
 
+  /**
+   * 用 fetch + Authorization 头订阅 SSE：
+   * 原生 EventSource 只能把 token 拼进 URL，会泄漏到日志与历史记录。
+   */
   function connectStream() {
     if (isDemoMode) return
     const token = localStorage.getItem('token')
@@ -119,35 +124,34 @@ export const useAnnouncementStore = defineStore('announcement', () => {
 
     disconnectStream(false)
 
-    try {
-      eventSource = new EventSource(buildAnnouncementStreamUrl(token))
-      eventSource.addEventListener('announcement', handleSseMessage as EventListener)
-      eventSource.onmessage = handleSseMessage as EventListener
-      eventSource.onopen = () => {
+    const abort = new AbortController()
+    streamAbort = abort
+    void openSseStream({
+      url: buildAnnouncementStreamUrl(),
+      headers: { Authorization: `Bearer ${token}` },
+      signal: abort.signal,
+      onOpen: () => {
         streamConnected.value = true
         clearReconnectTimer()
-      }
-      eventSource.onerror = () => {
-        streamConnected.value = false
-        disconnectStream(false)
-        scheduleReconnect()
-      }
-    } catch (error) {
-      console.error('连接公告 SSE 失败:', error)
+      },
+      onEvent: (event) => {
+        if (event.event === 'announcement' || event.event === 'message') {
+          handleSsePayload(event.data)
+        }
+      },
+    }).catch((error: unknown) => {
+      // 主动 disconnect 不重连
+      if (abort.signal.aborted) return
+      console.warn('公告 SSE 连接中断，稍后重连:', error)
+      streamConnected.value = false
       scheduleReconnect()
-    }
+    })
   }
 
   function disconnectStream(clearData = true) {
     clearReconnectTimer()
-    if (eventSource) {
-      eventSource.removeEventListener('announcement', handleSseMessage as EventListener)
-      eventSource.onmessage = null
-      eventSource.onerror = null
-      eventSource.onopen = null
-      eventSource.close()
-      eventSource = null
-    }
+    streamAbort?.abort()
+    streamAbort = null
     streamConnected.value = false
     if (clearData) {
       recentAnnouncements.value = []

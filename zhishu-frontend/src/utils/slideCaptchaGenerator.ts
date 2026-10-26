@@ -138,11 +138,7 @@ export const generateSlideCaptchaImages = (
   drawPuzzlePath(blockCtx, layout.pathX, layout.pathY, blockSize)
   blockCtx.save()
   blockCtx.clip()
-  blockCtx.drawImage(
-    backgroundCanvas,
-    -slideX,
-    -(sliderY - layout.imageOffsetY),
-  )
+  blockCtx.drawImage(backgroundCanvas, -slideX, -(sliderY - layout.imageOffsetY))
   blockCtx.restore()
 
   blockCtx.save()
@@ -166,7 +162,9 @@ export const generateSlideCaptchaImages = (
   backgroundCtx.restore()
 
   return {
-    backgroundImage: backgroundCanvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, ''),
+    backgroundImage: backgroundCanvas
+      .toDataURL('image/png')
+      .replace(/^data:image\/png;base64,/, ''),
     sliderImage: blockCanvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, ''),
     width,
     height,

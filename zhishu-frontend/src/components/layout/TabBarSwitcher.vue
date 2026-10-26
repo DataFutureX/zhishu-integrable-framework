@@ -25,9 +25,7 @@ defineProps<{
 
 const layoutStore = useLayoutStore()
 
-const tooltipText = computed(() =>
-  layoutStore.showTabBar ? '隐藏标签栏' : '显示标签栏',
-)
+const tooltipText = computed(() => (layoutStore.showTabBar ? '隐藏标签栏' : '显示标签栏'))
 </script>
 
 <style scoped lang="scss">
@@ -35,7 +33,9 @@ const tooltipText = computed(() =>
   border: none;
   background: transparent;
   color: #909399;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     color: var(--app-primary);

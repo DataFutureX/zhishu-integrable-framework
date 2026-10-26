@@ -174,13 +174,7 @@ const systemConfigStore = useSystemConfigStore()
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      background: linear-gradient(
-        105deg,
-        #ffffff 0%,
-        #e8f7ff 42%,
-        #ffffff 68%,
-        #d6eeff 100%
-      );
+      background: linear-gradient(105deg, #ffffff 0%, #e8f7ff 42%, #ffffff 68%, #d6eeff 100%);
       background-size: 180% 100%;
       -webkit-background-clip: text;
       background-clip: text;
@@ -295,13 +289,7 @@ const systemConfigStore = useSystemConfigStore()
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      background: linear-gradient(
-        105deg,
-        #f0fdff 0%,
-        #bae6fd 42%,
-        #7dd3fc 68%,
-        #e0f2fe 100%
-      );
+      background: linear-gradient(105deg, #f0fdff 0%, #bae6fd 42%, #7dd3fc 68%, #e0f2fe 100%);
       background-size: 180% 100%;
       -webkit-background-clip: text;
       background-clip: text;

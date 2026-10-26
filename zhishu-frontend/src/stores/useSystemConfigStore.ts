@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { resolveAssetUrl } from '@/utils/asset'
 import { updateBrowserFavicon } from '@/utils/favicon'
+import { setDocumentSystemName } from '@/utils/documentTitle'
 import type { SystemConfigVO } from '@/types/systemConfig'
 import defaultSystemIcon from '@/assets/logo.svg'
 
@@ -85,7 +86,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             : await (await import('@/api/systemConfig')).getSystemConfigApi()
           if (config) {
             this.applyConfig(config)
-            document.title = this.systemName
+            // 只更新标题后缀，不覆盖当前路由标题（组装逻辑见 utils/documentTitle）
+            setDocumentSystemName(this.systemName)
           }
         } catch (error) {
           console.error('获取系统配置失败:', error)

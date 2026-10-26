@@ -208,7 +208,9 @@ ZX2DyIQ6ggb67B0cNwIDAQAB
   }
   if (method === 'POST' && path === '/auth/sso/exchange') {
     const redirect =
-      typeof _body.redirect === 'string' && _body.redirect.startsWith('/') && !_body.redirect.startsWith('//')
+      typeof _body.redirect === 'string' &&
+      _body.redirect.startsWith('/') &&
+      !_body.redirect.startsWith('//')
         ? _body.redirect
         : '/ai/chat'
     return {
@@ -250,9 +252,15 @@ function handleUser(
       if (username && !includesIgnoreCase(u.username, username)) return false
       if (realName && !includesIgnoreCase(u.realName, realName)) return false
       if (phone && !includesIgnoreCase(u.phone, phone)) return false
-      if (role && !includesIgnoreCase(u.role, role) && !includesIgnoreCase(u.roleName, role)) return false
+      if (role && !includesIgnoreCase(u.role, role) && !includesIgnoreCase(u.roleName, role))
+        return false
       if (roleId != null && roleId !== '' && String(u.roleId) !== String(roleId)) return false
-      if (status !== undefined && status !== '' && status !== null && Number(u.status) !== num(status, -1)) {
+      if (
+        status !== undefined &&
+        status !== '' &&
+        status !== null &&
+        Number(u.status) !== num(status, -1)
+      ) {
         return false
       }
       return true
@@ -431,10 +439,20 @@ function handleAnnouncement(
     const status = params.status
     return paginate(mockState.announcements, num(params.pageNum), num(params.pageSize, 10), (a) => {
       if (title && !includesIgnoreCase(a.title, title)) return false
-      if (priority !== undefined && priority !== '' && priority !== null && Number(a.priority) !== num(priority, -1)) {
+      if (
+        priority !== undefined &&
+        priority !== '' &&
+        priority !== null &&
+        Number(a.priority) !== num(priority, -1)
+      ) {
         return false
       }
-      if (status !== undefined && status !== '' && status !== null && Number(a.status) !== num(status, -1)) {
+      if (
+        status !== undefined &&
+        status !== '' &&
+        status !== null &&
+        Number(a.status) !== num(status, -1)
+      ) {
         return false
       }
       return true
@@ -574,8 +592,14 @@ function handleUnit(
       if (unitCode && !includesIgnoreCase(u.unitCode, unitCode)) return false
       if (unitName && !includesIgnoreCase(u.unitName, unitName)) return false
       if (unitType && !includesIgnoreCase(u.unitType, unitType)) return false
-      if (parentId != null && parentId !== '' && String(u.parentId) !== String(parentId)) return false
-      if (status !== undefined && status !== '' && status !== null && Number(u.status) !== num(status, -1)) {
+      if (parentId != null && parentId !== '' && String(u.parentId) !== String(parentId))
+        return false
+      if (
+        status !== undefined &&
+        status !== '' &&
+        status !== null &&
+        Number(u.status) !== num(status, -1)
+      ) {
         return false
       }
       return true
@@ -655,7 +679,12 @@ function handleRole(
     return paginate(mockState.roles, num(params.pageNum), num(params.pageSize, 10), (r) => {
       if (roleCode && !includesIgnoreCase(r.roleCode, roleCode)) return false
       if (roleName && !includesIgnoreCase(r.roleName, roleName)) return false
-      if (status !== undefined && status !== '' && status !== null && Number(r.status) !== num(status, -1)) {
+      if (
+        status !== undefined &&
+        status !== '' &&
+        status !== null &&
+        Number(r.status) !== num(status, -1)
+      ) {
         return false
       }
       return true
@@ -724,12 +753,21 @@ function handleOperationLog(
       'createTime',
     ) as typeof mockState.operationLogs
     return paginate(records, num(params.pageNum), num(params.pageSize, 10), (log) => {
-      if (username && !includesIgnoreCase(log.username, username) && !includesIgnoreCase(log.realName, username)) {
+      if (
+        username &&
+        !includesIgnoreCase(log.username, username) &&
+        !includesIgnoreCase(log.realName, username)
+      ) {
         return false
       }
       if (moduleName && !includesIgnoreCase(log.module, moduleName)) return false
       if (operation && !includesIgnoreCase(log.operation, operation)) return false
-      if (status !== undefined && status !== '' && status !== null && Number(log.status) !== num(status, -1)) {
+      if (
+        status !== undefined &&
+        status !== '' &&
+        status !== null &&
+        Number(log.status) !== num(status, -1)
+      ) {
         return false
       }
       return true

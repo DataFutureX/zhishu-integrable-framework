@@ -53,9 +53,7 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" :loading="updating" @click="handleUpdate">
-            保存修改
-          </el-button>
+          <el-button type="primary" :loading="updating" @click="handleUpdate"> 保存修改 </el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -110,8 +108,7 @@ const fetchUserDetail = async () => {
     userStore.setUserInfo(userData)
     initFormData()
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : '获取用户详情失败'
-    ElMessage.error(message)
+    console.error('获取用户详情失败:', error)
   } finally {
     loading.value = false
   }
@@ -135,8 +132,7 @@ const handleUpdate = async () => {
       initFormData()
       ElMessage.success('保存成功')
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : '保存失败'
-      ElMessage.error(message)
+      console.error('保存个人资料失败:', error)
     } finally {
       updating.value = false
     }

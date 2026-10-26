@@ -5,7 +5,7 @@
  */
 export const formatDateTime = (
   date?: Date | string | number | null,
-  format = 'YYYY-MM-DD HH:mm:ss'
+  format = 'YYYY-MM-DD HH:mm:ss',
 ): string => {
   if (date == null || date === '') return ''
   const d = new Date(date)
@@ -25,6 +25,31 @@ export const formatDateTime = (
     .replace('HH', hours)
     .replace('mm', minutes)
     .replace('ss', seconds)
+}
+
+/**
+ * 相对时间：刚刚 / N 分钟前 / N 小时前 / MM-DD HH:mm / YYYY-MM-DD
+ * 会话列表、消息列表共用
+ */
+export const formatRelativeTime = (value?: string | Date | null): string => {
+  if (!value) return ''
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const now = new Date()
+  const diffMin = Math.floor((now.getTime() - date.getTime()) / 60000)
+  if (diffMin < 1) return '刚刚'
+  if (diffMin < 60) return `${diffMin} 分钟前`
+
+  const diffHour = Math.floor(diffMin / 60)
+  if (diffHour < 24) return `${diffHour} 小时前`
+
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mi = String(date.getMinutes()).padStart(2, '0')
+  if (date.getFullYear() === now.getFullYear()) return `${mm}-${dd} ${hh}:${mi}`
+  return `${date.getFullYear()}-${mm}-${dd}`
 }
 
 /**
@@ -48,7 +73,7 @@ export const formatFileSize = (bytes: number): string => {
  */
 export const debounce = <T extends (...args: any[]) => any>(
   fn: T,
-  delay = 300
+  delay = 300,
 ): ((...args: Parameters<T>) => void) => {
   let timer: ReturnType<typeof setTimeout> | null = null
 
@@ -67,7 +92,7 @@ export const debounce = <T extends (...args: any[]) => any>(
  */
 export const throttle = <T extends (...args: any[]) => any>(
   fn: T,
-  interval = 300
+  interval = 300,
 ): ((...args: Parameters<T>) => void) => {
   let lastTime = 0
 

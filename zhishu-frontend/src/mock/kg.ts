@@ -14,10 +14,38 @@ const now = () => new Date().toISOString()
 
 const demoSubgraph: KgSubgraphVO = {
   nodes: [
-    { id: 'Project:1', label: 'Project', bizId: 1, name: '青溪防洪工程', projectId: 1, properties: {} },
-    { id: 'Terminal:1001', label: 'Terminal', bizId: 1001, name: '青溪水文站', projectId: 1, properties: { status: 'ONLINE' } },
-    { id: 'Alert:8001', label: 'Alert', bizId: 8001, name: '东区雨量超阈', projectId: 1, properties: { terminalId: 1003 } },
-    { id: 'Region:east', label: 'Region', bizId: 'east', name: '东区', projectId: 1, properties: {} },
+    {
+      id: 'Project:1',
+      label: 'Project',
+      bizId: 1,
+      name: '青溪防洪工程',
+      projectId: 1,
+      properties: {},
+    },
+    {
+      id: 'Terminal:1001',
+      label: 'Terminal',
+      bizId: 1001,
+      name: '青溪水文站',
+      projectId: 1,
+      properties: { status: 'ONLINE' },
+    },
+    {
+      id: 'Alert:8001',
+      label: 'Alert',
+      bizId: 8001,
+      name: '东区雨量超阈',
+      projectId: 1,
+      properties: { terminalId: 1003 },
+    },
+    {
+      id: 'Region:east',
+      label: 'Region',
+      bizId: 'east',
+      name: '东区',
+      projectId: 1,
+      properties: {},
+    },
   ],
   edges: [
     { id: 'e1', type: 'HAS_TERMINAL', source: 'Project:1', target: 'Terminal:1001', projectId: 1 },
@@ -68,7 +96,9 @@ export async function mockKgNeighbors(
   bizId: number | string,
   _depth = 1,
 ): Promise<KgNeighborResult> {
-  const node = demoSubgraph.nodes.find((n) => n.label === label && String(n.bizId) === String(bizId))
+  const node = demoSubgraph.nodes.find(
+    (n) => n.label === label && String(n.bizId) === String(bizId),
+  )
   if (!node) {
     return { found: false, message: '演示图谱中未找到该节点', subgraph: { nodes: [], edges: [] } }
   }
@@ -103,7 +133,10 @@ export async function mockKgTopology(projectId: number | string): Promise<KgTopo
   }
 }
 
-export async function mockKgAlertImpact(_bizId: number | string, _depth = 2): Promise<KgNeighborResult> {
+export async function mockKgAlertImpact(
+  _bizId: number | string,
+  _depth = 2,
+): Promise<KgNeighborResult> {
   return { found: true, message: '演示影响面', subgraph: structuredClone(demoSubgraph) }
 }
 

@@ -5,11 +5,7 @@
     :class="{ 'layout-aside--secondary': variant === 'secondary' }"
     :style="{ backgroundColor: themeStore.themeConfig.sidebarBgColor }"
   >
-    <LayoutLogo
-      v-if="variant === 'primary'"
-      :collapse="collapse"
-      :variant="logoVariant"
-    />
+    <LayoutLogo v-if="variant === 'primary'" :collapse="collapse" :variant="logoVariant" />
 
     <el-menu
       ref="menuRef"

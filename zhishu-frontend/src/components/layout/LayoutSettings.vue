@@ -26,7 +26,10 @@
 
         <div class="setting-item">
           <label class="setting-item__label">页面导航</label>
-          <el-radio-group v-model="navContextDisplay" class="setting-radio-group setting-radio-group--triple">
+          <el-radio-group
+            v-model="navContextDisplay"
+            class="setting-radio-group setting-radio-group--triple"
+          >
             <el-radio-button value="tabs">标签栏</el-radio-button>
             <el-radio-button value="breadcrumb">面包屑</el-radio-button>
             <el-radio-button value="none">不显示</el-radio-button>
@@ -36,7 +39,10 @@
 
         <div class="setting-item">
           <label class="setting-item__label">菜单模式</label>
-          <el-radio-group v-model="layoutMode" class="setting-radio-group setting-radio-group--triple">
+          <el-radio-group
+            v-model="layoutMode"
+            class="setting-radio-group setting-radio-group--triple"
+          >
             <el-radio-button value="hybrid">顶部菜单</el-radio-button>
             <el-radio-button value="sidebar">侧边栏</el-radio-button>
             <el-radio-button value="immersive">无顶栏</el-radio-button>
@@ -60,10 +66,7 @@
               @click="handleThemeChange(theme.value)"
             >
               <div class="theme-card__preview">
-                <div
-                  class="theme-card__header"
-                  :style="{ background: theme.config.headerBg }"
-                />
+                <div class="theme-card__header" :style="{ background: theme.config.headerBg }" />
                 <div
                   class="theme-card__sidebar"
                   :style="{ backgroundColor: theme.config.sidebarBgColor }"
@@ -181,7 +184,9 @@ const handleThemeChange = (theme: ThemeStyle) => {
   border: none;
   background: transparent;
   color: #606266;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     color: var(--app-primary, #0969da);
@@ -346,7 +351,10 @@ const handleThemeChange = (theme: ThemeStyle) => {
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
   text-align: left;
   width: 100%;
 

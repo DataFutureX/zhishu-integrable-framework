@@ -32,7 +32,11 @@
         />
       </el-form-item>
       <el-form-item label="单位类型">
-        <el-input v-model="formModel.unitType" placeholder="如：管理单位、运维单位" maxlength="50" />
+        <el-input
+          v-model="formModel.unitType"
+          placeholder="如：管理单位、运维单位"
+          maxlength="50"
+        />
       </el-form-item>
       <el-form-item label="所属区域">
         <el-input v-model="formModel.region" placeholder="请输入所属区域" maxlength="100" />

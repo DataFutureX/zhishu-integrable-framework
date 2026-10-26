@@ -50,12 +50,7 @@
         </a>
       </header>
 
-      <article
-        v-if="docLoading"
-        ref="articleRef"
-        class="portal-readme"
-        aria-busy="true"
-      >
+      <article v-if="docLoading" ref="articleRef" class="portal-readme" aria-busy="true">
         <p class="portal-docs__loading">文档加载中…</p>
       </article>
       <article
@@ -72,11 +67,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  parsePortalDocRef,
-  portalDocPath,
-  type PortalDocId,
-} from '@/utils/portalDocRoutes'
+import { parsePortalDocRef, portalDocPath, type PortalDocId } from '@/utils/portalDocRoutes'
 import type { PortalDocTocItem } from './portalMarkdown'
 
 interface PortalDocMeta {
@@ -128,7 +119,8 @@ const docs: PortalDocMeta[] = [
     label: 'OpenAPI SDK',
     navHint: 'AK/SK 签名',
     title: '知枢 Open API 接入 SDK',
-    summary: '外部系统经 AK/SK HMAC-SHA256 签名调用 AI 对话、知识问答、知识图谱能力；附 Java SDK 与多语言签名协议。',
+    summary:
+      '外部系统经 AK/SK HMAC-SHA256 签名调用 AI 对话、知识问答、知识图谱能力；附 Java SDK 与多语言签名协议。',
     repoUrl: `${GITHUB_BLOB}/docs/知枢OpenAPI接入SDK使用说明.md`,
   },
 ]
@@ -290,9 +282,7 @@ watch(activeHeadingId, (id) => {
   if (!id) return
   const nav = navRef.value
   if (!nav) return
-  const link = nav.querySelector<HTMLElement>(
-    `.portal-docs__toc-link[href="#${CSS.escape(id)}"]`,
-  )
+  const link = nav.querySelector<HTMLElement>(`.portal-docs__toc-link[href="#${CSS.escape(id)}"]`)
   if (!link) return
   const navRect = nav.getBoundingClientRect()
   const linkRect = link.getBoundingClientRect()

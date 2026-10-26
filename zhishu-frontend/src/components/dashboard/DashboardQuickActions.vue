@@ -15,10 +15,7 @@
         class="quick-tile"
         @click="handleNavigate(action.path)"
       >
-        <div
-          class="quick-tile__icon"
-          :class="`quick-tile__icon--${action.accent}`"
-        >
+        <div class="quick-tile__icon" :class="`quick-tile__icon--${action.accent}`">
           <el-icon :size="18">
             <component :is="action.icon" />
           </el-icon>

@@ -44,11 +44,17 @@
           </template>
         </el-table-column>
         <el-table-column label="模型数" width="140" align="center">
-          <template #default="{ row }">对话 {{ row.chatModelCount }} / 向量 {{ row.embeddingModelCount }}</template>
+          <template #default="{ row }"
+            >对话 {{ row.chatModelCount }} / 向量 {{ row.embeddingModelCount }}</template
+          >
         </el-table-column>
         <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'" size="small" effect="light">
+            <el-tag
+              :type="row.status === 'ENABLED' ? 'success' : 'info'"
+              size="small"
+              effect="light"
+            >
               {{ row.status === 'ENABLED' ? '启用' : '停用' }}
             </el-tag>
           </template>
@@ -97,16 +103,27 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑供应商' : '新建供应商'" width="620px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="editingId ? '编辑供应商' : '新建供应商'"
+      width="620px"
+    >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="如 阿里百炼、DeepSeek" />
         </el-form-item>
         <el-form-item label="程序标识" prop="providerKey">
-          <el-input v-model="form.providerKey" :disabled="!!editingId" placeholder="如 dashscope / deepseek" />
+          <el-input
+            v-model="form.providerKey"
+            :disabled="!!editingId"
+            placeholder="如 dashscope / deepseek"
+          />
         </el-form-item>
         <el-form-item label="Base URL" prop="baseUrl">
-          <el-input v-model="form.baseUrl" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+          <el-input
+            v-model="form.baseUrl"
+            placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1"
+          />
         </el-form-item>
         <el-form-item label="API Key">
           <el-input
@@ -117,7 +134,12 @@
           />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="form.sortOrder" :min="0" :max="9999" controls-position="right" />
+          <el-input-number
+            v-model="form.sortOrder"
+            :min="0"
+            :max="9999"
+            controls-position="right"
+          />
         </el-form-item>
         <el-form-item label="设为默认">
           <el-switch v-model="form.isDefault" />

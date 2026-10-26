@@ -1,5 +1,5 @@
-import { computed, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type FormRules, type TableInstance } from 'element-plus'
+import { computed, ref } from 'vue'
+import { ElMessage, ElMessageBox, type FormRules } from 'element-plus'
 import type { UserCreateDTO, UserQueryDTO, UserUpdateDTO, UserVO } from '@/api/user'
 import {
   createUserApi,
@@ -11,6 +11,8 @@ import {
 } from '@/api/user'
 import { getRoleListApi } from '@/api/role'
 import type { RoleVO } from '@/types/role'
+import { useCrudList, type CrudQuery, type FilterChip } from '@/composables/useCrudList'
+import { isMessageBoxCancel } from '@/utils/uiMessage'
 
 export interface UserFormModel {
   id?: string | number
@@ -23,16 +25,16 @@ export interface UserFormModel {
   status: number
 }
 
+/** 查询条件必须带分页字段，useCrudList 依赖它做序号与翻页 */
+type UserListQuery = UserQueryDTO & CrudQuery
+
 export function useUserList() {
-  const loading = ref(false)
-  const submitLoading = ref(false)
-  const tableRef = ref<TableInstance>()
   const roleOptions = ref<RoleVO[]>([])
   const tableData = ref<UserVO[]>([])
   const total = ref(0)
   const selectedRows = ref<UserVO[]>([])
 
-  const queryParams = reactive<UserQueryDTO>({
+  const defaultQuery = (): UserListQuery => ({
     pageNum: 1,
     pageSize: 20,
     username: '',
@@ -42,11 +44,7 @@ export function useUserList() {
     status: undefined,
   })
 
-  const dialogVisible = ref(false)
-  const dialogTitle = ref('新增用户')
-  const isCreate = ref(true)
-
-  const userForm = reactive<UserFormModel>({
+  const defaultForm = (): UserFormModel => ({
     username: '',
     realName: '',
     email: '',
@@ -55,6 +53,45 @@ export function useUserList() {
     roleId: undefined,
     status: 1,
   })
+
+  const crud = useCrudList<UserVO, UserFormModel, UserListQuery>({
+    defaultQuery,
+    defaultForm,
+    createTitle: '新增用户',
+    editTitle: '编辑用户',
+    reload: () => fetchUserList(),
+    deleteApi: (id) => deleteUserApi(id),
+    rowLabel: (row) => `用户"${row.username}"`,
+    chipBuilder: (query): FilterChip[] => {
+      const chips: FilterChip[] = []
+      if (query.username?.trim())
+        chips.push({ key: 'username', label: `用户名：${query.username.trim()}` })
+      if (query.realName?.trim())
+        chips.push({ key: 'realName', label: `姓名：${query.realName.trim()}` })
+      if (query.phone?.trim()) chips.push({ key: 'phone', label: `手机：${query.phone.trim()}` })
+      if (query.roleId != null && query.roleId !== '') {
+        const role = roleOptions.value.find((item) => String(item.id) === String(query.roleId))
+        chips.push({ key: 'roleId', label: `角色：${role?.roleName || query.roleId}` })
+      }
+      if (query.status === 0 || query.status === 1) {
+        chips.push({ key: 'status', label: query.status === 1 ? '启用' : '禁用' })
+      }
+      return chips
+    },
+  })
+
+  const {
+    loading,
+    submitLoading,
+    tableRef,
+    queryParams,
+    form: userForm,
+    dialogVisible,
+    dialogTitle,
+    isCreate,
+    filterChips,
+    activeFilterCount,
+  } = crud
 
   const userRules: FormRules = {
     username: [
@@ -104,40 +141,6 @@ export function useUserList() {
     return map
   })
 
-  const filterChips = computed(() => {
-    const chips: { key: string; label: string }[] = []
-    if (queryParams.username?.trim()) {
-      chips.push({ key: 'username', label: `用户名：${queryParams.username.trim()}` })
-    }
-    if (queryParams.realName?.trim()) {
-      chips.push({ key: 'realName', label: `姓名：${queryParams.realName.trim()}` })
-    }
-    if (queryParams.phone?.trim()) {
-      chips.push({ key: 'phone', label: `手机：${queryParams.phone.trim()}` })
-    }
-    if (queryParams.roleId != null && queryParams.roleId !== '') {
-      const role = roleOptions.value.find((item) => String(item.id) === String(queryParams.roleId))
-      chips.push({ key: 'roleId', label: `角色：${role?.roleName || queryParams.roleId}` })
-    }
-    if (queryParams.status === 0 || queryParams.status === 1) {
-      chips.push({ key: 'status', label: queryParams.status === 1 ? '启用' : '禁用' })
-    }
-    return chips
-  })
-
-  const activeFilterCount = computed(() => filterChips.value.length)
-
-  const resetUserForm = () => {
-    userForm.id = undefined
-    userForm.username = ''
-    userForm.realName = ''
-    userForm.email = ''
-    userForm.phone = ''
-    userForm.password = ''
-    userForm.roleId = undefined
-    userForm.status = 1
-  }
-
   const fetchRoleOptions = async () => {
     try {
       roleOptions.value = await getRoleListApi()
@@ -168,30 +171,9 @@ export function useUserList() {
       total.value = pageData.total
     } catch (error) {
       console.error('获取用户列表失败:', error)
-      ElMessage.error('获取用户列表失败，请稍后重试')
     } finally {
       loading.value = false
     }
-  }
-
-  const tableIndexMethod = (index: number) => {
-    const pageNum = queryParams.pageNum ?? 1
-    const pageSize = queryParams.pageSize ?? 20
-    return (pageNum - 1) * pageSize + index + 1
-  }
-
-  const handleSearch = () => {
-    queryParams.pageNum = 1
-    void fetchUserList()
-  }
-
-  const handleReset = () => {
-    queryParams.username = ''
-    queryParams.realName = ''
-    queryParams.phone = ''
-    queryParams.roleId = undefined
-    queryParams.status = undefined
-    handleSearch()
   }
 
   const applyStatusFilter = (status: number | undefined) => {
@@ -206,16 +188,6 @@ export function useUserList() {
     void fetchUserList()
   }
 
-  const removeFilterChip = (key: string) => {
-    if (key === 'username') queryParams.username = ''
-    else if (key === 'realName') queryParams.realName = ''
-    else if (key === 'phone') queryParams.phone = ''
-    else if (key === 'roleId') queryParams.roleId = undefined
-    else if (key === 'status') queryParams.status = undefined
-    queryParams.pageNum = 1
-    void fetchUserList()
-  }
-
   const handleSelectionChange = (rows: UserVO[]) => {
     selectedRows.value = rows
   }
@@ -226,17 +198,11 @@ export function useUserList() {
   }
 
   const handleAdd = () => {
-    isCreate.value = true
-    dialogTitle.value = '新增用户'
-    resetUserForm()
-    userForm.roleId = roleOptions.value[0]?.id
-    dialogVisible.value = true
+    crud.openCreate({ roleId: roleOptions.value[0]?.id })
   }
 
   const handleEdit = (row: UserVO) => {
-    isCreate.value = false
-    dialogTitle.value = '编辑用户'
-    Object.assign(userForm, {
+    crud.openEdit(row.id, {
       id: row.id,
       username: row.username,
       realName: row.realName,
@@ -246,60 +212,11 @@ export function useUserList() {
       roleId: row.roleId,
       status: row.status,
     })
-    dialogVisible.value = true
-  }
-
-  const handleDialogClose = () => {
-    resetUserForm()
-  }
-
-  const handleDelete = async (row: UserVO) => {
-    try {
-      await ElMessageBox.confirm(
-        `确定要删除用户"${row.username}"吗？此操作不可恢复！`,
-        '警告',
-        {
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
-          type: 'warning',
-          draggable: true,
-        },
-      )
-      await deleteUserApi(row.id)
-      ElMessage.success('删除成功')
-      void fetchUserList()
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除失败:', error)
-        ElMessage.error('删除失败，请稍后重试')
-      }
-    }
   }
 
   const handleBatchDelete = async () => {
-    const count = selectedRows.value.length
-    const usernames = selectedRows.value.map((r) => r.username).join('、')
-    try {
-      await ElMessageBox.confirm(
-        `确定要删除以下 ${count} 个用户吗？此操作不可恢复！\n\n${usernames}`,
-        '警告',
-        {
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
-          type: 'warning',
-          draggable: true,
-        },
-      )
-      await Promise.all(selectedRows.value.map((row) => deleteUserApi(row.id)))
-      ElMessage.success(`成功删除 ${count} 个用户`)
-      clearSelection()
-      void fetchUserList()
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('批量删除失败:', error)
-        ElMessage.error('批量删除失败，请稍后重试')
-      }
-    }
+    await crud.handleBatchDelete(selectedRows.value, (row) => row.username)
+    clearSelection()
   }
 
   const handleStatusChange = async (row: UserVO, _newStatus: number | string | boolean) => {
@@ -309,7 +226,6 @@ export function useUserList() {
     } catch (error) {
       console.error('状态更新失败:', error)
       row.status = row.status === 1 ? 0 : 1
-      ElMessage.error(error instanceof Error ? error.message : '状态更新失败，请稍后重试')
     }
   }
 
@@ -329,9 +245,8 @@ export function useUserList() {
       await resetUserPasswordApi(row.id, { newPassword: value })
       ElMessage.success('密码已重置，用户需重新登录')
     } catch (error) {
-      if (error === 'cancel' || error === 'close') return
+      if (isMessageBoxCancel(error)) return
       console.error('重置密码失败:', error)
-      ElMessage.error(error instanceof Error ? error.message : '重置密码失败')
     }
   }
 
@@ -369,7 +284,6 @@ export function useUserList() {
       void fetchUserList()
     } catch (error) {
       console.error('提交失败:', error)
-      ElMessage.error(isCreate.value ? '创建失败，请稍后重试' : '更新失败，请稍后重试')
     } finally {
       submitLoading.value = false
     }
@@ -382,7 +296,7 @@ export function useUserList() {
       operator: '操作员',
       user: '普通用户',
     }
-    return roleMap[role] || role
+    return roleMap[role] ?? roleMap[role.toLowerCase()] ?? role
   }
 
   const getRoleType = (role?: string): 'success' | 'warning' | 'danger' | 'info' => {
@@ -392,7 +306,7 @@ export function useUserList() {
       operator: 'warning',
       user: 'info',
     }
-    return roleMap[role] || 'info'
+    return roleMap[role.toLowerCase()] ?? 'info'
   }
 
   const tableRowClassName = ({ row }: { row: UserVO }) =>
@@ -418,18 +332,18 @@ export function useUserList() {
     activeFilterCount,
     fetchRoleOptions,
     fetchUserList,
-    tableIndexMethod,
-    handleSearch,
-    handleReset,
+    tableIndexMethod: crud.tableIndexMethod,
+    handleSearch: crud.handleSearch,
+    handleReset: crud.handleReset,
     applyStatusFilter,
     applyRoleFilter,
-    removeFilterChip,
+    removeFilterChip: crud.removeFilterChip,
     handleSelectionChange,
     clearSelection,
     handleAdd,
     handleEdit,
-    handleDialogClose,
-    handleDelete,
+    handleDialogClose: crud.handleDialogClose,
+    handleDelete: crud.handleDelete,
     handleBatchDelete,
     handleStatusChange,
     handleResetPassword,

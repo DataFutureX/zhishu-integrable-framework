@@ -1,10 +1,6 @@
 import MarkdownIt from 'markdown-it'
 
-import {
-  PORTAL_DOC_FILE_TO_ID,
-  portalDocPath,
-  type PortalDocId,
-} from '@/utils/portalDocRoutes'
+import { PORTAL_DOC_FILE_TO_ID, portalDocPath, type PortalDocId } from '@/utils/portalDocRoutes'
 
 const REPO_BLOB = 'https://github.com/DataFutureX/zhishu-integrable-framework/blob/master/'
 const REPO_TREE = 'https://github.com/DataFutureX/zhishu-integrable-framework/tree/master/'
@@ -302,10 +298,7 @@ export function renderDocHtml(id: PortalDocId, source: string): string {
   return renderDocContent(id, source).html
 }
 
-const DOC_SOURCE_LOADERS: Record<
-  PortalDocId,
-  () => Promise<{ default: string }>
-> = {
+const DOC_SOURCE_LOADERS: Record<PortalDocId, () => Promise<{ default: string }>> = {
   quickstart: () => import('../../../../README.md?raw'),
   sso: () => import('../../../../docs/单点登录对接说明.md?raw'),
   wanxiang: () => import('../../../../docs/万象接入联调实现步骤.md?raw'),

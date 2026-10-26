@@ -13,7 +13,11 @@ async function loadUserStore() {
   return useUserStore()
 }
 
-function applyPermission(el: HTMLElement, binding: DirectiveBinding<PermissionValue>, userStore: Awaited<ReturnType<typeof loadUserStore>>) {
+function applyPermission(
+  el: HTMLElement,
+  binding: DirectiveBinding<PermissionValue>,
+  userStore: Awaited<ReturnType<typeof loadUserStore>>,
+) {
   const codes = resolveCodes(binding.value)
   if (!codes.length) return
 

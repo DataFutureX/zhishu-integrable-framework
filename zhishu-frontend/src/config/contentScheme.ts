@@ -88,10 +88,7 @@ const CSS_VAR_MAP: Record<keyof ContentSchemeTokens, string> = {
 }
 
 /** 将内容区配色写入 document（内联样式，优先级高于主题默认值） */
-export function applyContentSchemeVariables(
-  scheme: ContentScheme,
-  theme?: ThemeConfig,
-): void {
+export function applyContentSchemeVariables(scheme: ContentScheme, theme?: ThemeConfig): void {
   const root = document.documentElement
   const tokens = resolveContentSchemeTokens(scheme, theme)
 

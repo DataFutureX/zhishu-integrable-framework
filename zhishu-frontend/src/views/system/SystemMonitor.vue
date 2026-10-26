@@ -4,10 +4,7 @@
     <section class="monitor-hero">
       <div class="monitor-hero__main">
         <div class="monitor-hero__status">
-          <span
-            class="monitor-pulse"
-            :class="`monitor-pulse--${healthTone(overallStatus)}`"
-          />
+          <span class="monitor-pulse" :class="`monitor-pulse--${healthTone(overallStatus)}`" />
           <div>
             <div class="monitor-hero__title-row">
               <h1 class="monitor-hero__title">运维监控</h1>
@@ -25,12 +22,7 @@
         </div>
       </div>
       <div class="monitor-hero__actions">
-        <el-switch
-          v-model="autoRefresh"
-          active-text="自动"
-          inactive-text="手动"
-          inline-prompt
-        />
+        <el-switch v-model="autoRefresh" active-text="自动" inactive-text="手动" inline-prompt />
         <el-button :icon="Refresh" :loading="loading" type="primary" @click="loadMonitorData">
           刷新
         </el-button>
@@ -106,14 +98,30 @@
             </p>
           </div>
           <div class="kv-grid">
-            <div class="kv"><span>非堆已用</span><b>{{ formatMb(statusData?.jvm?.nonHeapUsedMb) }}</b></div>
-            <div class="kv"><span>活跃线程</span><b>{{ statusData?.jvm?.activeThreads ?? '-' }}</b></div>
-            <div class="kv"><span>峰值线程</span><b>{{ statusData?.jvm?.peakThreads ?? '-' }}</b></div>
-            <div class="kv"><span>守护线程</span><b>{{ statusData?.jvm?.daemonThreads ?? '-' }}</b></div>
-            <div class="kv"><span>累计启动</span><b>{{ statusData?.jvm?.totalStartedThreads ?? '-' }}</b></div>
-            <div class="kv"><span>GC 次数</span><b>{{ statusData?.jvm?.gcCount ?? '-' }}</b></div>
-            <div class="kv"><span>GC 耗时</span><b>{{ formatMs(statusData?.jvm?.gcTimeMs) }}</b></div>
-            <div class="kv"><span>非堆提交</span><b>{{ formatMb(statusData?.jvm?.nonHeapCommittedMb) }}</b></div>
+            <div class="kv">
+              <span>非堆已用</span><b>{{ formatMb(statusData?.jvm?.nonHeapUsedMb) }}</b>
+            </div>
+            <div class="kv">
+              <span>活跃线程</span><b>{{ statusData?.jvm?.activeThreads ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>峰值线程</span><b>{{ statusData?.jvm?.peakThreads ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>守护线程</span><b>{{ statusData?.jvm?.daemonThreads ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>累计启动</span><b>{{ statusData?.jvm?.totalStartedThreads ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>GC 次数</span><b>{{ statusData?.jvm?.gcCount ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>GC 耗时</span><b>{{ formatMs(statusData?.jvm?.gcTimeMs) }}</b>
+            </div>
+            <div class="kv">
+              <span>非堆提交</span><b>{{ formatMb(statusData?.jvm?.nonHeapCommittedMb) }}</b>
+            </div>
           </div>
         </section>
       </el-col>
@@ -137,8 +145,8 @@
               />
             </div>
             <p class="meter-block__sub">
-              可用 {{ formatMb(statusData?.os?.systemMemoryFreeMb) }} /
-              总计 {{ formatMb(statusData?.os?.systemMemoryTotalMb) }}
+              可用 {{ formatMb(statusData?.os?.systemMemoryFreeMb) }} / 总计
+              {{ formatMb(statusData?.os?.systemMemoryTotalMb) }}
             </p>
           </div>
           <div class="kv-grid">
@@ -170,7 +178,11 @@
           <header class="monitor-panel__head">
             <div class="monitor-panel__title-group">
               <h2 class="monitor-panel__title">数据库连接池</h2>
-              <el-tag :type="healthTagType(statusData?.database?.status)" size="small" effect="plain">
+              <el-tag
+                :type="healthTagType(statusData?.database?.status)"
+                size="small"
+                effect="plain"
+              >
                 {{ statusData?.database?.status || '-' }}
               </el-tag>
             </div>
@@ -189,18 +201,31 @@
               />
             </div>
             <p class="meter-block__sub">
-              活跃 {{ statusData?.database?.activeConnections ?? '-' }}
-              · 空闲 {{ statusData?.database?.idleConnections ?? '-' }}
-              · 最大 {{ statusData?.database?.maxConnections ?? '-' }}
+              活跃 {{ statusData?.database?.activeConnections ?? '-' }} · 空闲
+              {{ statusData?.database?.idleConnections ?? '-' }} · 最大
+              {{ statusData?.database?.maxConnections ?? '-' }}
             </p>
           </div>
           <div class="kv-grid">
-            <div class="kv"><span>连接池</span><b>{{ statusData?.database?.poolName || '-' }}</b></div>
-            <div class="kv"><span>当前连接</span><b>{{ statusData?.database?.totalConnections ?? '-' }}</b></div>
-            <div class="kv"><span>等待线程</span><b>{{ statusData?.database?.threadsAwaitingConnection ?? '-' }}</b></div>
-            <div class="kv"><span>连接超时</span><b>{{ formatMs(statusData?.database?.connectionTimeoutMs) }}</b></div>
-            <div class="kv"><span>校验耗时</span><b>{{ formatMs(statusData?.database?.validationTimeMs) }}</b></div>
-            <div class="kv"><span>用户总数</span><b>{{ statusData?.business?.userTotal ?? '-' }}</b></div>
+            <div class="kv">
+              <span>连接池</span><b>{{ statusData?.database?.poolName || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>当前连接</span><b>{{ statusData?.database?.totalConnections ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>等待线程</span
+              ><b>{{ statusData?.database?.threadsAwaitingConnection ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>连接超时</span><b>{{ formatMs(statusData?.database?.connectionTimeoutMs) }}</b>
+            </div>
+            <div class="kv">
+              <span>校验耗时</span><b>{{ formatMs(statusData?.database?.validationTimeMs) }}</b>
+            </div>
+            <div class="kv">
+              <span>用户总数</span><b>{{ statusData?.business?.userTotal ?? '-' }}</b>
+            </div>
           </div>
         </section>
       </el-col>
@@ -210,19 +235,37 @@
           <header class="monitor-panel__head">
             <div class="monitor-panel__title-group">
               <h2 class="monitor-panel__title">Web 与存储</h2>
-              <el-tag :type="healthTagType(statusData?.webServer?.status)" size="small" effect="plain">
+              <el-tag
+                :type="healthTagType(statusData?.webServer?.status)"
+                size="small"
+                effect="plain"
+              >
                 {{ statusData?.webServer?.status || '-' }}
               </el-tag>
             </div>
           </header>
           <div class="kv-grid kv-grid--dense">
-            <div class="kv"><span>监听端口</span><b>{{ statusData?.webServer?.port ?? '-' }}</b></div>
-            <div class="kv"><span>容器</span><b>{{ statusData?.webServer?.servletContainer || '-' }}</b></div>
-            <div class="kv"><span>应用名</span><b>{{ statusData?.application?.name || '-' }}</b></div>
-            <div class="kv"><span>版本</span><b>{{ statusData?.application?.version || '-' }}</b></div>
-            <div class="kv"><span>Java</span><b>{{ statusData?.application?.javaVersion || '-' }}</b></div>
-            <div class="kv"><span>Spring Boot</span><b>{{ statusData?.application?.springBootVersion || '-' }}</b></div>
-            <div class="kv"><span>Profile</span><b>{{ statusData?.application?.profile || '-' }}</b></div>
+            <div class="kv">
+              <span>监听端口</span><b>{{ statusData?.webServer?.port ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>容器</span><b>{{ statusData?.webServer?.servletContainer || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>应用名</span><b>{{ statusData?.application?.name || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>版本</span><b>{{ statusData?.application?.version || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>Java</span><b>{{ statusData?.application?.javaVersion || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>Spring Boot</span><b>{{ statusData?.application?.springBootVersion || '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>Profile</span><b>{{ statusData?.application?.profile || '-' }}</b>
+            </div>
             <div class="kv">
               <span>启动时间</span>
               <b>
@@ -247,10 +290,10 @@
               />
             </div>
             <p class="meter-block__sub">
-              可用 {{ formatMb(statusData?.storage?.diskFreeMb) }} /
-              总计 {{ formatMb(statusData?.storage?.diskTotalMb) }}
-              · 日志 {{ formatMb(statusData?.storage?.logFileSizeMb) }}
-              · 上传 {{ formatMb(statusData?.storage?.uploadDirSizeMb) }}
+              可用 {{ formatMb(statusData?.storage?.diskFreeMb) }} / 总计
+              {{ formatMb(statusData?.storage?.diskTotalMb) }} · 日志
+              {{ formatMb(statusData?.storage?.logFileSizeMb) }} · 上传
+              {{ formatMb(statusData?.storage?.uploadDirSizeMb) }}
             </p>
           </div>
         </section>
@@ -268,8 +311,8 @@
           </el-tag>
         </div>
         <span class="monitor-panel__hint">
-          策略 {{ statusData.sharding.strategyCount ?? 0 }}
-          · 表 {{ statusData.sharding.existingTableCount ?? 0 }}/{{
+          策略 {{ statusData.sharding.strategyCount ?? 0 }} · 表
+          {{ statusData.sharding.existingTableCount ?? 0 }}/{{
             statusData.sharding.expectedTableCount ?? 0
           }}
           · 缺表 {{ statusData.sharding.missingTableCount ?? 0 }}
@@ -299,11 +342,21 @@
               <span>已有 / 期望</span>
               <b>{{ strategy.existingTableCount ?? 0 }} / {{ strategy.expectedTableCount ?? 0 }}</b>
             </div>
-            <div class="kv"><span>缺表</span><b>{{ strategy.missingTableCount ?? 0 }}</b></div>
-            <div class="kv"><span>约行数</span><b>{{ formatCount(strategy.approximateRowTotal) }}</b></div>
-            <div class="kv"><span>数据量</span><b>{{ formatBytes(strategy.dataLengthBytes) }}</b></div>
-            <div class="kv"><span>回溯月</span><b>{{ strategy.monthsBehind ?? '-' }}</b></div>
-            <div class="kv"><span>前瞻月</span><b>{{ strategy.monthsAhead ?? '-' }}</b></div>
+            <div class="kv">
+              <span>缺表</span><b>{{ strategy.missingTableCount ?? 0 }}</b>
+            </div>
+            <div class="kv">
+              <span>约行数</span><b>{{ formatCount(strategy.approximateRowTotal) }}</b>
+            </div>
+            <div class="kv">
+              <span>数据量</span><b>{{ formatBytes(strategy.dataLengthBytes) }}</b>
+            </div>
+            <div class="kv">
+              <span>回溯月</span><b>{{ strategy.monthsBehind ?? '-' }}</b>
+            </div>
+            <div class="kv">
+              <span>前瞻月</span><b>{{ strategy.monthsAhead ?? '-' }}</b>
+            </div>
           </div>
           <p v-if="strategy.missingMonths?.length" class="sharding-card__missing">
             缺失月份：{{ strategy.missingMonths.join('、') }}
@@ -351,7 +404,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { getSystemStatusApi, getSystemHealthApi } from '@/api/systemMonitor'
 import type {
   ComponentHealthDTO,
@@ -557,11 +609,9 @@ const loadMonitorData = async () => {
   try {
     const [status, health] = await Promise.all([getSystemStatusApi(), getSystemHealthApi()])
     statusData.value = status
-    healthComponents.value = health.components?.length
-      ? health.components
-      : status.components || []
-  } catch {
-    ElMessage.error('加载运维监控数据失败')
+    healthComponents.value = health.components?.length ? health.components : status.components || []
+  } catch (error) {
+    console.error('加载运维监控数据失败:', error)
   } finally {
     loading.value = false
   }
@@ -619,7 +669,11 @@ onUnmounted(() => {
   border-radius: var(--app-radius-lg, 12px);
   border: 1px solid color-mix(in srgb, var(--app-primary) 12%, var(--app-border-color));
   background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--app-primary) 12%, transparent), transparent 55%),
+    radial-gradient(
+      120% 140% at 0% 0%,
+      color-mix(in srgb, var(--app-primary) 12%, transparent),
+      transparent 55%
+    ),
     linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
 
   &__status {
@@ -874,7 +928,11 @@ onUnmounted(() => {
     transition: width 0.35s ease;
 
     &.is-ok {
-      background: linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--app-primary) 60%, #67c23a));
+      background: linear-gradient(
+        90deg,
+        var(--app-primary),
+        color-mix(in srgb, var(--app-primary) 60%, #67c23a)
+      );
     }
 
     &.is-warn {

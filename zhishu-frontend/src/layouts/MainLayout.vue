@@ -1,119 +1,110 @@
 <template>
   <ElementPlusRoot>
-  <DemoBanner />
-  <el-container
-    class="layout-container"
-    :class="{
-      'layout-container--hybrid': layoutStore.isHybridLayout,
-      'layout-container--immersive': layoutStore.isImmersiveLayout,
-      'layout-container--hydro': isHydroTheme,
-      'layout-container--light': isLightTheme,
-    }"
-  >
-    <el-header v-if="layoutStore.isHybridLayout" class="hybrid-top-header">
-      <div v-if="isHydroTheme" class="hybrid-top-header__grid" aria-hidden="true" />
-      <LayoutLogo
-        class="hybrid-top-header__logo"
-        :collapse="false"
-        compact
-        :variant="logoVariant"
-      />
-      <TopNavMenu
-        class="hybrid-top-header__nav"
-        :theme="hybridNavTheme"
-      />
-      <div class="hybrid-top-header__aside">
-        <LayoutHeaderActions
-          class="hybrid-top-header__actions"
-          :on-primary="headerActionsOnPrimary"
-          :user-name="userStore.userName || '管理员'"
-          @command="handleCommand"
+    <DemoBanner />
+    <el-container
+      class="layout-container"
+      :class="{
+        'layout-container--hybrid': layoutStore.isHybridLayout,
+        'layout-container--immersive': layoutStore.isImmersiveLayout,
+        'layout-container--hydro': isHydroTheme,
+        'layout-container--light': isLightTheme,
+      }"
+    >
+      <el-header v-if="layoutStore.isHybridLayout" class="hybrid-top-header">
+        <div v-if="isHydroTheme" class="hybrid-top-header__grid" aria-hidden="true" />
+        <LayoutLogo
+          class="hybrid-top-header__logo"
+          :collapse="false"
+          compact
+          :variant="logoVariant"
         />
-      </div>
-    </el-header>
-
-    <el-container :class="layoutStore.isHybridLayout ? 'hybrid-body' : 'layout-body'">
-      <LayoutAside
-        v-if="layoutStore.isSidebarLayout || layoutStore.isImmersiveLayout"
-        variant="primary"
-        :collapse="isCollapse"
-        :menus="menuStore.sidebarNavigationMenus"
-        :active-menu="activeMenu"
-        :copyright="sidebarCopyright"
-      >
-        <template v-if="layoutStore.isImmersiveLayout" #actions>
-          <LayoutAsideActions
-            :collapse="isCollapse"
-            :user-name="userStore.userName || '管理员'"
-            @command="handleCommand"
-            @toggle-collapse="toggleCollapse"
-          />
-        </template>
-      </LayoutAside>
-
-      <LayoutAside
-        v-if="routeLayout.effectiveShowSecondaryAside"
-        variant="secondary"
-        :collapse="isCollapse"
-        :menus="secondaryMenus"
-        :active-menu="activeMenu"
-        :menu-key="activeTopMenuPath"
-        :copyright="sidebarCopyright"
-      />
-
-      <div
-        v-if="showHybridCopyrightBar"
-        class="hybrid-copyright-bar"
-      >
-        <span class="hybrid-copyright-bar__rule" aria-hidden="true" />
-        <p class="copyright">{{ sidebarCopyright }}</p>
-      </div>
-
-      <el-container class="main-container">
-        <el-header
-          v-if="layoutStore.isSidebarLayout"
-          class="layout-header"
-        >
-          <LayoutNavBar
-            :collapse="isCollapse"
-            :show-collapse="true"
-            :show-tab-bar="false"
-            :show-breadcrumb="routeLayout.showBreadcrumb"
-            :breadcrumbs="breadcrumbs"
-            @toggle-collapse="toggleCollapse"
-          />
+        <TopNavMenu class="hybrid-top-header__nav" :theme="hybridNavTheme" />
+        <div class="hybrid-top-header__aside">
           <LayoutHeaderActions
+            class="hybrid-top-header__actions"
+            :on-primary="headerActionsOnPrimary"
             :user-name="userStore.userName || '管理员'"
             @command="handleCommand"
           />
-        </el-header>
+        </div>
+      </el-header>
 
-        <el-header
-          v-else-if="routeLayout.showHybridSubHeader"
-          class="layout-header layout-header--sub"
+      <el-container :class="layoutStore.isHybridLayout ? 'hybrid-body' : 'layout-body'">
+        <LayoutAside
+          v-if="layoutStore.isSidebarLayout || layoutStore.isImmersiveLayout"
+          variant="primary"
+          :collapse="isCollapse"
+          :menus="menuStore.sidebarNavigationMenus"
+          :active-menu="activeMenu"
+          :copyright="sidebarCopyright"
         >
-          <LayoutNavBar
-            :collapse="isCollapse"
-            :show-collapse="routeLayout.effectiveShowSecondaryAside"
-            :show-tab-bar="routeLayout.tabBarInNavBar"
-            :show-breadcrumb="routeLayout.showBreadcrumb"
-            :breadcrumbs="breadcrumbs"
-            @toggle-collapse="toggleCollapse"
-          />
-        </el-header>
+          <template v-if="layoutStore.isImmersiveLayout" #actions>
+            <LayoutAsideActions
+              :collapse="isCollapse"
+              :user-name="userStore.userName || '管理员'"
+              @command="handleCommand"
+              @toggle-collapse="toggleCollapse"
+            />
+          </template>
+        </LayoutAside>
 
-        <el-main
-          class="layout-main"
-          :class="{ 'layout-main--full-bleed': routeLayout.fullBleed }"
-        >
-          <LayoutContent
-            :full-bleed="routeLayout.fullBleed"
-            :show-tab-bar="routeLayout.showTabBarInContent"
-          />
-        </el-main>
+        <LayoutAside
+          v-if="routeLayout.effectiveShowSecondaryAside"
+          variant="secondary"
+          :collapse="isCollapse"
+          :menus="secondaryMenus"
+          :active-menu="activeMenu"
+          :menu-key="activeTopMenuPath"
+          :copyright="sidebarCopyright"
+        />
+
+        <div v-if="showHybridCopyrightBar" class="hybrid-copyright-bar">
+          <span class="hybrid-copyright-bar__rule" aria-hidden="true" />
+          <p class="copyright">{{ sidebarCopyright }}</p>
+        </div>
+
+        <el-container class="main-container">
+          <el-header v-if="layoutStore.isSidebarLayout" class="layout-header">
+            <LayoutNavBar
+              :collapse="isCollapse"
+              :show-collapse="true"
+              :show-tab-bar="false"
+              :show-breadcrumb="routeLayout.showBreadcrumb"
+              :breadcrumbs="breadcrumbs"
+              @toggle-collapse="toggleCollapse"
+            />
+            <LayoutHeaderActions
+              :user-name="userStore.userName || '管理员'"
+              @command="handleCommand"
+            />
+          </el-header>
+
+          <el-header
+            v-else-if="routeLayout.showHybridSubHeader"
+            class="layout-header layout-header--sub"
+          >
+            <LayoutNavBar
+              :collapse="isCollapse"
+              :show-collapse="routeLayout.effectiveShowSecondaryAside"
+              :show-tab-bar="routeLayout.tabBarInNavBar"
+              :show-breadcrumb="routeLayout.showBreadcrumb"
+              :breadcrumbs="breadcrumbs"
+              @toggle-collapse="toggleCollapse"
+            />
+          </el-header>
+
+          <el-main
+            class="layout-main"
+            :class="{ 'layout-main--full-bleed': routeLayout.fullBleed }"
+          >
+            <LayoutContent
+              :full-bleed="routeLayout.fullBleed"
+              :show-tab-bar="routeLayout.showTabBarInContent"
+            />
+          </el-main>
+        </el-container>
       </el-container>
     </el-container>
-  </el-container>
   </ElementPlusRoot>
 </template>
 

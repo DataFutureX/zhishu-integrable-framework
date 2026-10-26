@@ -91,7 +91,14 @@ export interface AlarmSummary {
 }
 
 export function isStationCompareResult(v: unknown): v is StationCompareResult {
-  return !!v && typeof v === 'object' && 'items' in v && 'element' in v && !('level' in v) && !('trend' in v && 'points' in v)
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    'items' in v &&
+    'element' in v &&
+    !('level' in v) &&
+    !('trend' in v && 'points' in v)
+  )
 }
 
 export function isTrendAnalysisResult(v: unknown): v is TrendAnalysisResult {

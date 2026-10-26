@@ -229,7 +229,10 @@
   color: var(--app-text-regular);
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: color-mix(in srgb, var(--app-primary) 35%, var(--app-border-color));

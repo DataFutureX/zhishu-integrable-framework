@@ -1,127 +1,130 @@
 <template>
   <ElementPlusRoot>
-  <div class="login-container">
-    <div class="background" aria-hidden="true">
-      <AgentNetworkBackdrop />
-    </div>
-
-    <div class="login-layout">
-      <div class="brand-panel">
-        <div class="brand-content">
-          <div class="brand-badge">
-            <img :src="systemIconUrl" alt="" class="brand-badge__icon" />
-            <span>{{ systemName }}</span>
-          </div>
-          <p class="brand-eyebrow">{{ englishTitle }}</p>
-          <h1 class="brand-title">{{ systemName }}</h1>
-          <p class="brand-caps">
-            <span v-for="tag in capabilityTags" :key="tag">{{ tag }}</span>
-          </p>
-          <p class="brand-desc">
-            面向智能体集成的开发底座：用 Agent 编排业务，RAG 混合检索增强问答，知识图谱补全关联，MCP
-            打通上下游工具。登录后即可在智能中心完成会话、知识与协议接入。
-          </p>
-          <ul class="feature-list">
-            <li v-for="feature in features" :key="feature.label" class="feature-item">
-              <span class="feature-icon">
-                <el-icon :size="18"><component :is="feature.icon" /></el-icon>
-              </span>
-              <div class="feature-text">
-                <strong>{{ feature.label }}</strong>
-                <span>{{ feature.desc }}</span>
-              </div>
-            </li>
-          </ul>
-          <a class="portal-entry" href="/portal" @click.prevent="goPortal">
-            <el-icon :size="16"><ArrowRight /></el-icon>
-            了解 Agent / RAG / MCP
-          </a>
-        </div>
+    <div class="login-container">
+      <div class="background" aria-hidden="true">
+        <AgentNetworkBackdrop />
       </div>
 
-      <div class="form-panel">
-        <div class="login-box">
-          <div class="login-header">
-            <p class="login-eyebrow">{{ englishTitle }}</p>
-            <h2 class="title">欢迎登录</h2>
-            <p class="subtitle">进入智能中心：Agent 会话、RAG 问答、图谱探索与 MCP 接入</p>
+      <div class="login-layout">
+        <div class="brand-panel">
+          <div class="brand-content">
+            <div class="brand-badge">
+              <img :src="systemIconUrl" alt="" class="brand-badge__icon" />
+              <span>{{ systemName }}</span>
+            </div>
+            <p class="brand-eyebrow">{{ englishTitle }}</p>
+            <h1 class="brand-title">{{ systemName }}</h1>
+            <p class="brand-caps">
+              <span v-for="tag in capabilityTags" :key="tag">{{ tag }}</span>
+            </p>
+            <p class="brand-desc">
+              面向智能体集成的开发底座：用 Agent 编排业务，RAG
+              混合检索增强问答，知识图谱补全关联，MCP
+              打通上下游工具。登录后即可在智能中心完成会话、知识与协议接入。
+            </p>
+            <ul class="feature-list">
+              <li v-for="feature in features" :key="feature.label" class="feature-item">
+                <span class="feature-icon">
+                  <el-icon :size="18"><component :is="feature.icon" /></el-icon>
+                </span>
+                <div class="feature-text">
+                  <strong>{{ feature.label }}</strong>
+                  <span>{{ feature.desc }}</span>
+                </div>
+              </li>
+            </ul>
+            <a class="portal-entry" href="/portal" @click.prevent="goPortal">
+              <el-icon :size="16"><ArrowRight /></el-icon>
+              了解 Agent / RAG / MCP
+            </a>
           </div>
+        </div>
 
-          <el-form
-            ref="loginFormRef"
-            :model="loginForm"
-            :rules="loginRules"
-            class="login-form"
-            @keyup.enter="handleLogin"
-          >
-            <el-form-item prop="username" class="form-field">
-              <el-input
-                v-model="loginForm.username"
-                placeholder="用户名"
-                size="large"
-                clearable
-              />
-            </el-form-item>
+        <div class="form-panel">
+          <div class="login-box">
+            <div class="login-header">
+              <p class="login-eyebrow">{{ englishTitle }}</p>
+              <h2 class="title">欢迎登录</h2>
+              <p class="subtitle">进入智能中心：Agent 会话、RAG 问答、图谱探索与 MCP 接入</p>
+            </div>
 
-            <el-form-item prop="password" class="form-field">
-              <el-input
-                v-model="loginForm.password"
-                type="password"
-                placeholder="密码"
-                size="large"
-                show-password
-              />
-            </el-form-item>
+            <el-form
+              ref="loginFormRef"
+              :model="loginForm"
+              :rules="loginRules"
+              class="login-form"
+              @keyup.enter="handleLogin"
+            >
+              <el-form-item prop="username" class="form-field">
+                <el-input
+                  v-model="loginForm.username"
+                  placeholder="用户名"
+                  size="large"
+                  clearable
+                />
+              </el-form-item>
 
-            <el-form-item class="submit-item">
-              <el-button
-                type="primary"
-                size="large"
-                class="login-btn"
-                :loading="loading"
-                @click="handleLogin"
+              <el-form-item prop="password" class="form-field">
+                <el-input
+                  v-model="loginForm.password"
+                  type="password"
+                  placeholder="密码"
+                  size="large"
+                  show-password
+                />
+              </el-form-item>
+
+              <el-form-item class="submit-item">
+                <el-button
+                  type="primary"
+                  size="large"
+                  class="login-btn"
+                  :loading="loading"
+                  @click="handleLogin"
+                >
+                  <span v-if="!loading">登 录</span>
+                  <span v-else>登录中...</span>
+                </el-button>
+              </el-form-item>
+            </el-form>
+
+            <p class="portal-hint">
+              首次访问？
+              <a class="portal-hint__link" href="/portal" @click.prevent="goPortal"
+                >了解 Agent 与 RAG 能力</a
               >
-                <span v-if="!loading">登 录</span>
-                <span v-else>登录中...</span>
-              </el-button>
-            </el-form-item>
-          </el-form>
+            </p>
 
-          <p class="portal-hint">
-            首次访问？
-            <a class="portal-hint__link" href="/portal" @click.prevent="goPortal">了解 Agent 与 RAG 能力</a>
-          </p>
+            <el-alert
+              v-if="isDemoMode"
+              type="warning"
+              :closable="false"
+              show-icon
+              class="demo-login-alert"
+              title="演示模式"
+              description="任意账号密码均可登录，推荐 demo / demo123。数据均为模拟，无需后端服务。"
+            />
 
-          <el-alert
-            v-if="isDemoMode"
-            type="warning"
-            :closable="false"
-            show-icon
-            class="demo-login-alert"
-            title="演示模式"
-            description="任意账号密码均可登录，推荐 demo / demo123。数据均为模拟，无需后端服务。"
-          />
+            <el-dialog
+              v-model="captchaVisible"
+              title="安全验证"
+              width="360px"
+              align-center
+              destroy-on-close
+              :close-on-click-modal="false"
+              class="captcha-dialog"
+              @closed="handleCaptchaClosed"
+            >
+              <SlideCaptcha @success="handleCaptchaSuccess" />
+            </el-dialog>
 
-          <el-dialog
-            v-model="captchaVisible"
-            title="安全验证"
-            width="360px"
-            align-center
-            destroy-on-close
-            :close-on-click-modal="false"
-            class="captcha-dialog"
-            @closed="handleCaptchaClosed"
-          >
-            <SlideCaptcha @success="handleCaptchaSuccess" />
-          </el-dialog>
-
-          <div class="login-footer">
-            <p v-if="copyright" class="copyright">{{ copyright }}</p>
+            <div class="login-footer">
+              <p v-if="copyright" class="copyright">{{ copyright }}</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   </ElementPlusRoot>
 </template>
 

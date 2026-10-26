@@ -22,10 +22,7 @@ const isOaepAlgorithm = (algorithm?: string) => {
 }
 
 const pemToArrayBuffer = (pem: string): ArrayBuffer => {
-  const base64 = pem
-    .replace(PEM_HEADER, '')
-    .replace(PEM_FOOTER, '')
-    .replace(/\s/g, '')
+  const base64 = pem.replace(PEM_HEADER, '').replace(PEM_FOOTER, '').replace(/\s/g, '')
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i += 1) {

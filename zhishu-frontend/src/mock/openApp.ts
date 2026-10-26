@@ -72,7 +72,10 @@ export function createDemoOpenApp(body: Record<string, unknown>): OpenAppVO {
   return clone(created)
 }
 
-export function updateDemoOpenApp(id: number, body: Record<string, unknown>): OpenAppVO | undefined {
+export function updateDemoOpenApp(
+  id: number,
+  body: Record<string, unknown>,
+): OpenAppVO | undefined {
   const found = apps.find((item) => item.id === id)
   if (!found) return undefined
   if (body.code != null) found.code = String(body.code)

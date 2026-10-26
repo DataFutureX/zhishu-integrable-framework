@@ -16,11 +16,10 @@ import { MagicStick } from '@element-plus/icons-vue'
 
 const route = useRoute()
 
-const description = computed(
-  () => (route.meta?.title as string | undefined) || 'AI 模块',
-)
+const description = computed(() => (route.meta?.title as string | undefined) || 'AI 模块')
 
-const hint = 'AI 能力已迁入知枢。简报是知枢内部控制台能力；外部系统请调用开放 Agent 对话接口自行实现。'
+const hint =
+  'AI 能力已迁入知枢。简报是知枢内部控制台能力；外部系统请调用开放 Agent 对话接口自行实现。'
 </script>
 
 <style scoped lang="scss">

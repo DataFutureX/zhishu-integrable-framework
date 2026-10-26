@@ -16,11 +16,7 @@
       active-text-color="#ffffff"
       @select="handleSelect"
     >
-      <el-menu-item
-        v-for="menu in topMenus"
-        :key="menu.id"
-        :index="normalizeMenuPath(menu.path)"
-      >
+      <el-menu-item v-for="menu in topMenus" :key="menu.id" :index="normalizeMenuPath(menu.path)">
         <el-icon class="top-nav-menu__icon">
           <component :is="resolveMenuIcon(menu.icon)" />
         </el-icon>
@@ -117,7 +113,9 @@ const handleSelect = (index: string) => {
     font-size: 13.5px;
     letter-spacing: 0.02em;
     color: var(--nav-item-text);
-    transition: color 0.18s ease, background-color 0.18s ease;
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease;
 
     &::after {
       content: '';
@@ -145,7 +143,9 @@ const handleSelect = (index: string) => {
       font-size: var(--nav-icon-size);
       color: inherit;
       opacity: var(--nav-icon-muted);
-      transition: opacity 0.18s ease, color 0.18s ease;
+      transition:
+        opacity 0.18s ease,
+        color 0.18s ease;
     }
 
     .top-nav-menu__label {

@@ -9,10 +9,18 @@
           </p>
           <p class="portal-hero__desc">{{ heroSupport }}</p>
           <div class="portal-hero__actions">
-            <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
+            <button
+              type="button"
+              class="portal-btn-primary portal-btn-primary--lg"
+              @click="goLogin"
+            >
               立即体验
             </button>
-            <button type="button" class="portal-btn-ghost portal-btn-ghost--lg" @click="goDocs('quickstart')">
+            <button
+              type="button"
+              class="portal-btn-ghost portal-btn-ghost--lg"
+              @click="goDocs('quickstart')"
+            >
               快速开始
             </button>
           </div>
@@ -76,7 +84,8 @@
             <p class="portal-section-eyebrow">Capabilities</p>
             <h2 class="portal-section-title">Agent、检索、图谱、MCP 与 Open API 一体</h2>
             <p class="portal-section-desc">
-              以智能体为编排核心，RAG 混合检索增强问答，知识图谱补全关联，MCP 打通上下游工具，Open API 对外开放 AI 能力，并叠加权限、SSO 与运维观测。
+              以智能体为编排核心，RAG 混合检索增强问答，知识图谱补全关联，MCP 打通上下游工具，Open
+              API 对外开放 AI 能力，并叠加权限、SSO 与运维观测。
             </p>
           </div>
           <div class="portal-feature-list">
@@ -123,13 +132,22 @@
         <div class="portal-section-inner portal-cta__panel">
           <h2 class="portal-cta__title">从知枢开始，编排智能体与开放 AI 能力</h2>
           <p class="portal-cta__desc">
-            用 Agent 跑通业务，用 RAG 与图谱加强检索，用 MCP 接入工具链，用 Open API 对外开放 AI 能力，更快交付可集成的智能化应用。
+            用 Agent 跑通业务，用 RAG 与图谱加强检索，用 MCP 接入工具链，用 Open API 对外开放 AI
+            能力，更快交付可集成的智能化应用。
           </p>
           <div class="portal-cta__actions">
-            <button type="button" class="portal-btn-primary portal-btn-primary--lg" @click="goLogin">
+            <button
+              type="button"
+              class="portal-btn-primary portal-btn-primary--lg"
+              @click="goLogin"
+            >
               登录体验
             </button>
-            <button type="button" class="portal-btn-ghost portal-btn-ghost--lg" @click="goDocs('quickstart')">
+            <button
+              type="button"
+              class="portal-btn-ghost portal-btn-ghost--lg"
+              @click="goDocs('quickstart')"
+            >
               查看文档
             </button>
             <a

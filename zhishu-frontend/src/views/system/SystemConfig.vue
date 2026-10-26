@@ -4,9 +4,7 @@
       <header class="page-header">
         <div class="page-header__main">
           <h1 class="page-header__title">参数配置</h1>
-          <p class="page-header__desc">
-            配置品牌标识、展示文案、项目地坐标与登录安全策略
-          </p>
+          <p class="page-header__desc">配置品牌标识、展示文案、项目地坐标与登录安全策略</p>
         </div>
         <p v-if="configData.updateTime" class="page-header__meta">
           最近更新 {{ formatDateTime(configData.updateTime) }}
@@ -46,192 +44,200 @@
           <div ref="settingsMainRef" class="settings-main">
             <!-- 品牌标识 -->
             <div id="setting-section-brand" class="settings-section">
-            <div class="settings-section__head">
-              <div class="settings-section__icon settings-section__icon--brand">
-                <el-icon :size="18"><OfficeBuilding /></el-icon>
+              <div class="settings-section__head">
+                <div class="settings-section__icon settings-section__icon--brand">
+                  <el-icon :size="18"><OfficeBuilding /></el-icon>
+                </div>
+                <div>
+                  <div class="settings-section__title">品牌标识</div>
+                  <div class="settings-section__desc">
+                    设置平台名称、英文标题与系统图标，将应用于浏览器标题与导航栏
+                  </div>
+                </div>
               </div>
-              <div>
-                <div class="settings-section__title">品牌标识</div>
-                <div class="settings-section__desc">设置平台名称、英文标题与系统图标，将应用于浏览器标题与导航栏</div>
-              </div>
-            </div>
 
-            <div class="settings-section__body">
-              <el-form-item label="系统名称" prop="systemName">
-                <el-input
-                  v-model="formData.systemName"
-                  placeholder="请输入系统名称"
-                  maxlength="100"
-                  show-word-limit
-                  class="settings-input"
-                />
-              </el-form-item>
+              <div class="settings-section__body">
+                <el-form-item label="系统名称" prop="systemName">
+                  <el-input
+                    v-model="formData.systemName"
+                    placeholder="请输入系统名称"
+                    maxlength="100"
+                    show-word-limit
+                    class="settings-input"
+                  />
+                </el-form-item>
 
-              <el-form-item label="英文标题" prop="englishTitle">
-                <el-input
-                  v-model="formData.englishTitle"
-                  placeholder="请输入英文标题，如 ZhiShu Integrable Framework"
-                  maxlength="100"
-                  show-word-limit
-                  class="settings-input"
-                />
-              </el-form-item>
+                <el-form-item label="英文标题" prop="englishTitle">
+                  <el-input
+                    v-model="formData.englishTitle"
+                    placeholder="请输入英文标题，如 ZhiShu Integrable Framework"
+                    maxlength="100"
+                    show-word-limit
+                    class="settings-input"
+                  />
+                </el-form-item>
 
-              <el-form-item label="系统图标">
-                <div class="icon-upload-area">
-                  <div class="icon-preview" :class="{ 'has-image': !!iconPreviewUrl }">
-                    <img
-                      v-if="iconPreviewUrl"
-                      :src="iconPreviewUrl"
-                      alt="系统图标"
-                      class="icon-image"
-                    />
-                    <div v-else class="icon-placeholder">
-                      <el-icon :size="32"><Picture /></el-icon>
-                      <span>暂无图标</span>
+                <el-form-item label="系统图标">
+                  <div class="icon-upload-area">
+                    <div class="icon-preview" :class="{ 'has-image': !!iconPreviewUrl }">
+                      <img
+                        v-if="iconPreviewUrl"
+                        :src="iconPreviewUrl"
+                        alt="系统图标"
+                        class="icon-image"
+                      />
+                      <div v-else class="icon-placeholder">
+                        <el-icon :size="32"><Picture /></el-icon>
+                        <span>暂无图标</span>
+                      </div>
+                    </div>
+                    <div class="icon-actions">
+                      <el-upload
+                        :show-file-list="false"
+                        :http-request="handleIconUpload"
+                        accept=".png,.jpg,.jpeg,.gif,.svg,.ico,.webp"
+                      >
+                        <el-button type="primary" :icon="Upload" :loading="iconUploading">
+                          上传图标
+                        </el-button>
+                      </el-upload>
+                      <p class="icon-tip">
+                        支持 png / jpg / jpeg / gif / svg / ico / webp，最大 2MB
+                      </p>
+                      <el-input
+                        v-model="formData.systemIcon"
+                        placeholder="或直接输入图标 URL"
+                        clearable
+                        class="settings-input settings-input--url"
+                      />
                     </div>
                   </div>
-                  <div class="icon-actions">
-                    <el-upload
-                      :show-file-list="false"
-                      :http-request="handleIconUpload"
-                      accept=".png,.jpg,.jpeg,.gif,.svg,.ico,.webp"
-                    >
-                      <el-button type="primary" :icon="Upload" :loading="iconUploading">
-                        上传图标
-                      </el-button>
-                    </el-upload>
-                    <p class="icon-tip">支持 png / jpg / jpeg / gif / svg / ico / webp，最大 2MB</p>
-                    <el-input
-                      v-model="formData.systemIcon"
-                      placeholder="或直接输入图标 URL"
-                      clearable
-                      class="settings-input settings-input--url"
-                    />
+                </el-form-item>
+              </div>
+            </div>
+
+            <!-- 展示文案 -->
+            <div id="setting-section-content" class="settings-section">
+              <div class="settings-section__head">
+                <div class="settings-section__icon settings-section__icon--content">
+                  <el-icon :size="18"><Document /></el-icon>
+                </div>
+                <div>
+                  <div class="settings-section__title">展示文案</div>
+                  <div class="settings-section__desc">
+                    版权信息与系统介绍将展示在登录页与仪表盘欢迎区
                   </div>
                 </div>
-              </el-form-item>
-            </div>
-          </div>
-
-          <!-- 展示文案 -->
-          <div id="setting-section-content" class="settings-section">
-            <div class="settings-section__head">
-              <div class="settings-section__icon settings-section__icon--content">
-                <el-icon :size="18"><Document /></el-icon>
               </div>
-              <div>
-                <div class="settings-section__title">展示文案</div>
-                <div class="settings-section__desc">版权信息与系统介绍将展示在登录页与仪表盘欢迎区</div>
-              </div>
-            </div>
 
-            <div class="settings-section__body">
-              <el-form-item label="版权信息">
-                <el-input
-                  v-model="formData.copyright"
-                  type="textarea"
-                  :rows="3"
-                  placeholder="请输入版权信息，如 © 2026 知枢可集成框架 · MIT 开源"
-                  maxlength="200"
-                  show-word-limit
-                  class="settings-input"
-                />
-              </el-form-item>
-
-              <el-form-item label="系统介绍" prop="systemIntroduction">
-                <el-input
-                  v-model="formData.systemIntroduction"
-                  type="textarea"
-                  :rows="5"
-                  placeholder="请输入系统介绍，将展示在登录页与仪表盘欢迎区"
-                  maxlength="5000"
-                  show-word-limit
-                  class="settings-input"
-                />
-              </el-form-item>
-            </div>
-          </div>
-
-          <!-- 安全配置 -->
-          <div id="setting-section-security" class="settings-section">
-            <div class="settings-section__head">
-              <div class="settings-section__icon settings-section__icon--security">
-                <el-icon :size="18"><Lock /></el-icon>
-              </div>
-              <div>
-                <div class="settings-section__title">安全配置</div>
-                <div class="settings-section__desc">
-                  控制登录失败重试次数与账号锁定时长，降低暴力破解风险
-                </div>
-              </div>
-            </div>
-
-            <div class="settings-section__body">
-              <el-form-item label="重试限制" prop="loginRetryLimitEnabled">
-                <div class="security-switch-row">
-                  <el-switch
-                    v-model="formData.loginRetryLimitEnabled"
-                    active-text="启用"
-                    inactive-text="关闭"
+              <div class="settings-section__body">
+                <el-form-item label="版权信息">
+                  <el-input
+                    v-model="formData.copyright"
+                    type="textarea"
+                    :rows="3"
+                    placeholder="请输入版权信息，如 © 2026 知枢可集成框架 · MIT 开源"
+                    maxlength="200"
+                    show-word-limit
+                    class="settings-input"
                   />
-                  <span class="security-switch-tip">
-                    开启后，连续登录失败达到上限将临时锁定账号
-                  </span>
-                </div>
-              </el-form-item>
+                </el-form-item>
 
-              <el-form-item label="最大重试" prop="loginMaxRetryAttempts">
-                <el-input-number
-                  v-model="formData.loginMaxRetryAttempts"
-                  :min="1"
-                  :max="20"
-                  :disabled="!formData.loginRetryLimitEnabled"
-                  controls-position="right"
-                  class="settings-number"
-                />
-                <span class="field-tip">次，范围 1-20</span>
-              </el-form-item>
-
-              <el-form-item label="锁定时长" prop="loginLockMinutes">
-                <el-input-number
-                  v-model="formData.loginLockMinutes"
-                  :min="1"
-                  :max="1440"
-                  :disabled="!formData.loginRetryLimitEnabled"
-                  controls-position="right"
-                  class="settings-number"
-                />
-                <span class="field-tip">分钟，范围 1-1440</span>
-              </el-form-item>
-            </div>
-          </div>
-
-          <!-- AI 对话 -->
-          <div id="setting-section-chat" class="settings-section">
-            <div class="settings-section__head">
-              <div class="settings-section__icon settings-section__icon--security">
-                <el-icon :size="18"><ChatDotRound /></el-icon>
-              </div>
-              <div>
-                <div class="settings-section__title">AI 对话</div>
-                <div class="settings-section__desc">控制 Agent 会话是否默认携带知识库检索（仍受 Agent 自身能力约束）</div>
-              </div>
-            </div>
-
-            <div class="settings-section__body">
-              <el-form-item label="默认 RAG" prop="chatEnableRagDefault">
-                <div class="security-switch-row">
-                  <el-switch
-                    v-model="formData.chatEnableRagDefault"
-                    active-text="开启"
-                    inactive-text="关闭"
+                <el-form-item label="系统介绍" prop="systemIntroduction">
+                  <el-input
+                    v-model="formData.systemIntroduction"
+                    type="textarea"
+                    :rows="5"
+                    placeholder="请输入系统介绍，将展示在登录页与仪表盘欢迎区"
+                    maxlength="5000"
+                    show-word-limit
+                    class="settings-input"
                   />
-                  <span class="field-tip">会话页的“知识库”开关会以该默认值初始化</span>
-                </div>
-              </el-form-item>
+                </el-form-item>
+              </div>
             </div>
-          </div>
+
+            <!-- 安全配置 -->
+            <div id="setting-section-security" class="settings-section">
+              <div class="settings-section__head">
+                <div class="settings-section__icon settings-section__icon--security">
+                  <el-icon :size="18"><Lock /></el-icon>
+                </div>
+                <div>
+                  <div class="settings-section__title">安全配置</div>
+                  <div class="settings-section__desc">
+                    控制登录失败重试次数与账号锁定时长，降低暴力破解风险
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section__body">
+                <el-form-item label="重试限制" prop="loginRetryLimitEnabled">
+                  <div class="security-switch-row">
+                    <el-switch
+                      v-model="formData.loginRetryLimitEnabled"
+                      active-text="启用"
+                      inactive-text="关闭"
+                    />
+                    <span class="security-switch-tip">
+                      开启后，连续登录失败达到上限将临时锁定账号
+                    </span>
+                  </div>
+                </el-form-item>
+
+                <el-form-item label="最大重试" prop="loginMaxRetryAttempts">
+                  <el-input-number
+                    v-model="formData.loginMaxRetryAttempts"
+                    :min="1"
+                    :max="20"
+                    :disabled="!formData.loginRetryLimitEnabled"
+                    controls-position="right"
+                    class="settings-number"
+                  />
+                  <span class="field-tip">次，范围 1-20</span>
+                </el-form-item>
+
+                <el-form-item label="锁定时长" prop="loginLockMinutes">
+                  <el-input-number
+                    v-model="formData.loginLockMinutes"
+                    :min="1"
+                    :max="1440"
+                    :disabled="!formData.loginRetryLimitEnabled"
+                    controls-position="right"
+                    class="settings-number"
+                  />
+                  <span class="field-tip">分钟，范围 1-1440</span>
+                </el-form-item>
+              </div>
+            </div>
+
+            <!-- AI 对话 -->
+            <div id="setting-section-chat" class="settings-section">
+              <div class="settings-section__head">
+                <div class="settings-section__icon settings-section__icon--security">
+                  <el-icon :size="18"><ChatDotRound /></el-icon>
+                </div>
+                <div>
+                  <div class="settings-section__title">AI 对话</div>
+                  <div class="settings-section__desc">
+                    控制 Agent 会话是否默认携带知识库检索（仍受 Agent 自身能力约束）
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section__body">
+                <el-form-item label="默认 RAG" prop="chatEnableRagDefault">
+                  <div class="security-switch-row">
+                    <el-switch
+                      v-model="formData.chatEnableRagDefault"
+                      active-text="开启"
+                      inactive-text="关闭"
+                    />
+                    <span class="field-tip">会话页的“知识库”开关会以该默认值初始化</span>
+                  </div>
+                </el-form-item>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -261,7 +267,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, type Component } from 'vue'
-import { ElMessage, type FormInstance, type FormRules, type UploadRequestOptions } from 'element-plus'
+import {
+  ElMessage,
+  type FormInstance,
+  type FormRules,
+  type UploadRequestOptions,
+} from 'element-plus'
 import {
   Picture,
   Check,
@@ -273,13 +284,10 @@ import {
   Lock,
   ChatDotRound,
 } from '@element-plus/icons-vue'
-import {
-  getSystemConfigApi,
-  updateSystemConfigApi,
-  uploadSystemIconApi,
-} from '@/api/systemConfig'
+import { getSystemConfigApi, updateSystemConfigApi, uploadSystemIconApi } from '@/api/systemConfig'
 import type { SystemConfigVO, SystemConfigUpdateDTO } from '@/types/systemConfig'
 import { formatDateTime } from '@/utils/format'
+import { setDocumentSystemName } from '@/utils/documentTitle'
 import { resolveAssetUrl } from '@/utils/asset'
 import {
   useSystemConfigStore,
@@ -340,12 +348,8 @@ const formRules: FormRules = {
     { required: true, message: '请输入系统名称', trigger: 'blur' },
     { max: 100, message: '系统名称不能超过 100 个字符', trigger: 'blur' },
   ],
-  englishTitle: [
-    { max: 100, message: '英文标题不能超过 100 个字符', trigger: 'blur' },
-  ],
-  systemIntroduction: [
-    { max: 5000, message: '系统介绍不能超过 5000 个字符', trigger: 'blur' },
-  ],
+  englishTitle: [{ max: 100, message: '英文标题不能超过 100 个字符', trigger: 'blur' }],
+  systemIntroduction: [{ max: 5000, message: '系统介绍不能超过 5000 个字符', trigger: 'blur' }],
   loginMaxRetryAttempts: [
     { required: true, message: '请设置最大重试次数', trigger: 'change' },
     { type: 'number', min: 1, max: 20, message: '最大重试次数范围为 1-20', trigger: 'change' },
@@ -368,7 +372,8 @@ const applyConfigToForm = (config: SystemConfigVO) => {
   formData.copyright = config.copyright || ''
   formData.systemIntroduction = config.systemIntroduction || ''
   formData.projectSite = config.projectSite || ''
-  formData.loginRetryLimitEnabled = config.loginRetryLimitEnabled ?? DEFAULT_LOGIN_RETRY_LIMIT_ENABLED
+  formData.loginRetryLimitEnabled =
+    config.loginRetryLimitEnabled ?? DEFAULT_LOGIN_RETRY_LIMIT_ENABLED
   formData.loginMaxRetryAttempts = config.loginMaxRetryAttempts ?? DEFAULT_LOGIN_MAX_RETRY_ATTEMPTS
   formData.loginLockMinutes = config.loginLockMinutes ?? DEFAULT_LOGIN_LOCK_MINUTES
   formData.chatEnableRagDefault = !!config.chatEnableRagDefault
@@ -432,7 +437,7 @@ const handleSubmit = async () => {
       const config = await updateSystemConfigApi(payload)
       applyConfigToForm(config)
       systemConfigStore.applyConfig(config)
-      document.title = config.systemName
+      setDocumentSystemName(config.systemName)
       ElMessage.success('参数配置保存成功')
     } catch (error) {
       console.error('保存系统配置失败:', error)

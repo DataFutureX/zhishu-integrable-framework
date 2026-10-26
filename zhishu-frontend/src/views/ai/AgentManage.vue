@@ -118,7 +118,10 @@
             </p>
 
             <div class="agent-persona__specs">
-              <span v-if="resolveModelLabel(row)" class="agent-persona__spec agent-persona__spec--model">
+              <span
+                v-if="resolveModelLabel(row)"
+                class="agent-persona__spec agent-persona__spec--model"
+              >
                 {{ resolveModelLabel(row) }}
               </span>
               <span v-if="row.enableMemory" class="agent-persona__spec">Memory</span>
@@ -159,11 +162,19 @@
                   {{ capabilityLabel(cap) }}
                 </span>
               </el-tooltip>
-              <span v-if="!row.capabilities?.length" class="agent-persona__skills-empty">未配置能力</span>
+              <span v-if="!row.capabilities?.length" class="agent-persona__skills-empty"
+                >未配置能力</span
+              >
             </div>
 
             <footer class="agent-persona__foot">
-              <el-button v-permission="PERMISSIONS.AI_AGENT_QUERY" type="primary" size="small" :icon="Promotion" @click="openTrial(row)">
+              <el-button
+                v-permission="PERMISSIONS.AI_AGENT_QUERY"
+                type="primary"
+                size="small"
+                :icon="Promotion"
+                @click="openTrial(row)"
+              >
                 试运行
               </el-button>
               <div class="agent-persona__links">
@@ -212,233 +223,81 @@
     </div>
 
     <template #extra>
-      <el-dialog
-      v-model="formVisible"
-      :title="editingId ? '编辑智能体' : '新建智能体'"
-      width="1080px"
-      :close-on-click-modal="false"
-      destroy-on-close
-      @close="resetForm"
-    >
-      <el-form ref="formRef" :model="form" :rules="formRules" label-width="110px">
-        <el-form-item v-if="!editingId" label="编码" prop="code">
-          <el-input v-model="form.code" placeholder="字母开头，如 alert_helper" maxlength="64" />
-        </el-form-item>
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" maxlength="128" />
-        </el-form-item>
-        <el-form-item label="简介">
-          <el-input v-model="form.description" type="textarea" :rows="2" maxlength="500" />
-        </el-form-item>
-        <el-form-item label="工作流" prop="workflowType">
-          <div class="workflow-picker">
-            <button
-              v-for="item in workflowTemplates"
-              :key="item.code"
-              type="button"
-              class="workflow-pick"
-              :class="[
-                `workflow-pick--${workflowTone(item.code)}`,
-                { 'is-active': form.workflowType === item.code },
-              ]"
-              @click="selectWorkflow(item.code)"
-            >
-              <el-tooltip placement="top" popper-class="agent-workflow-hint-popper">
-                <template #content>
-                  <div class="workflow-hint">
-                    <div class="workflow-hint__title">{{ item.label }}</div>
-                    <p class="workflow-hint__desc">{{ workflowHint(item) }}</p>
-                  </div>
-                </template>
-                <span class="workflow-pick__icon">
-                  <el-icon :size="20"><component :is="workflowIcon(item.code)" /></el-icon>
-                </span>
-              </el-tooltip>
-              <span class="workflow-pick__label">{{ item.label }}</span>
-            </button>
-          </div>
-        </el-form-item>
-        <el-form-item label="能力" prop="capabilities">
-          <el-checkbox-group v-model="form.capabilities" class="cap-group">
-            <div v-for="cap in capabilities" :key="cap.code" class="cap-option">
-              <el-checkbox :label="cap.code" class="cap-option__check">
-                <span class="cap-option__title">{{ cap.label }}</span>
-                <el-tag v-if="cap.toolBased" size="small" type="primary" effect="plain">Tools</el-tag>
-                <el-tag v-else size="small" type="info" effect="plain">非 Tool</el-tag>
-              </el-checkbox>
-              <p class="cap-option__desc">{{ cap.description }}</p>
-              <div v-if="resolveCapTools(cap).length" class="cap-option__tools">
-                <el-tooltip
-                  v-for="tool in resolveCapTools(cap)"
-                  :key="tool.name"
-                  :content="tool.description || tool.name"
-                  placement="top"
-                  :show-after="150"
-                >
-                  <el-tag size="small" class="tool-chip" effect="plain">
-                    {{ tool.name }}
-                  </el-tag>
-                </el-tooltip>
-              </div>
-            </div>
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item label="系统提示词" prop="systemPrompt">
-          <div class="prompt-head">
-            <el-button
-              type="primary"
-              link
-              :icon="MagicStick"
-              :loading="draftingPrompt"
-              @click="generateSystemPromptDraft"
-            >
-              根据表单生成初稿
-            </el-button>
-          </div>
-          <el-input
-            v-model="form.systemPrompt"
-            type="textarea"
-            :rows="8"
-            placeholder="可先填名称、简介并勾选能力，再点上方生成初稿"
-          />
-          <p class="prompt-hint">依据名称、简介、工作流、能力、知识库与上游 MCP 生成可再编辑的初稿。</p>
-        </el-form-item>
-        <el-form-item label="网关模型">
-          <el-select
-            v-model="form.model"
-            filterable
-            clearable
-            :disabled="followGlobalModel"
-            placeholder="空则使用网关默认模型"
-            style="width: 280px"
-          >
-            <el-option
-              v-for="opt in gatewayModelOptions"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
-            />
-          </el-select>
-          <span class="form-item-hint">来自「模型网关 · 网关模型」，空则使用网关默认模型</span>
-        </el-form-item>
-        <el-form-item label="模型参数">
-          <div class="model-row">
-            <el-switch v-model="followGlobalModel" active-text="跟随全局" inactive-text="自定义" />
-          </div>
-          <div v-if="!followGlobalModel" class="model-fields">
-            <el-input-number v-model="form.temperature" :min="0" :max="2" :step="0.1" :precision="2" />
-            <el-input-number v-model="form.maxTokens" :min="256" :max="16000" :step="256" />
-          </div>
-        </el-form-item>
-        <el-form-item label="多轮记忆">
-          <el-switch v-model="form.enableMemory" />
-        </el-form-item>
-        <el-form-item label="绑定文档">
-          <el-select
-            v-model="form.documentIds"
-            multiple
-            filterable
-            clearable
-            collapse-tags
-            collapse-tags-tooltip
-            placeholder="空=全部知识库"
-            style="width: 100%"
-            :loading="docsLoading"
-          >
-            <el-option
-              v-for="doc in documentOptions"
-              :key="doc.id"
-              :label="doc.label"
-              :value="doc.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="上游 MCP">
-          <el-select
-            v-model="form.mcpUpstreamIds"
-            multiple
-            filterable
-            clearable
-            collapse-tags
-            placeholder="可选：挂载他方 MCP 工具"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="u in mcpUpstreams"
-              :key="u.id"
-              :label="`${u.name} (${u.code})`"
-              :value="u.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="form.status">
-            <el-radio label="ENABLED">启用</el-radio>
-            <el-radio label="DISABLED">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog
-      v-model="trialVisible"
-      width="760px"
-      destroy-on-close
-      class="agent-trial-dialog"
-      :title="trialAgent ? `试运行 · ${trialAgent.name}` : '试运行'"
-      @closed="handleTrialClosed"
-    >
-      <div v-if="trialAgent" class="trial-meta">
-        <code>{{ trialAgent.code }}</code>
-        <el-tag size="small" effect="plain">{{ workflowLabel(trialAgent.workflowType) }}</el-tag>
-        <span v-if="trialConversationId" class="trial-cid">会话 {{ trialConversationId }}</span>
-      </div>
-      <el-input
-        v-model="trialMessage"
-        type="textarea"
-        :rows="4"
-        placeholder="输入一句话测试智能体…"
-        :disabled="trialLoading"
+      <AgentFormDialog
+        ref="agentFormRef"
+        v-model="formVisible"
+        v-model:follow-global-model="followGlobalModel"
+        :editing-id="editingId"
+        :form="form"
+        :form-rules="formRules"
+        :saving="saving"
+        :drafting-prompt="draftingPrompt"
+        :docs-loading="docsLoading"
+        :workflow-templates="workflowTemplates"
+        :capabilities="capabilities"
+        :gateway-model-options="gatewayModelOptions"
+        :document-options="documentOptions"
+        :mcp-upstreams="mcpUpstreams"
+        @close="resetForm"
+        @generate-prompt="generateSystemPromptDraft"
+        @submit="submitForm"
       />
-      <div class="trial-actions">
-        <el-checkbox
-          v-model="trialEnableRag"
-          :disabled="!trialAgent?.capabilities?.includes('RAG')"
-        >
-          启用知识库
-        </el-checkbox>
-        <el-checkbox v-model="trialEnableMemory">多轮记忆</el-checkbox>
-        <el-checkbox v-model="trialStream">流式</el-checkbox>
-        <el-button @click="clearTrialMemory">清空会话</el-button>
-        <el-button
-          v-if="trialLoading && trialStream"
-          type="danger"
-          plain
-          :icon="VideoPause"
-          @click="handleStopTrial"
-        >
-          停止
-        </el-button>
-        <el-button type="primary" :loading="trialLoading" @click="runTrial">运行</el-button>
-      </div>
-      <el-scrollbar v-if="trialResult" max-height="240px" class="trial-result">
-        <pre>{{ trialResult }}</pre>
-      </el-scrollbar>
-      <AgentTracePanel :traces="trialTraces" default-expand />
-      <div v-if="trialRuns.length" class="trial-runs">
-        <p class="trial-runs__title">最近运行</p>
-        <el-table :data="trialRuns" size="small" max-height="160">
-          <el-table-column prop="id" label="ID" width="70" />
-          <el-table-column prop="status" label="状态" width="90" />
-          <el-table-column prop="currentNode" label="节点" />
-          <el-table-column prop="createTime" label="时间" width="160" />
-        </el-table>
-      </div>
-    </el-dialog>
+
+      <el-dialog
+        v-model="trialVisible"
+        width="760px"
+        destroy-on-close
+        class="agent-trial-dialog"
+        :title="trialAgent ? `试运行 · ${trialAgent.name}` : '试运行'"
+        @closed="handleTrialClosed"
+      >
+        <div v-if="trialAgent" class="trial-meta">
+          <code>{{ trialAgent.code }}</code>
+          <el-tag size="small" effect="plain">{{ workflowLabel(trialAgent.workflowType) }}</el-tag>
+          <span v-if="trialConversationId" class="trial-cid">会话 {{ trialConversationId }}</span>
+        </div>
+        <el-input
+          v-model="trialMessage"
+          type="textarea"
+          :rows="4"
+          placeholder="输入一句话测试智能体…"
+          :disabled="trialLoading"
+        />
+        <div class="trial-actions">
+          <el-checkbox
+            v-model="trialEnableRag"
+            :disabled="!trialAgent?.capabilities?.includes('RAG')"
+          >
+            启用知识库
+          </el-checkbox>
+          <el-checkbox v-model="trialEnableMemory">多轮记忆</el-checkbox>
+          <el-checkbox v-model="trialStream">流式</el-checkbox>
+          <el-button @click="clearTrialMemory">清空会话</el-button>
+          <el-button
+            v-if="trialLoading && trialStream"
+            type="danger"
+            plain
+            :icon="VideoPause"
+            @click="handleStopTrial"
+          >
+            停止
+          </el-button>
+          <el-button type="primary" :loading="trialLoading" @click="runTrial">运行</el-button>
+        </div>
+        <el-scrollbar v-if="trialResult" max-height="240px" class="trial-result">
+          <pre>{{ trialResult }}</pre>
+        </el-scrollbar>
+        <AgentTracePanel :traces="trialTraces" default-expand />
+        <div v-if="trialRuns.length" class="trial-runs">
+          <p class="trial-runs__title">最近运行</p>
+          <el-table :data="trialRuns" size="small" max-height="160">
+            <el-table-column prop="id" label="ID" width="70" />
+            <el-table-column prop="status" label="状态" width="90" />
+            <el-table-column prop="currentNode" label="节点" />
+            <el-table-column prop="createTime" label="时间" width="160" />
+          </el-table>
+        </div>
+      </el-dialog>
     </template>
   </ListPageShell>
 </template>
@@ -446,16 +305,21 @@
 <script setup lang="ts">
 defineOptions({ name: 'AIAgentManage' })
 
-import { computed, reactive, ref, type Component } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox, type FormRules } from 'element-plus'
 import {
-  ElMessage,
-  ElMessageBox,
-  type FormInstance,
-  type FormRules,
-} from 'element-plus'
-import { Cpu, Guide, Plus, Refresh, RefreshRight, Search, SetUp, Service, Share, Sort, Promotion, MagicStick, VideoPause } from '@element-plus/icons-vue'
+  Cpu,
+  Plus,
+  Refresh,
+  Search,
+  SetUp,
+  Service,
+  Promotion,
+  VideoPause,
+} from '@element-plus/icons-vue'
 import AgentTracePanel from '@/components/ai/AgentTracePanel.vue'
+import AgentFormDialog from '@/components/ai/AgentFormDialog.vue'
 import ListPageShell from '@/components/list-page/ListPageShell.vue'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { useAiStream } from '@/composables/useAiStream'
@@ -475,7 +339,15 @@ import {
   updateAgent,
 } from '@/api/ai'
 import { isAiSseUserAbort, postAiSse } from '@/utils/aiSse'
-import type { AgentRunVO, AgentVO, CapabilityVO, ToolInfoVO, WorkflowTemplateVO } from '@/types/aiAgent'
+import { resolveCapabilityTools as resolveCapTools } from '@/utils/agentCapability'
+import { workflowTone } from '@/config/agentWorkflow'
+import type {
+  AgentRunVO,
+  AgentVO,
+  CapabilityVO,
+  ToolInfoVO,
+  WorkflowTemplateVO,
+} from '@/types/aiAgent'
 import type { McpUpstreamVO } from '@/types/mcp'
 import type { AgentTraceEvent } from '@/types/aiChat'
 import type { DocumentVO } from '@/types/aiDocument'
@@ -499,7 +371,8 @@ const formVisible = ref(false)
 const editingId = ref<number | null>(null)
 const followGlobalModel = ref(true)
 const draftingPrompt = ref(false)
-const formRef = ref<FormInstance>()
+/** 表单弹窗为展示型组件，校验入口通过组件暴露的 validate() 调用 */
+const agentFormRef = ref<{ validate: () => Promise<boolean> }>()
 const form = reactive({
   code: '',
   name: '',
@@ -524,7 +397,9 @@ const gatewayModels = ref<GatewayModelVO[]>([])
 const gatewayModelOptions = computed(() =>
   gatewayModels.value.map((m) => ({
     value: m.modelId,
-    label: m.isDefault ? `${m.displayName}（${m.modelId}·默认）` : `${m.displayName}（${m.modelId}）`,
+    label: m.isDefault
+      ? `${m.displayName}（${m.modelId}·默认）`
+      : `${m.displayName}（${m.modelId}）`,
   })),
 )
 
@@ -547,7 +422,9 @@ const formRules: FormRules = {
   name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
   systemPrompt: [{ required: true, message: '请输入系统提示词', trigger: 'blur' }],
   workflowType: [{ required: true, message: '请选择工作流', trigger: 'change' }],
-  capabilities: [{ type: 'array', required: true, min: 1, message: '至少勾选一项能力', trigger: 'change' }],
+  capabilities: [
+    { type: 'array', required: true, min: 1, message: '至少勾选一项能力', trigger: 'change' },
+  ],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
 
@@ -568,9 +445,7 @@ const TRIAL_STREAM_KEY = 'agent-trial'
 /** 管理 SSE 中断与首包/空闲超时，组件卸载时自动断流 */
 const aiStream = useAiStream()
 
-const defaultAgentName = computed(
-  () => tableData.value.find((a) => a.defaultAgent)?.name || '',
-)
+const defaultAgentName = computed(() => tableData.value.find((a) => a.defaultAgent)?.name || '')
 
 const activeFilterCount = computed(() => {
   let n = 0
@@ -597,8 +472,7 @@ const displayData = computed(() => {
   return rows
 })
 
-const capabilityMeta = (code: string) =>
-  capabilities.value.find((c) => c.code === code)
+const capabilityMeta = (code: string) => capabilities.value.find((c) => c.code === code)
 
 const capabilityLabel = (code: string) => capabilityMeta(code)?.label || code
 
@@ -608,13 +482,7 @@ const resolveModelLabel = (row: AgentVO): string => {
   return gatewayModel ? `${gatewayModel.displayName}·${row.model}` : row.model
 }
 
-const capabilityDesc = (code: string) =>
-  capabilityMeta(code)?.description || '暂无能力描述'
-
-const resolveCapTools = (cap: CapabilityVO): ToolInfoVO[] => {
-  if (cap.tools?.length) return cap.tools
-  return (cap.toolNames || []).map((name) => ({ name, description: '' }))
-}
+const capabilityDesc = (code: string) => capabilityMeta(code)?.description || '暂无能力描述'
 
 const capabilityTools = (code: string): ToolInfoVO[] => {
   const meta = capabilityMeta(code)
@@ -655,39 +523,6 @@ const heroMetrics = computed(() => [
 
 const workflowLabel = (code: string) =>
   workflowTemplates.value.find((w) => w.code === code)?.label || code
-
-const workflowTone = (code: string) => {
-  const map: Record<string, string> = {
-    REACT: 'react',
-    SEQUENTIAL: 'sequential',
-    ROUTING: 'routing',
-    GRAPH: 'graph',
-  }
-  return map[code] || 'react'
-}
-
-const workflowIconMap: Record<string, Component> = {
-  REACT: RefreshRight,
-  SEQUENTIAL: Sort,
-  ROUTING: Guide,
-  GRAPH: Share,
-}
-
-const workflowHintMap: Record<string, string> = {
-  REACT: '单智能体推理-行动循环：模型边思考边按需调用 Tools，适合通用问答与工具调用。',
-  SEQUENTIAL: '固定三步：先澄清意图，再调用工具执行，最后润色答案。适合巡检、报告等结构化任务。',
-  ROUTING: '入口先判断问题类型，再路由到「数据查询」或「知识问答」子智能体。适合问题差异较大的场景。',
-  GRAPH: '按可视化节点与边编排执行（START / LLM / TOOL_AGENT / ROUTER / END）。保存后可进入工作流编排画布。',
-}
-
-const workflowIcon = (code: string) => workflowIconMap[code] || Cpu
-
-const workflowHint = (item: WorkflowTemplateVO) => workflowHintMap[item.code] || item.description
-
-const selectWorkflow = (code: string) => {
-  form.workflowType = code
-  void formRef.value?.validateField('workflowType')
-}
 
 const handleReset = () => {
   queryParams.keyword = ''
@@ -764,7 +599,9 @@ const generateSystemPromptDraft = async () => {
   }
   if (form.systemPrompt.trim()) {
     try {
-      await ElMessageBox.confirm('将覆盖当前系统提示词，是否继续？', '生成初稿', { type: 'warning' })
+      await ElMessageBox.confirm('将覆盖当前系统提示词，是否继续？', '生成初稿', {
+        type: 'warning',
+      })
     } catch {
       return
     }
@@ -789,9 +626,7 @@ const generateSystemPromptDraft = async () => {
     })
     form.systemPrompt = vo?.prompt || ''
     ElMessage.success(
-      vo?.source === 'TEMPLATE'
-        ? '已按表单拼出初稿，请核对后保存'
-        : '已生成初稿，请核对后保存',
+      vo?.source === 'TEMPLATE' ? '已按表单拼出初稿，请核对后保存' : '已生成初稿，请核对后保存',
     )
   } finally {
     draftingPrompt.value = false
@@ -830,8 +665,9 @@ const openGraph = (row: AgentVO) => {
 }
 
 const submitForm = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate()
+  if (!agentFormRef.value) return
+  const valid = await agentFormRef.value.validate()
+  if (!valid) return
   saving.value = true
   try {
     const modelFields = followGlobalModel.value
@@ -1109,12 +945,17 @@ useRouteActivate(() => {
   background: #fff;
   overflow: hidden;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 
   &:hover {
     transform: translateY(-2px);
     border-color: color-mix(in srgb, var(--agent-primary) 35%, transparent);
-    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.05), 0 12px 24px rgba(15, 23, 42, 0.07);
+    box-shadow:
+      0 4px 8px rgba(15, 23, 42, 0.05),
+      0 12px 24px rgba(15, 23, 42, 0.07);
   }
 
   &.is-disabled {
@@ -1123,7 +964,9 @@ useRouteActivate(() => {
 
   &.is-default {
     border-color: color-mix(in srgb, var(--agent-accent) 40%, transparent);
-    box-shadow: 0 0 0 1px rgba(8, 145, 178, 0.08), 0 10px 24px rgba(8, 145, 178, 0.08);
+    box-shadow:
+      0 0 0 1px rgba(8, 145, 178, 0.08),
+      0 10px 24px rgba(8, 145, 178, 0.08);
   }
 
   &--react {
@@ -1140,7 +983,11 @@ useRouteActivate(() => {
   }
 
   &__rail {
-    background: linear-gradient(180deg, var(--persona-tone), color-mix(in srgb, var(--persona-tone) 70%, #fff));
+    background: linear-gradient(
+      180deg,
+      var(--persona-tone),
+      color-mix(in srgb, var(--persona-tone) 70%, #fff)
+    );
   }
 
   &__body {
@@ -1328,9 +1175,15 @@ useRouteActivate(() => {
 }
 
 @keyframes agent-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
-  70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 .cap-tip {
@@ -1370,156 +1223,6 @@ useRouteActivate(() => {
       opacity: 0.9;
     }
   }
-}
-
-.cap-group {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-  align-items: stretch;
-}
-
-.prompt-head {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 4px;
-}
-
-.prompt-hint {
-  margin: 6px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--el-text-color-placeholder);
-}
-
-.form-item-hint {
-  margin-left: 12px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.workflow-picker {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  width: 100%;
-}
-
-.workflow-pick {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 6px 10px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
-  background: var(--el-fill-color-blank);
-  cursor: pointer;
-  color: inherit;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-
-  &--react {
-    --wf-tone: #7dd3fc;
-  }
-
-  &--sequential {
-    --wf-tone: #5eead4;
-  }
-
-  &--routing {
-    --wf-tone: #fdba74;
-  }
-
-  &--graph {
-    --wf-tone: #6ee7b7;
-  }
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--wf-tone) 70%, #94a3b8);
-  }
-
-  &.is-active {
-    border-color: color-mix(in srgb, var(--wf-tone) 85%, #0891b2);
-    background: color-mix(in srgb, var(--wf-tone) 22%, #fff);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--wf-tone) 35%, transparent);
-  }
-
-  &__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    color: #0f2740;
-    background: linear-gradient(135deg, #fff, var(--wf-tone));
-    cursor: help;
-  }
-
-  &__label {
-    font-size: 12px;
-    line-height: 1.3;
-    text-align: center;
-    color: var(--el-text-color-primary);
-  }
-}
-
-.cap-option {
-  min-width: 0;
-  height: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 8px;
-  background: var(--el-fill-color-blank);
-
-  &__check {
-    height: auto;
-    align-items: flex-start;
-
-    :deep(.el-checkbox__label) {
-      display: inline-flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      white-space: normal;
-      line-height: 1.4;
-    }
-  }
-
-  &__title {
-    font-weight: 600;
-    color: var(--el-text-color-primary);
-  }
-
-  &__desc {
-    margin: 6px 0 0 24px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--el-text-color-secondary);
-  }
-
-  &__tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 8px 0 0 24px;
-  }
-}
-
-.tool-chip {
-  cursor: help;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.model-row {
-  margin-bottom: 8px;
-}
-
-.model-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 .trial-meta {

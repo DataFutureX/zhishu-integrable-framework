@@ -174,155 +174,28 @@
               <el-empty :description="emptyDescription" :image-size="88" />
             </div>
 
-            <div
+            <ChatMessageItem
               v-for="(msg, index) in messages"
               :key="index"
-              :class="['message-row', msg.role]"
-            >
-              <div class="message-avatar">
-                <el-avatar
-                  v-if="msg.role === 'user'"
-                  :size="36"
-                  :style="{ backgroundColor: getUserAvatarColor }"
-                >
-                  {{ getUserInitial }}
-                </el-avatar>
-                <el-avatar v-else :size="36" class="message-avatar--agent">
-                  <el-icon><Service /></el-icon>
-                </el-avatar>
-              </div>
-              <div class="message-body">
-                <div class="message-role">
-                  {{ msg.role === 'user' ? '我' : currentAgent?.name || 'Agent' }}
-                </div>
-                <template v-if="msg.role === 'assistant'">
-                  <div class="message-reply-block">
-                    <div
-                      v-if="msg.content"
-                      class="message-bubble markdown-body"
-                      v-html="renderMarkdown(msg.content)"
-                    />
-                    <div v-if="msg.examples?.length" class="welcome-examples">
-                      <div class="welcome-examples__label">试试这样问</div>
-                      <div class="welcome-examples__list">
-                        <button
-                          v-for="(ex, ei) in msg.examples"
-                          :key="`${index}-ex-${ei}`"
-                          type="button"
-                          class="welcome-examples__chip"
-                          :disabled="loading"
-                          @click="handleExampleClick(ex)"
-                        >
-                          {{ ex }}
-                        </button>
-                      </div>
-                    </div>
-                    <div v-if="msg.structured" class="structured-panel">
-                      <template v-if="isCompare(msg.structured)">
-                        <div class="structured-title">多站对比 · {{ msg.structured.element }}</div>
-                        <div class="structured-summary">{{ msg.structured.summary }}</div>
-                        <el-table :data="msg.structured.items" size="small" border stripe>
-                          <el-table-column prop="stationAddress" label="站号" min-width="120" />
-                          <el-table-column prop="observeTime" label="观测时间" min-width="150" />
-                          <el-table-column prop="value" label="数值" width="100" />
-                          <el-table-column prop="remark" label="备注" min-width="100" />
-                        </el-table>
-                      </template>
-                      <template v-else-if="isTrend(msg.structured)">
-                        <div class="structured-title">
-                          趋势分析 · {{ msg.structured.stationAddress }} / {{ msg.structured.element }}
-                        </div>
-                        <div class="structured-summary">{{ msg.structured.summary }}</div>
-                        <el-descriptions :column="3" size="small" border class="trend-desc">
-                          <el-descriptions-item label="样本">{{ msg.structured.sampleCount }}</el-descriptions-item>
-                          <el-descriptions-item label="最小">{{ msg.structured.min }}</el-descriptions-item>
-                          <el-descriptions-item label="最大">{{ msg.structured.max }}</el-descriptions-item>
-                          <el-descriptions-item label="均值">{{ msg.structured.avg }}</el-descriptions-item>
-                          <el-descriptions-item label="合计">{{ msg.structured.sum }}</el-descriptions-item>
-                          <el-descriptions-item label="趋势">{{ msg.structured.trend }}</el-descriptions-item>
-                        </el-descriptions>
-                      </template>
-                      <template v-else-if="isAlarm(msg.structured)">
-                        <div class="structured-title">
-                          告警摘要
-                          <el-tag size="small" :type="alarmTagType(msg.structured.level)" style="margin-left: 8px">
-                            {{ msg.structured.level }}
-                          </el-tag>
-                        </div>
-                        <div class="structured-summary">{{ msg.structured.summary }}</div>
-                        <el-table :data="msg.structured.items" size="small" border stripe>
-                          <el-table-column prop="stationAddress" label="站号" min-width="120" />
-                          <el-table-column prop="element" label="要素" width="80" />
-                          <el-table-column prop="currentValue" label="当前值" width="90" />
-                          <el-table-column prop="threshold" label="阈值" width="90" />
-                          <el-table-column prop="message" label="说明" min-width="140" />
-                        </el-table>
-                      </template>
-                    </div>
-                    <AgentTracePanel v-if="msg.traces?.length" :traces="msg.traces" />
-                    <div v-if="msg.stopped" class="message-stopped">
-                      <el-icon><VideoPause /></el-icon>
-                      回复已中断，以上为已接收的部分内容
-                    </div>
-                    <div v-if="plainMessageText(msg)" class="message-actions">
-                      <el-button
-                        link
-                        type="primary"
-                        size="small"
-                        :icon="DocumentCopy"
-                        @click="copyMessage(plainMessageText(msg))"
-                      >
-                        复制
-                      </el-button>
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="message-user-block">
-                    <div
-                      class="message-bubble message-bubble--user"
-                      :class="{ 'is-editing': editingIndex === index }"
-                    >
-                      {{ msg.content }}
-                    </div>
-                    <div class="message-actions">
-                      <el-button
-                        link
-                        type="primary"
-                        size="small"
-                        :icon="DocumentCopy"
-                        @click="copyMessage(msg.content)"
-                      >
-                        复制
-                      </el-button>
-                      <el-button
-                        link
-                        type="primary"
-                        size="small"
-                        :icon="EditPen"
-                        :disabled="loading"
-                        @click.stop="startEdit(index, msg.content)"
-                      >
-                        编辑
-                      </el-button>
-                    </div>
-                  </div>
-                </template>
-                <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
-              </div>
-            </div>
+              :message="msg"
+              :index="index"
+              :is-editing="editingIndex === index"
+              :loading="loading"
+              :agent-name="currentAgent?.name || 'Agent'"
+              :user-initial="getUserInitial"
+              :user-avatar-color="getUserAvatarColor"
+              @copy="copyMessage"
+              @edit="startEdit"
+              @example="handleExampleClick"
+            />
 
-            <div v-if="loading && !streamingStarted" class="message-row assistant">
-              <div class="message-avatar">
-                <el-avatar :size="36" class="message-avatar--agent">
-                  <el-icon><Service /></el-icon>
-                </el-avatar>
-              </div>
-              <div class="message-body">
-                <div class="message-role">{{ currentAgent?.name || 'Agent' }}</div>
-                <div class="typing-indicator">
-                  <span /><span /><span />
-                </div>
+            <div v-if="loading && !streamingStarted" class="typing-row">
+              <el-avatar :size="36" class="typing-row__avatar">
+                <el-icon><Service /></el-icon>
+              </el-avatar>
+              <div class="typing-row__body">
+                <div class="typing-row__role">{{ currentAgent?.name || 'Agent' }}</div>
+                <div class="typing-indicator"><span /><span /><span /></div>
               </div>
             </div>
           </div>
@@ -357,13 +230,7 @@
                 <span v-if="enableRag"> · 知识库已开启</span>
                 <span v-if="outputMode !== 'STREAM'"> · {{ outputModeLabel }}</span>
               </div>
-              <el-button
-                v-if="loading"
-                type="danger"
-                plain
-                :icon="VideoPause"
-                @click="handleStop"
-              >
+              <el-button v-if="loading" type="danger" plain :icon="VideoPause" @click="handleStop">
                 停止生成
               </el-button>
               <el-button
@@ -386,7 +253,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'AIChat' })
 
-import { ref, nextTick, computed, reactive } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox, type InputInstance } from 'element-plus'
 import {
   ChatDotRound,
@@ -395,14 +262,11 @@ import {
   Service,
   Promotion,
   Edit,
-  EditPen,
-  DocumentCopy,
   Plus,
   FullScreen,
   ScaleToOriginal,
   VideoPause,
 } from '@element-plus/icons-vue'
-import MarkdownIt from 'markdown-it'
 import {
   chatStream,
   chatStructured,
@@ -416,17 +280,7 @@ import {
   listChatSessionMessages,
   truncateChatSessionMessages,
 } from '@/api/ai'
-import type {
-  AlarmSummary,
-  StationCompareResult,
-  StructuredChatType,
-  TrendAnalysisResult,
-} from '@/types/aiChat'
-import {
-  isAlarmSummary,
-  isStationCompareResult,
-  isTrendAnalysisResult,
-} from '@/types/aiChat'
+import type { StructuredChatType } from '@/types/aiChat'
 import type { AgentVO } from '@/types/aiAgent'
 import type { AgentTraceEvent } from '@/types/aiChat'
 import type { QaHistoryVO } from '@/types/qaHistory'
@@ -436,20 +290,13 @@ import { useSystemConfigStore } from '@/stores/useSystemConfigStore'
 import { useRouteActivate } from '@/composables/useRouteActivate'
 import { usePanelMaximize } from '@/composables/usePanelMaximize'
 import { useAiStream } from '@/composables/useAiStream'
+import { useChatSession } from '@/composables/useChatSession'
+import { useUserAvatar } from '@/composables/useUserAvatar'
 import { isAiSseTimeout, isAiSseUserAbort } from '@/utils/aiSse'
-import AgentTracePanel from '@/components/ai/AgentTracePanel.vue'
-
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-  structured?: StationCompareResult | TrendAnalysisResult | AlarmSummary | null
-  traces?: AgentTraceEvent[] | null
-  /** 欢迎语示例提问（可点击填入） */
-  examples?: string[]
-  /** 流式被中断（用户停止或超时），已输出的部分正文予以保留 */
-  stopped?: boolean
-}
+import { formatRelativeTime } from '@/utils/format'
+import { isMessageBoxCancel } from '@/utils/uiMessage'
+import ChatMessageItem from '@/components/ai/ChatMessageItem.vue'
+import type { AgentChatMessage as Message } from '@/types/chatMessage'
 
 type OutputMode = 'STREAM' | StructuredChatType
 
@@ -458,11 +305,20 @@ const { isMaximized, toggleMaximize } = usePanelMaximize()
 /** 按会话维度管理 SSE 中断，组件卸载时自动断流 */
 const aiStream = useAiStream()
 
-/** 按会话缓存消息（含进行中的流式回复，切走后仍可回看） */
-const messageCache = reactive<Record<string, Message[]>>({})
-const loadingByCid = reactive<Record<string, boolean>>({})
-const streamingByCid = reactive<Record<string, boolean>>({})
-const fallbackMessages = ref<Message[]>([])
+/** 按会话缓存消息（含进行中的流式回复，切走后仍可回看），逻辑见 useChatSession */
+const {
+  conversationId,
+  messages,
+  loading,
+  streamingStarted,
+  loadingByCid,
+  streamingByCid,
+  messageCache,
+  ensureMessageList,
+  setSessionMessages,
+  clearSessionRuntime,
+  isSessionPending,
+} = useChatSession<Message>({ useFallback: true })
 
 const inputMessage = ref('')
 const editingIndex = ref<number | null>(null)
@@ -473,7 +329,6 @@ const composerKey = computed(() =>
 const historyLoading = ref(false)
 const sessionsLoading = ref(false)
 const messagesRef = ref<HTMLElement>()
-const conversationId = ref<string | undefined>(undefined)
 const enableRag = ref(false)
 const outputMode = ref<OutputMode>('STREAM')
 const agents = ref<AgentVO[]>([])
@@ -481,46 +336,6 @@ const selectedAgentId = ref<number | undefined>(undefined)
 const sessions = ref<ChatSessionVO[]>([])
 const userStore = useUserStore()
 const systemConfigStore = useSystemConfigStore()
-
-const messages = computed(() => {
-  const cid = conversationId.value
-  if (!cid) return fallbackMessages.value
-  return messageCache[cid] ?? []
-})
-
-/** 当前会话是否在等待回复（其它会话 loading 不阻塞本会话） */
-const loading = computed(() => {
-  const cid = conversationId.value
-  return !!cid && !!loadingByCid[cid]
-})
-
-const streamingStarted = computed(() => {
-  const cid = conversationId.value
-  return !!cid && !!streamingByCid[cid]
-})
-
-const isSessionPending = (cid: string) => !!loadingByCid[cid]
-
-const ensureMessageList = (cid: string): Message[] => {
-  if (!messageCache[cid]) {
-    messageCache[cid] = []
-  }
-  return messageCache[cid]
-}
-
-const setSessionMessages = (cid: string | undefined, list: Message[]) => {
-  if (!cid) {
-    fallbackMessages.value = list
-    return
-  }
-  messageCache[cid] = list
-}
-
-const clearSessionRuntime = (cid: string) => {
-  delete messageCache[cid]
-  delete loadingByCid[cid]
-  delete streamingByCid[cid]
-}
 
 const bindSessionAgent = (cid: string) => {
   const session = sessions.value.find((s) => s.conversationId === cid)
@@ -644,46 +459,7 @@ const handleExampleClick = (example: string) => {
   inputMessage.value = example
 }
 
-const getUserInitial = computed(() => {
-  const name = userStore.userName || '管理员'
-  return name.charAt(0).toUpperCase()
-})
-
-const getUserAvatarColor = computed(() => {
-  const name = userStore.userName || 'admin'
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  const hue = Math.abs(hash % 360)
-  return `hsl(${hue}, 70%, 50%)`
-})
-
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  breaks: true,
-})
-
-const renderMarkdown = (content: string): string => {
-  try {
-    return md.render(content)
-  } catch (error) {
-    console.error('Markdown 渲染失败:', error)
-    return content
-  }
-}
-
-const isCompare = isStationCompareResult
-const isTrend = isTrendAnalysisResult
-const isAlarm = isAlarmSummary
-
-const alarmTagType = (level?: string) => {
-  if (level === 'CRITICAL') return 'danger'
-  if (level === 'WARN') return 'warning'
-  return 'info'
-}
+const { initial: getUserInitial, color: getUserAvatarColor } = useUserAvatar()
 
 const toDate = (value?: string | Date) => {
   if (!value) return new Date()
@@ -702,30 +478,7 @@ const historyToMessages = (records: QaHistoryVO[]): Message[] => {
   return list
 }
 
-const formatTime = (date: Date): string => {
-  const hours = date.getHours().toString().padStart(2, '0')
-  const minutes = date.getMinutes().toString().padStart(2, '0')
-  return `${hours}:${minutes}`
-}
-
-const formatSessionTime = (value?: string): string => {
-  if (!value) return ''
-  const d = toDate(value)
-  const now = new Date()
-  const diffMs = now.getTime() - d.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return '刚刚'
-  if (diffMin < 60) return `${diffMin} 分钟前`
-  const diffHour = Math.floor(diffMin / 60)
-  if (diffHour < 24) return `${diffHour} 小时前`
-  const sameYear = d.getFullYear() === now.getFullYear()
-  const mm = (d.getMonth() + 1).toString().padStart(2, '0')
-  const dd = d.getDate().toString().padStart(2, '0')
-  const hh = d.getHours().toString().padStart(2, '0')
-  const mi = d.getMinutes().toString().padStart(2, '0')
-  if (sameYear) return `${mm}-${dd} ${hh}:${mi}`
-  return `${d.getFullYear()}-${mm}-${dd}`
-}
+const formatSessionTime = (value?: string): string => formatRelativeTime(value)
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -832,7 +585,6 @@ const loadSessionMessages = async (cid: string) => {
     await scrollToBottom()
   } catch (error) {
     console.error('加载会话消息失败:', error)
-    ElMessage.error('加载会话消息失败')
     if (conversationId.value === cid) applyWelcome()
   } finally {
     if (conversationId.value === cid) {
@@ -866,7 +618,6 @@ const handleCreateSession = async () => {
     ElMessage.success('已新建会话')
   } catch (error) {
     console.error('新建会话失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '新建会话失败')
   } finally {
     sessionsLoading.value = false
   }
@@ -891,9 +642,8 @@ const handleRenameSession = async (session: ChatSessionVO) => {
     await promptRename(session)
     ElMessage.success('已重命名')
   } catch (error) {
-    if (error === 'cancel' || error === 'close') return
+    if (isMessageBoxCancel(error)) return
     console.error('重命名失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '重命名失败')
   }
 }
 
@@ -905,11 +655,15 @@ const handleRenameCurrentSession = async () => {
 
 const handleDeleteSession = async (session: ChatSessionVO) => {
   try {
-    await ElMessageBox.confirm(`确认删除会话「${session.title || '新会话'}」？此操作不可恢复。`, '删除会话', {
-      type: 'warning',
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-    })
+    await ElMessageBox.confirm(
+      `确认删除会话「${session.title || '新会话'}」？此操作不可恢复。`,
+      '删除会话',
+      {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+      },
+    )
   } catch {
     return
   }
@@ -930,7 +684,6 @@ const handleDeleteSession = async (session: ChatSessionVO) => {
     ElMessage.success('已删除会话')
   } catch (error) {
     console.error('删除会话失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '删除会话失败')
   }
 }
 
@@ -979,7 +732,9 @@ const formatProgressInterim = (events: AgentTraceEvent[]): string => {
   if (intent?.detail?.trim()) {
     lines.push(`**已理解意图**\n\n${intent.detail.trim()}`)
   }
-  const lastTool = [...events].reverse().find((e) => e.type === 'TOOL_CALL' || e.type === 'TOOL_RESULT')
+  const lastTool = [...events]
+    .reverse()
+    .find((e) => e.type === 'TOOL_CALL' || e.type === 'TOOL_RESULT')
   const lastStart = [...events].reverse().find((e) => e.type === 'NODE_START')
   if (lastTool?.type === 'TOOL_CALL' && lastTool.name) {
     lines.push(`\n\n_正在查询数据：${lastTool.name}…_`)
@@ -988,7 +743,11 @@ const formatProgressInterim = (events: AgentTraceEvent[]): string => {
   } else if (lastStart?.name) {
     if (lastStart.name.includes('意图') || lastStart.name.includes('澄清')) {
       if (!intent) lines.push('_正在理解意图…_')
-    } else if (lastStart.name.includes('工具') || lastStart.name.includes('查询') || lastStart.name.includes('执行')) {
+    } else if (
+      lastStart.name.includes('工具') ||
+      lastStart.name.includes('查询') ||
+      lastStart.name.includes('执行')
+    ) {
       lines.push('\n\n_正在查询数据…_')
     } else if (lastStart.name.includes('润色') || lastStart.name.includes('生成')) {
       lines.push('\n\n_正在整理最终回答…_')
@@ -1027,14 +786,6 @@ const copyMessage = async (text: string) => {
   }
 }
 
-const plainMessageText = (msg: Message) => {
-  const parts = [msg.content?.trim() || '']
-  if (msg.structured?.summary) {
-    parts.push(msg.structured.summary)
-  }
-  return parts.filter(Boolean).join('\n')
-}
-
 const startEdit = async (index: number, content?: string) => {
   if (loading.value) return
   const msg = messages.value[index]
@@ -1049,8 +800,7 @@ const startEdit = async (index: number, content?: string) => {
   await nextTick()
   const inst = composerInputRef.value
   const textarea =
-    inst?.textarea ??
-    (inst?.$el instanceof HTMLElement ? inst.$el.querySelector('textarea') : null)
+    inst?.textarea ?? (inst?.$el instanceof HTMLElement ? inst.$el.querySelector('textarea') : null)
   inst?.focus()
   if (textarea) {
     if (textarea.value !== text) {
@@ -1086,7 +836,7 @@ const sendUserMessage = async (preset?: string) => {
         ElMessage.warning('未能裁剪历史，将作为新问题发送')
       }
     } else {
-      fallbackMessages.value.splice(editIdx)
+      setSessionMessages(undefined, messages.value.slice(0, editIdx))
     }
     editingIndex.value = null
   }
@@ -1237,9 +987,7 @@ const sendUserMessage = async (preset?: string) => {
       }
     } else {
       console.error('聊天失败:', error)
-      const failureText = isAiSseTimeout(error)
-        ? `抱歉，${detail}`
-        : '抱歉，请求失败，请稍后重试。'
+      const failureText = isAiSseTimeout(error) ? `抱歉，${detail}` : '抱歉，请求失败，请稍后重试。'
       if (partial?.content) {
         // 超时前已输出部分正文：保留内容并标记中断，避免整段回复丢失
         partial.stopped = true
@@ -1289,16 +1037,12 @@ const handleClear = async () => {
     ElMessage.success('已清空对话')
   } catch (error) {
     console.error('清空对话失败:', error)
-    ElMessage.error(error instanceof Error ? error.message : '清空对话失败')
   }
 }
 
 const handleHealthCheck = async () => {
   try {
-    const [health, evalResult] = await Promise.all([
-      healthCheck(),
-      chatEval().catch(() => null),
-    ])
+    const [health, evalResult] = await Promise.all([healthCheck(), chatEval().catch(() => null)])
     if (evalResult && typeof evalResult.passed === 'boolean') {
       ElMessage.success(
         `服务: ${health} | 评测: ${evalResult.passed ? '通过' : '未通过'} (${evalResult.passedCount}/${evalResult.totalCount})`,
@@ -1308,7 +1052,6 @@ const handleHealthCheck = async () => {
     }
   } catch (error) {
     console.error('健康检查失败:', error)
-    ElMessage.error('服务连接失败')
   }
 }
 
@@ -1622,8 +1365,7 @@ useRouteActivate(loadHistory)
   min-height: 0;
   overflow-y: auto;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(64, 158, 255, 0.05), transparent 70%),
-    #f5f7fa;
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(64, 158, 255, 0.05), transparent 70%), #f5f7fa;
 
   &__inner {
     max-width: 1200px;
@@ -1641,245 +1383,29 @@ useRouteActivate(loadHistory)
   justify-content: center;
 }
 
-.message-row {
+.typing-row {
   display: flex;
   gap: 12px;
   margin-bottom: 22px;
-  animation: chat-fade-in 0.28s ease;
 
-  &.user {
-    flex-direction: row-reverse;
-
-    .message-body {
-      align-items: flex-end;
-    }
-
-    .message-role {
-      text-align: right;
-    }
-  }
-}
-
-.message-avatar {
-  flex-shrink: 0;
-  padding-top: 2px;
-
-  &--agent {
+  &__avatar {
+    flex-shrink: 0;
+    padding-top: 2px;
     background: linear-gradient(135deg, #409eff, #1a7fd4) !important;
   }
-}
 
-.message-body {
-  display: flex;
-  flex-direction: column;
-  max-width: min(960px, calc(100% - 48px));
-  min-width: 0;
-}
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
 
-.message-role {
-  margin-bottom: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #86909c;
-}
-
-.welcome-examples {
-  margin-top: 10px;
-  max-width: 100%;
-
-  &__label {
-    margin-bottom: 8px;
+  &__role {
+    margin-bottom: 4px;
     font-size: 12px;
     font-weight: 600;
     color: #86909c;
   }
-
-  &__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  &__chip {
-    max-width: 100%;
-    padding: 6px 12px;
-    border: 1px solid rgba(64, 158, 255, 0.35);
-    border-radius: 999px;
-    background: rgba(64, 158, 255, 0.06);
-    color: #1d4f91;
-    font-size: 13px;
-    line-height: 1.4;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-
-    &:hover:not(:disabled) {
-      background: rgba(64, 158, 255, 0.12);
-      border-color: rgba(64, 158, 255, 0.55);
-    }
-
-    &:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-  }
-}
-
-.message-bubble {
-  padding: 12px 16px;
-  border-radius: 12px;
-  line-height: 1.65;
-  word-wrap: break-word;
-  background: #fff;
-  color: #303133;
-  border: 1px solid rgba(228, 231, 237, 0.9);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-
-  &--user {
-    background: linear-gradient(135deg, #409eff, #2b8ef0);
-    color: #fff;
-    border: none;
-    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.28);
-    white-space: pre-wrap;
-
-    &.is-editing {
-      outline: 2px solid rgba(255, 255, 255, 0.85);
-      box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.35);
-    }
-  }
-
-  &.markdown-body {
-    :deep(p) {
-      margin-bottom: 8px;
-      line-height: 1.8;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    :deep(ul),
-    :deep(ol) {
-      margin: 8px 0;
-      padding-left: 20px;
-    }
-
-    :deep(code) {
-      padding: 2px 6px;
-      background-color: rgba(0, 0, 0, 0.06);
-      border-radius: 3px;
-      font-family: Consolas, Monaco, monospace;
-      font-size: 0.9em;
-    }
-
-    :deep(pre) {
-      margin: 8px 0;
-      padding: 12px;
-      background-color: #f6f8fa;
-      border-radius: 6px;
-      overflow-x: auto;
-
-      code {
-        padding: 0;
-        background-color: transparent;
-      }
-    }
-
-    :deep(table) {
-      margin: 8px 0;
-      border-collapse: collapse;
-      width: 100%;
-
-      th,
-      td {
-        padding: 6px 12px;
-        border: 1px solid #dcdfe6;
-      }
-
-      th {
-        background-color: #f5f7fa;
-        font-weight: 600;
-      }
-    }
-  }
-}
-
-.structured-panel {
-  margin-top: 8px;
-  padding: 12px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  width: 100%;
-
-  .structured-title {
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #303133;
-  }
-
-  .structured-summary {
-    font-size: 13px;
-    color: #606266;
-    margin-bottom: 10px;
-  }
-
-  .trend-desc {
-    margin-top: 4px;
-  }
-}
-
-.message-stopped {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--el-text-color-secondary);
-}
-
-.message-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin-top: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-
-  :deep(.el-button) {
-    padding: 0 4px;
-    height: 22px;
-    font-size: 12px;
-  }
-}
-
-.message-user-block,
-.message-reply-block {
-  max-width: 100%;
-
-  &:hover .message-actions,
-  &:focus-within .message-actions {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-.message-user-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.message-row.user .message-actions {
-  justify-content: flex-end;
-}
-
-.message-time {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #a8abb2;
 }
 
 .typing-indicator {

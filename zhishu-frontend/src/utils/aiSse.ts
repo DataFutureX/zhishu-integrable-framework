@@ -1,6 +1,3 @@
-import { resolveAiUserId } from '@/utils/aiUser'
-import { parseJsonWithBigInt } from '@/utils/parseJson'
-
 export interface AiSseHandlers {
   onMessage?: (chunk: string) => void
   onProgress?: (json: string) => void
@@ -193,7 +190,6 @@ export async function postAiSse(
 ): Promise<void> {
   const url = `${aiApiBase()}${path.startsWith('/') ? path : `/${path}`}`
   const token = localStorage.getItem('token')
-  const userId = resolveAiUserId()
   const guard = createTimeoutGuard(options)
   guard.waitForFirstByte()
 
@@ -205,7 +201,6 @@ export async function postAiSse(
         'Content-Type': 'application/json;charset=UTF-8',
         Accept: 'text/event-stream',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(userId ? { 'X-User-Id': userId } : {}),
       },
       body: JSON.stringify(body),
       signal: guard.signal,
@@ -221,7 +216,7 @@ export async function postAiSse(
     let detail = `SSE 请求失败（${response.status}）`
     try {
       const text = await response.text()
-      const parsed = parseJsonWithBigInt<{ message?: string }>(text)
+      const parsed = JSON.parse(text) as { message?: string }
       if (parsed?.message) detail = parsed.message
     } catch {
       /* ignore */

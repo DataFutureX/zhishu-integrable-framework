@@ -1,11 +1,5 @@
 import { get, post, put, del } from '@/utils/request'
-import type {
-  UnitVO,
-  UnitQueryDTO,
-  UnitCreateDTO,
-  UnitUpdateDTO,
-  PageResult,
-} from '@/types/unit'
+import type { UnitVO, UnitQueryDTO, UnitCreateDTO, UnitUpdateDTO, PageResult } from '@/types/unit'
 
 /** 分页查询单位 GET /api/v1/units/page */
 export const getUnitPageApi = (params: UnitQueryDTO) => {

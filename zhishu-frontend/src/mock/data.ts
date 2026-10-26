@@ -84,7 +84,10 @@ function collectButtonPermissions(menus: MenuVO[]): string[] {
 
 /** 基于仓库根 MENU_ROUTES.json（已同步至 docs/）构建演示菜单树 */
 function buildDemoMenuTree(): MenuVO[] {
-  const tree = ((menuRoutesDoc as { menuTree?: unknown[] }).menuTree ?? []) as Record<string, unknown>[]
+  const tree = ((menuRoutesDoc as { menuTree?: unknown[] }).menuTree ?? []) as Record<
+    string,
+    unknown
+  >[]
   return tree.map(convertMenuItem).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
 }
 
@@ -249,7 +252,8 @@ export const mockAnnouncements = [
   {
     id: 9003,
     title: '系统监控与操作日志开放试用',
-    content: '运维监控页已对接 /system/status、/system/health；操作日志支持按模块、状态、时间筛选。',
+    content:
+      '运维监控页已对接 /system/status、/system/health；操作日志支持按模块、状态、时间筛选。',
     priority: 0,
     status: 1,
     publishTime: daysAgoStr(2, 14),
@@ -386,8 +390,9 @@ export const mockRoleMenuIds: Record<number, (number | string)[]> = {
   1: [],
   // 运维：智能中心 + 权限只读 + 系统设置（无用户/菜单删除）
   2: [
-    10, 103, 109, 10901, 106, 10601, 101, 10101, 102, 104, 10401, 105, 108, 5, 61, 6101, 63, 6301, 64, 6401, 66, 6601, 6,
-    65, 6501, 6502, 68, 6801, 69, 6901, 6902, 6903, 6905, 67, 6701, 91, 9101, 610, 7, 71, 7101, 72, 7201,
+    10, 103, 109, 10901, 106, 10601, 101, 10101, 102, 104, 10401, 105, 108, 5, 61, 6101, 63, 6301,
+    64, 6401, 66, 6601, 6, 65, 6501, 6502, 68, 6801, 69, 6901, 6902, 6903, 6905, 67, 6701, 91, 9101,
+    610, 7, 71, 7101, 72, 7201,
   ],
   // 审计：Agent 会话 + 操作日志 + 监控 + 个人中心
   3: [10, 103, 6, 68, 6801, 67, 6701, 7, 71, 7101, 72, 7201],

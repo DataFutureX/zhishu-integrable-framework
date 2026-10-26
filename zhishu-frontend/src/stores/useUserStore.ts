@@ -1,11 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import {
-  loginApi,
-  getCurrentUserApi,
-  type UserEntity,
-  type UserVO,
-} from '@/api/user'
+import { loginApi, getCurrentUserApi, type UserEntity, type UserVO } from '@/api/user'
 import { getPublicKeyApi, logoutApi } from '@/api/auth'
 import { getCurrentUserPermissionsApi } from '@/api/menu'
 import { encryptWithRsaPublicKey } from '@/utils/rsaEncrypt'

@@ -53,11 +53,36 @@
         :transform="`translate(${node.x}, ${node.y})`"
       >
         <circle v-if="node.kind === 'hub'" class="node__halo" r="28" />
-        <polygon v-if="node.kind === 'agent'" class="node__shape" points="0,-11 10,-6 10,6 0,11 -10,6 -10,-6" />
-        <rect v-else-if="node.kind === 'mcp'" class="node__shape" x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(45)" />
+        <polygon
+          v-if="node.kind === 'agent'"
+          class="node__shape"
+          points="0,-11 10,-6 10,6 0,11 -10,6 -10,-6"
+        />
+        <rect
+          v-else-if="node.kind === 'mcp'"
+          class="node__shape"
+          x="-8"
+          y="-8"
+          width="16"
+          height="16"
+          rx="2"
+          transform="rotate(45)"
+        />
         <circle v-else-if="node.kind === 'knowledge'" class="node__shape" r="8" />
-        <rect v-else-if="node.kind === 'system'" class="node__shape" x="-7.5" y="-7.5" width="15" height="15" rx="3" />
-        <polygon v-else-if="node.kind === 'hub'" class="node__shape node__shape--hub" points="0,-14 12,-7 12,7 0,14 -12,7 -12,-7" />
+        <rect
+          v-else-if="node.kind === 'system'"
+          class="node__shape"
+          x="-7.5"
+          y="-7.5"
+          width="15"
+          height="15"
+          rx="3"
+        />
+        <polygon
+          v-else-if="node.kind === 'hub'"
+          class="node__shape node__shape--hub"
+          points="0,-14 12,-7 12,7 0,14 -12,7 -12,-7"
+        />
         <text v-if="node.label" class="node__label" y="26">{{ node.label }}</text>
       </g>
     </svg>
@@ -175,7 +200,10 @@ const packets = edges.slice(0, 8).map((edge, i) => ({
     linear-gradient(30deg, rgba(9, 105, 218, 0.07) 1px, transparent 1px),
     linear-gradient(150deg, rgba(9, 105, 218, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(9, 105, 218, 0.04) 1px, transparent 1px);
-  background-size: 56px 96px, 56px 96px, 28px 28px;
+  background-size:
+    56px 96px,
+    56px 96px,
+    28px 28px;
   mask-image: radial-gradient(ellipse 70% 70% at 32% 46%, #000 20%, transparent 78%);
 }
 
@@ -204,8 +232,7 @@ const packets = edges.slice(0, 8).map((edge, i) => ({
   .agent-network__wash {
     background:
       radial-gradient(900px 520px at 78% 36%, rgba(9, 105, 218, 0.12), transparent 60%),
-      radial-gradient(640px 380px at 92% 12%, rgba(26, 127, 55, 0.07), transparent 64%),
-      transparent;
+      radial-gradient(640px 380px at 92% 12%, rgba(26, 127, 55, 0.07), transparent 64%), transparent;
   }
 
   .agent-network__hex {

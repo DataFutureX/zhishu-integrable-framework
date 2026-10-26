@@ -107,6 +107,7 @@
       v-model="dialogVisible"
       :title="editingId ? '编辑供应商' : '新建供应商'"
       width="620px"
+      @closed="resetTestState"
     >
       <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="名称" prop="name">
@@ -158,6 +159,15 @@
           <el-input v-model="form.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
+      <el-alert
+        v-if="lastTest"
+        class="gateway-page__test-result"
+        :type="lastTest.ok ? 'success' : 'warning'"
+        :title="lastTest.ok ? '上次测试：连通成功' : '上次测试：连通失败'"
+        :description="`${lastTest.time} · ${lastTest.message}`"
+        show-icon
+        :closable="false"
+      />
       <template #footer>
         <el-button :loading="testingDraft" @click="handleTestDraft">测试连接</el-button>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -171,6 +181,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import { PERMISSIONS } from '@/constants/permissions'
+import { formatDateTime } from '@/utils/format'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
   createGatewayProviderApi,
@@ -190,6 +201,8 @@ const saving = ref(false)
 const testingId = ref<GatewayId | null>(null)
 /** 弹窗内「测试连接」的加载态（与行内测试互不影响） */
 const testingDraft = ref(false)
+/** 弹窗内展示上一次试跑结果，便于保存前回溯 */
+const lastTest = ref<{ ok: boolean; message: string; time: string } | null>(null)
 const providers = ref<GatewayProviderVO[]>([])
 const dialogVisible = ref(false)
 const editingId = ref<GatewayId | null>(null)
@@ -223,6 +236,7 @@ async function loadProviders() {
 
 function openCreate() {
   editingId.value = null
+  resetTestState()
   form.name = ''
   form.providerKey = ''
   form.baseUrl = ''
@@ -236,6 +250,7 @@ function openCreate() {
 
 function openEdit(row: GatewayProviderVO) {
   editingId.value = row.id
+  resetTestState()
   form.name = row.name
   form.providerKey = row.providerKey
   form.baseUrl = row.baseUrl
@@ -298,20 +313,29 @@ async function handleTestDraft() {
       baseUrl: form.baseUrl.trim(),
       apiKey: form.apiKey?.trim() || null,
     })
-    showTestResult(result)
+    showTestResult(result, true)
   } finally {
     testingDraft.value = false
   }
 }
 
 /** 统一测试结果提示：成功用 success，其余作为警告展示后端原因 */
-function showTestResult(result?: string) {
+function showTestResult(result?: string, record = false) {
   const message = result || '测试完成'
-  if (message.includes('连通成功')) {
+  const ok = message.includes('连通成功')
+  if (record) {
+    lastTest.value = { ok, message, time: formatDateTime(new Date()) }
+  }
+  if (ok) {
     ElMessage.success(message)
     return
   }
   ElMessage.warning(message)
+}
+
+/** 打开/关闭弹窗时清空上一轮试跑结果 */
+function resetTestState() {
+  lastTest.value = null
 }
 
 async function handleDefault(row: GatewayProviderVO) {
@@ -355,6 +379,10 @@ onMounted(loadProviders)
   margin-left: 6px;
   color: var(--el-text-color-secondary);
   font-size: 12px;
+}
+
+.gateway-page__test-result {
+  margin-top: 4px;
 }
 
 .ml-6 {

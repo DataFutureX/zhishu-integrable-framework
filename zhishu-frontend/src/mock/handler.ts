@@ -838,6 +838,93 @@ function idFrom(value: string) {
   return Number(value)
 }
 
+/**
+ * 模型网关 · 供应商：demo 只覆盖「供应商页」所需的列表与连通性测试。
+ * 主键用字符串，与后端雪花 ID 超安全范围转字符串的契约保持一致。
+ */
+const DEMO_PROVIDERS = [
+  {
+    id: '910000000000000001',
+    name: '阿里百炼',
+    providerKey: 'dashscope',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    apiKeyMasked: 'sk-****1a2b',
+    apiKeyConfigured: true,
+    isDefault: true,
+    status: 'ENABLED',
+    sortOrder: 0,
+    remark: null,
+    chatModelCount: 2,
+    embeddingModelCount: 1,
+    updateTime: nowStr(),
+  },
+  {
+    id: '910000000000000002',
+    name: '本地 Ollama（无 Key）',
+    providerKey: 'ollama',
+    baseUrl: 'http://localhost:11434',
+    apiKeyMasked: null,
+    apiKeyConfigured: false,
+    isDefault: false,
+    status: 'ENABLED',
+    sortOrder: 1,
+    remark: '演示无鉴权上游：不填 API Key 也能测试连通性',
+    chatModelCount: 1,
+    embeddingModelCount: 0,
+    updateTime: nowStr(),
+  },
+] as const
+
+/**
+ * 模拟连通性探测：Ollama / 本机端口视为无需鉴权；其余供应商未配 Key 时返回 401 提示。
+ * 文案与后端保持一致（连通成功/连通失败 + 耗时）。
+ */
+function fakeProbeResult(providerKey: string, baseUrl: string, apiKey: string): string {
+  const elapsed = 96 + (baseUrl.length % 90)
+  if (!baseUrl) {
+    return '连通失败，耗时 0 ms：Base URL 不能为空'
+  }
+  const keylessOk =
+    includesIgnoreCase(providerKey, 'ollama') ||
+    includesIgnoreCase(baseUrl, 'ollama') ||
+    baseUrl.includes('11434')
+  if (!apiKey && !keylessOk) {
+    return `连通失败，耗时 ${elapsed} ms：上游返回 HTTP 401（该供应商未配置 API Key，若上游需要鉴权请先填写）`
+  }
+  const modelCount = keylessOk ? 3 : 12
+  return `连通成功，耗时 ${elapsed} ms，上游可用模型 ${modelCount} 个`
+}
+
+function handleModelGateway(
+  method: string,
+  path: string,
+  _params: Record<string, unknown>,
+  body: Record<string, unknown>,
+) {
+  if (method === 'GET' && path === '/model-gateway/providers') {
+    return DEMO_PROVIDERS.map((item) => ({ ...item }))
+  }
+  // 保存前试跑：baseUrl 必填，apiKey 可为空
+  if (method === 'POST' && path === '/model-gateway/providers/test') {
+    const target = DEMO_PROVIDERS.find((item) => String(item.id) === str(body.providerId))
+    const providerKey = str(body.providerKey) || target?.providerKey || ''
+    const baseUrl = str(body.baseUrl)
+    const apiKey = str(body.apiKey) || (target && target.apiKeyConfigured ? 'demo-stored-key' : '')
+    return fakeProbeResult(providerKey, baseUrl, apiKey)
+  }
+  const byIdTest = path.match(/^\/model-gateway\/providers\/([^/]+)\/test$/)
+  if (method === 'POST' && byIdTest) {
+    const target = DEMO_PROVIDERS.find((item) => String(item.id) === byIdTest[1])
+    if (!target) throw new MockNotFoundError(method, path)
+    return fakeProbeResult(
+      target.providerKey,
+      target.baseUrl,
+      target.apiKeyConfigured ? 'demo-stored-key' : '',
+    )
+  }
+  return NOT_HANDLED
+}
+
 function dispatch(
   method: string,
   path: string,
@@ -854,6 +941,7 @@ function dispatch(
     handleRole,
     handleOperationLog,
     handleOpenApp,
+    handleModelGateway,
   ]
   for (const handler of handlers) {
     const result = handler(method, path, params, body)

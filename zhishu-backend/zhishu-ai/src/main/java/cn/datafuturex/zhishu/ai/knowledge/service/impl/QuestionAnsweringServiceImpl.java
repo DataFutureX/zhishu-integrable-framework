@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.knowledge.service.impl;
 
 import cn.datafuturex.zhishu.ai.platform.ai.AiConfig;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.knowledge.service.EmbeddingService;
 import cn.datafuturex.zhishu.ai.knowledge.service.QuestionAnsweringService;

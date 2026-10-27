@@ -14,9 +14,9 @@ import cn.datafuturex.zhishu.ai.agent.mapper.AiAgentMapper;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.service.AgentDefinitionService;
 import cn.datafuturex.zhishu.ai.agent.support.AgentJsonUtils;
-import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.mcp.consume.api.McpAgentToolPort;
+import cn.datafuturex.zhishu.common.context.UserContext;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
     private final AiAgentMapper aiAgentMapper;
     private final ToolCapabilityRegistry toolCapabilityRegistry;
-    private final ExternalToolPort externalToolPort;
+    private final McpAgentToolPort agentToolPort;
 
     @Override
     public List<AgentVO> list(String status) {
@@ -118,7 +118,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         entity.setCreateTime(LocalDateTime.now());
         entity.setUpdateTime(LocalDateTime.now());
         aiAgentMapper.insert(entity);
-        externalToolPort.bindAgentUpstreams(entity.getId(), dto.mcpUpstreamIds());
+        agentToolPort.bindAgentUpstreams(entity.getId(), dto.mcpUpstreamIds());
         log.info("创建智能体 id={}, code={}", entity.getId(), entity.getCode());
         return toVo(entity);
     }
@@ -135,7 +135,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
         entity.setUpdateTime(LocalDateTime.now());
         aiAgentMapper.updateById(entity);
         if (dto.mcpUpstreamIds() != null) {
-            externalToolPort.bindAgentUpstreams(entity.getId(), dto.mcpUpstreamIds());
+            agentToolPort.bindAgentUpstreams(entity.getId(), dto.mcpUpstreamIds());
         }
         return toVo(entity);
     }
@@ -151,7 +151,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
             throw new BusinessException("默认智能体不可删除，请先指定其他默认智能体");
         }
         aiAgentMapper.deleteById(id);
-        externalToolPort.bindAgentUpstreams(id, List.of());
+        agentToolPort.bindAgentUpstreams(id, List.of());
     }
 
     @Override
@@ -247,6 +247,6 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
                 entity.getCreatedBy(),
                 entity.getCreateTime(),
                 entity.getUpdateTime(),
-                externalToolPort.listBoundUpstreamIds(entity.getId()));
+                agentToolPort.listBoundUpstreamIds(entity.getId()));
     }
 }

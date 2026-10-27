@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.gateway.provider.service.impl;
 
-import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelProviderPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderCreateDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
@@ -11,7 +11,7 @@ import cn.datafuturex.zhishu.gateway.provider.mapper.ModelProviderMapper;
 import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
 import cn.datafuturex.zhishu.gateway.provider.vo.ModelProviderVO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,7 +51,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
 
     private final ModelProviderMapper modelProviderMapper;
     private final ModelRuntimeCache modelRuntimeCache;
-    private final ModelConfigProperties modelConfigProperties;
+    private final CredentialProperties credentialProperties;
 
     /**
      * {@inheritDoc}
@@ -464,7 +464,7 @@ public class ModelProviderServiceImpl implements ModelProviderPort {
     }
 
     private String wrapKey() {
-        String key = modelConfigProperties.getCryptoKey();
+        String key = credentialProperties.getCryptoKey();
         return StringUtils.hasText(key) ? key : "zhishu-dev-model-key-wrap";
     }
 

@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.knowledge.service.impl;
 
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentQueryDTO;
 import cn.datafuturex.zhishu.ai.knowledge.vo.DocumentVO;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.ai.knowledge.service.KnowledgesCategoryService;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentManagementService;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentQaService;

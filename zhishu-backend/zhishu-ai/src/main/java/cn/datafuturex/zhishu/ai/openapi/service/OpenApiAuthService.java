@@ -2,8 +2,8 @@ package cn.datafuturex.zhishu.ai.openapi.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
 import cn.datafuturex.zhishu.ai.openapi.domain.entity.OpenAppEntity;
 import cn.datafuturex.zhishu.ai.openapi.mapper.OpenAppMapper;
 import cn.datafuturex.zhishu.ai.openapi.support.OpenApiCrypto;
@@ -30,7 +30,7 @@ public class OpenApiAuthService {
     private final OpenAppMapper openAppMapper;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
-    private final ModelConfigProperties modelConfigProperties;
+    private final CredentialProperties credentialProperties;
 
     /**
      * AK/SK Token 鉴权。
@@ -64,7 +64,7 @@ public class OpenApiAuthService {
         }
         String sk;
         try {
-            sk = CredentialCrypto.decrypt(app.getSecretKeyEnc(), modelConfigProperties.getCryptoKey());
+            sk = CredentialCrypto.decrypt(app.getSecretKeyEnc(), credentialProperties.getCryptoKey());
         } catch (Exception e) {
             throw new OpenApiAuthException(500, "服务端解密失败");
         }

@@ -100,7 +100,7 @@ docker compose logs -f zhishu-app     # 跟踪启动日志
 | `YUNQI_DATASOURCE_PARAMS` | 视情况 | `application-prod.yml` 写死 `sslmode=require`，库不支持 SSL 时置 `sslmode=disable`；也可用 `YUNQI_DATASOURCE_JDBC_URL` 整体覆盖 |
 | `JWT_SECRET` | 是 | prod profile 无默认值，缺失直接启动失败 |
 | `ZHISHU_AI_CRYPTO_KEY` | 是 | 加密「模型设置」入库的 API Key；一经使用不可更换 |
-| `ZHISHU_MCP_AUTH_KEY` / `ZHISHU_DESKTOP_AUTH_KEY` | 是 | 留空 = 不鉴权（仅开发可用） |
+| `ZHISHU_DESKTOP_AUTH_KEY` | 是 | 留空 = 不鉴权（仅开发可用）；MCP 已取消静态密钥，`/mcp` 走 `wxmcp_*` 或登录 JWT |
 | `APP_PORT` / `SERVER_PORT` | 否 | 默认 8180 |
 | `MEM_LIMIT` | 否 | 默认 `3g`（`-Xmx2g` + 约 1G 堆外余量） |
 | `JAVA_OPTS` | 否 | 默认 `-Xms512m -Xmx2g ...`，整体覆盖时保留 UTF-8 编码与 headless 参数 |

@@ -15,14 +15,38 @@
     <name>ZhiShu Integrable Framework · Model Gateway</name>
     <description>模型网关模块：OpenAI 兼容统一推理数据面（/v1），按登录用户权威计量并强制 token 额度</description>
 
+    <properties>
+        <spring-ai.version>2.0.0</spring-ai.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>cn.datafuturex.zhishu</groupId>
             <artifactId>zhishu-security</artifactId>
         </dependency>
+        <!-- 上游 OpenAI 兼容客户端与 ChatModel/EmbeddingModel 类型；不引用 zhishu-ai，依赖方向为 ai → gateway -->
         <dependency>
-            <groupId>cn.datafuturex.zhishu</groupId>
-            <artifactId>zhishu-ai</artifactId>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai</artifactId>
+            <exclusions>
+                <!-- 与 zhishu-ai 同一约定：swagger 注解统一由 springdoc 提供 -->
+                <exclusion>
+                    <groupId>io.swagger.core.v3</groupId>
+                    <artifactId>swagger-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -56,6 +80,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

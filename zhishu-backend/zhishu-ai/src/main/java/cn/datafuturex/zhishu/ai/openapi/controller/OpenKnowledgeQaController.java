@@ -3,7 +3,7 @@ package cn.datafuturex.zhishu.ai.openapi.controller;
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentQueryDTO;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentQaService;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
 import cn.datafuturex.zhishu.ai.shared.port.QaHistoryPort;
 import io.swagger.v3.oas.annotations.Operation;

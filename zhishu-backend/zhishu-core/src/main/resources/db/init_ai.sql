@@ -165,9 +165,9 @@ CREATE TABLE IF NOT EXISTS public.ai_mcp_call_log (
 
 COMMENT ON TABLE public.ai_mcp_call_log IS 'MCP 工具调用日志';
 COMMENT ON COLUMN public.ai_mcp_call_log.id IS '主键';
-COMMENT ON COLUMN public.ai_mcp_call_log.direction IS '调用方向：INBOUND=外部调用本平台，OUTBOUND=本平台调用上游';
-COMMENT ON COLUMN public.ai_mcp_call_log.client_id IS '入站客户端 id（ai_mcp_client.id）';
-COMMENT ON COLUMN public.ai_mcp_call_log.upstream_id IS '出站上游 id（ai_mcp_upstream.id）';
+COMMENT ON COLUMN public.ai_mcp_call_log.direction IS '调用方向：SERVE=外部 Client 调用本平台 Tool，CONSUME=本平台（Agent）调用上游 Tool（历史值 OUT/IN 由 db/patch_mcp_call_log_direction.sql 归一）';
+COMMENT ON COLUMN public.ai_mcp_call_log.client_id IS '对外平面调用方 Client id（ai_mcp_client.id；平台 JWT 调用为 NULL）';
+COMMENT ON COLUMN public.ai_mcp_call_log.upstream_id IS '被调用的上游 id（ai_mcp_upstream.id）';
 COMMENT ON COLUMN public.ai_mcp_call_log.agent_id IS '关联智能体 id（可空）';
 COMMENT ON COLUMN public.ai_mcp_call_log.tool_name IS '工具名称';
 COMMENT ON COLUMN public.ai_mcp_call_log.success IS '是否成功：true=成功';

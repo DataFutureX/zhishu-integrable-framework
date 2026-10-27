@@ -4,7 +4,7 @@ import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import cn.datafuturex.zhishu.ai.agent.runtime.ChatClientSupport;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;

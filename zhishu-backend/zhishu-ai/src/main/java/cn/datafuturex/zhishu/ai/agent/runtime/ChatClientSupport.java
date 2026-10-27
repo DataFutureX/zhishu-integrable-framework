@@ -4,9 +4,9 @@ import cn.datafuturex.zhishu.ai.agent.domain.entity.AiAgentEntity;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.agent.support.AgentTimeContext;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
-import cn.datafuturex.zhishu.ai.gatewayclient.api.GatewayChannels;
-import cn.datafuturex.zhishu.ai.shared.mcp.ExternalToolPort;
+import cn.datafuturex.zhishu.gateway.port.GatewayChannels;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
+import cn.datafuturex.zhishu.mcp.consume.api.McpAgentToolPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -41,7 +41,7 @@ public class ChatClientSupport {
     private final GatewayChatModelRegistry gatewayChatModelRegistry;
     private final ChatMemory chatMemory;
     private final ToolCapabilityRegistry toolCapabilityRegistry;
-    private final ExternalToolPort externalToolPort;
+    private final McpAgentToolPort agentToolPort;
 
     /** 当前执行步骤标签（供日志输出），由引擎层设置 */
     private static final ThreadLocal<String> STEP_LABEL = new ThreadLocal<>();
@@ -183,7 +183,7 @@ public class ChatClientSupport {
         List<ToolCallback> raw = new ArrayList<>(toolCapabilityRegistry.resolveToolCallbacks(
                 capabilities == null ? List.of() : capabilities));
         if (agentId != null) {
-            raw.addAll(externalToolPort.resolveForAgent(agentId));
+            raw.addAll(agentToolPort.resolveForAgent(agentId));
         }
         if (traces == null) {
             return raw;

@@ -6,7 +6,7 @@ import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderTestDTO;
 import cn.datafuturex.zhishu.gateway.provider.dto.ModelProviderUpdateDTO;
 import cn.datafuturex.zhishu.gateway.provider.vo.ModelProviderVO;
 import cn.datafuturex.zhishu.gateway.provider.vo.UpstreamModelInfo;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayProviderAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayProviderAdminVO;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;

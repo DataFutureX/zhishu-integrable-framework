@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.platform.ai;
 
 import cn.datafuturex.zhishu.ai.biztools.api.BizToolProviderPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -29,7 +29,7 @@ import javax.sql.DataSource;
  * （通义等 OpenAI 兼容端常见）。因此拆成：带 Tools 的主客户端 + 无 Tools 的流式客户端。
  */
 @Configuration
-@EnableConfigurationProperties(ModelConfigProperties.class)
+@EnableConfigurationProperties(CredentialProperties.class)
 @RequiredArgsConstructor
 public class AiConfig {
 

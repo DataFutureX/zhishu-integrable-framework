@@ -1,8 +1,8 @@
 package cn.datafuturex.zhishu.ai.openapi.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
 import cn.datafuturex.zhishu.ai.openapi.domain.entity.OpenAppEntity;
 import cn.datafuturex.zhishu.ai.openapi.dto.GenerateAkSkResult;
 import cn.datafuturex.zhishu.ai.openapi.dto.OpenAppUpsertDTO;
@@ -25,7 +25,7 @@ import java.util.List;
 public class OpenAppAdminService {
 
     private final OpenAppMapper openAppMapper;
-    private final ModelConfigProperties modelConfigProperties;
+    private final CredentialProperties credentialProperties;
     private final ObjectMapper objectMapper;
 
     /** 查询全部开放应用（不含 SK） */
@@ -87,7 +87,7 @@ public class OpenAppAdminService {
         OpenAppEntity entity = require(id);
         String ak = OpenApiCrypto.generateAccessKey();
         String sk = OpenApiCrypto.generateSecretKey();
-        String skEnc = CredentialCrypto.encrypt(sk, modelConfigProperties.getCryptoKey());
+        String skEnc = CredentialCrypto.encrypt(sk, credentialProperties.getCryptoKey());
 
         entity.setAccessKey(ak);
         entity.setSecretKeyEnc(skEnc);
@@ -106,7 +106,7 @@ public class OpenAppAdminService {
             throw new IllegalArgumentException("该应用尚未生成 AK/SK，请先生成");
         }
         String sk = OpenApiCrypto.generateSecretKey();
-        String skEnc = CredentialCrypto.encrypt(sk, modelConfigProperties.getCryptoKey());
+        String skEnc = CredentialCrypto.encrypt(sk, credentialProperties.getCryptoKey());
 
         entity.setSecretKeyEnc(skEnc);
         entity.setAkskGeneratedAt(LocalDateTime.now());

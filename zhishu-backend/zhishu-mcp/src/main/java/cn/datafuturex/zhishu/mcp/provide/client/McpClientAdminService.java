@@ -1,0 +1,144 @@
+package cn.datafuturex.zhishu.mcp.provide.client;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import cn.datafuturex.zhishu.mcp.common.config.McpProperties;
+import cn.datafuturex.zhishu.mcp.provide.client.dto.McpClientCreateDTO;
+import cn.datafuturex.zhishu.mcp.provide.client.dto.McpClientUpdateDTO;
+import cn.datafuturex.zhishu.mcp.provide.client.entity.AiMcpClientEntity;
+import cn.datafuturex.zhishu.mcp.provide.client.vo.McpClientVO;
+import cn.datafuturex.zhishu.mcp.provide.client.mapper.AiMcpClientMapper;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.mcp.common.json.McpJson;
+import cn.datafuturex.zhishu.mcp.provide.catalog.McpProvidedToolCatalog;
+import cn.datafuturex.zhishu.common.context.UserContext;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class McpClientAdminService {
+
+    /** rpm_limit 缺失时的兼容默认值（与 {@link McpRateLimiter} 的回落一致） */
+    public static final int DEFAULT_RPM_FALLBACK = 60;
+
+    private final AiMcpClientMapper clientMapper;
+    private final McpProperties properties;
+
+    public List<McpClientVO> list() {
+        return clientMapper.selectList(new LambdaQueryWrapper<AiMcpClientEntity>()
+                        .orderByDesc(AiMcpClientEntity::getId))
+                .stream()
+                .map(e -> toVo(e, null))
+                .toList();
+    }
+
+    @Transactional
+    public McpClientVO create(McpClientCreateDTO dto) {
+        String apiKey = CredentialCrypto.newApiKey();
+        AiMcpClientEntity entity = new AiMcpClientEntity();
+        entity.setName(dto.name().trim());
+        entity.setKeyPrefix(CredentialCrypto.keyPrefix(apiKey));
+        entity.setSecretHash(CredentialCrypto.sha256Hex(apiKey));
+        entity.setBoundUserId(dto.boundUserId());
+        entity.setBoundUsername(dto.boundUsername());
+        entity.setCapabilities(McpJson.toJson(
+                dto.capabilities() == null || dto.capabilities().isEmpty()
+                        ? McpProvidedToolCatalog.DEFAULT_CAPABILITIES
+                        : dto.capabilities()));
+        entity.setRpmLimit(dto.rpmLimit() == null ? defaultRpm() : dto.rpmLimit());
+        entity.setStatus("ENABLED");
+        entity.setRemark(dto.remark());
+        entity.setCreatedBy(UserContext.getUserId());
+        entity.setCreateTime(LocalDateTime.now());
+        entity.setUpdateTime(LocalDateTime.now());
+        clientMapper.insert(entity);
+        return toVo(entity, apiKey);
+    }
+
+    @Transactional
+    public McpClientVO update(Long id, McpClientUpdateDTO dto) {
+        AiMcpClientEntity entity = require(id);
+        entity.setName(dto.name().trim());
+        entity.setBoundUserId(dto.boundUserId());
+        entity.setBoundUsername(dto.boundUsername());
+        entity.setCapabilities(McpJson.toJson(dto.capabilities()));
+        entity.setRpmLimit(dto.rpmLimit() == null ? defaultRpm() : dto.rpmLimit());
+        entity.setStatus(normalizeStatus(dto.status()));
+        entity.setRemark(dto.remark());
+        entity.setUpdateTime(LocalDateTime.now());
+        clientMapper.updateById(entity);
+        return toVo(entity, null);
+    }
+
+    @Transactional
+    public McpClientVO rotateKey(Long id) {
+        AiMcpClientEntity entity = require(id);
+        String apiKey = CredentialCrypto.newApiKey();
+        entity.setKeyPrefix(CredentialCrypto.keyPrefix(apiKey));
+        entity.setSecretHash(CredentialCrypto.sha256Hex(apiKey));
+        entity.setUpdateTime(LocalDateTime.now());
+        clientMapper.updateById(entity);
+        return toVo(entity, apiKey);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        require(id);
+        clientMapper.deleteById(id);
+    }
+
+    public AiMcpClientEntity require(Long id) {
+        AiMcpClientEntity entity = clientMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(404, "MCP Client 不存在: " + id);
+        }
+        return entity;
+    }
+
+    public void touchLastUsed(Long id) {
+        AiMcpClientEntity patch = new AiMcpClientEntity();
+        patch.setId(id);
+        patch.setLastUsedAt(LocalDateTime.now());
+        clientMapper.updateById(patch);
+    }
+
+    /** 新建/更新 Client 时的默认 RPM（来自 {@code zhishu.mcp.provide.default-rpm}） */
+    private int defaultRpm() {
+        int configured = properties.getProvide().getDefaultRpm();
+        return configured <= 0 ? DEFAULT_RPM_FALLBACK : configured;
+    }
+
+    private static String normalizeStatus(String status) {
+        if (!StringUtils.hasText(status)) {
+            return "ENABLED";
+        }
+        String s = status.trim().toUpperCase();
+        if (!"ENABLED".equals(s) && !"DISABLED".equals(s)) {
+            throw new BusinessException("status 仅支持 ENABLED / DISABLED");
+        }
+        return s;
+    }
+
+    private static McpClientVO toVo(AiMcpClientEntity e, String apiKey) {
+        return new McpClientVO(
+                e.getId(),
+                e.getName(),
+                e.getKeyPrefix(),
+                e.getBoundUserId(),
+                e.getBoundUsername(),
+                McpJson.parseStringList(e.getCapabilities()),
+                e.getRpmLimit(),
+                e.getStatus(),
+                e.getRemark(),
+                e.getLastUsedAt(),
+                e.getCreatedBy(),
+                e.getCreateTime(),
+                apiKey);
+    }
+}

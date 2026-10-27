@@ -36,7 +36,8 @@
 | `zhishu-backend/zhishu-api/`                                | 跨模块 SPI / DTO，避免循环依赖          |
 | `zhishu-backend/zhishu-security/`                           | 认证鉴权、用户/角色/菜单/单位、JWT、验证码、伙伴 SSO |
 | `zhishu-backend/zhishu-biz/`                                | 公告、操作日志、系统配置、系统监控（Spring Modulith） |
-| `zhishu-backend/zhishu-ai/`                                 | Agent / RAG / 图谱 / MCP Hub / 开放 API（同进程） |
+| `zhishu-backend/zhishu-ai/`                                 | Agent / RAG / 图谱 / 开放 API（同进程） |
+| `zhishu-backend/zhishu-mcp/`                              | **MCP 双平面**：`provide` 对外提供 `/mcp`、`consume` 接入他方 MCP，两平面互不依赖；不依赖 AI 内核 |
 | `zhishu-backend/zhishu-model-gateway/`                        | **模型网关**：OpenAI 兼容 `/v1`、额度计量、供应商与模型业务实现（`ai_model_provider` + `ai_gateway_model`） |
 | `zhishu-backend/zhishu-core/`                               | 启动壳、配置文件、数据库初始化脚本            |
 | `zhishu-backend/zhishu-core/src/main/resources/db/init.sql` | 系统库初始化（用户/角色/菜单） |
@@ -133,7 +134,7 @@ flowchart TB
 | ---- | ---- | ---------- | -------- |
 | `/api/v1/**` | 知枢 JWT（控制台登录或 SSO 换票） | 本仓 Vue 前端 | 全量管理与 AI 工作台 |
 | `/open/v1/**` | AK/SK 签名 Token + `X-On-Behalf-Of` | 伙伴后端 BFF | 对话流、知识问答、Agent 目录、图谱写入 |
-| `/mcp` | `wxmcp_*` API Key | 外部 MCP Client | 标准 MCP Tool 调用（对外目录由 Hub 配置） |
+| `/mcp` | `Bearer wxmcp_*` 或平台登录 JWT（二选一） | 外部 MCP Client / 已登录用户 | 标准 MCP Tool 调用（公开目录 + Client 能力码） |
 | `/v1/**` | 知枢 JWT（同控制台登录态） | LetsWork 桌面端、外部 OpenAI 兼容客户端、平台内部 AI 调用 | 模型目录、对话补全（含流式）、额度查询 |
 | `POST /api/v1/auth/sso/exchange` | 伙伴 Ticket（RSA / SM2） | 伙伴门户跳转 | 换发知枢 JWT |
 
@@ -193,7 +194,7 @@ flowchart TB
 | **zhishu-api** | 跨模块 SPI / DTO（如 `AuthAuditApi`、`LoginSecuritySettingsApi`），切断 security ↔ biz 循环依赖 |
 | **zhishu-security** | 认证鉴权、用户/角色/菜单/单位、JWT、滑动验证码、登录 RSA 加密、伙伴 SSO、公共 `Result` |
 | **zhishu-biz** | 公告（含 SSE）、操作日志、系统配置、系统监控；Spring Modulith 应用模块 |
-| **zhishu-ai** | Agent、Chat、知识库、图谱、MCP Hub、开放 API；与 core **同进程**（`gatewayclient` 为模型接入层：推理目标端口、通道常量与共享构建器） |
+| **zhishu-ai** | Agent、Chat、知识库、图谱、开放 API；与 core **同进程**（`gatewayclient` 为模型接入层：推理目标端口、通道常量与共享构建器）；MCP 能力已迁至 **zhishu-mcp**，本模块单向依赖其 `consume.api` / `provide.spi` |
 | **zhishu-model-gateway** | 模型网关：`/v1` 协议面（目录/补全/额度）、额度计量与台账、**供应商与模型的业务实现**（`provider/` 包：`ModelProviderEntity`/Mapper/Registry/CRUD/上游解析 + 建表引导）、管理面 REST；依赖 security（JWT/用户）与 ai 的端口 |
 | **zhishu-core** | `YqapApplication` 启动壳：数据源、MyBatis-Plus、OpenAPI UI、异步/调度、静态资源、配置 |
 | **zhishu-test-support** | 集成测试夹具（不进入运行时类路径） |
@@ -292,7 +293,7 @@ flowchart TB
 | Chat | `ai.chat` | 多轮会话、问答历史、观测；调用 `AgentChatPort` |
 | Knowledge | `ai.knowledge` | 文档入库、向量化、Hybrid 检索、文档问答 |
 | KnowledgeGraph | `ai.kg` | Neo4j 同步 / 查询 / 可视化；开放写入 `/open/v1/kg` |
-| Mcp | `ai.mcp` | 对外 Streamable HTTP Server + 上游 Client + Hub 管理与审计 |
+| MCP（`zhishu-mcp`） | `mcp.provide` / `mcp.consume` | 对外 Streamable HTTP Server 与上游 Client **两平面分层不交叉**；Hub 管理与审计在 `mcp.web`（控制面） |
 | GatewayClient | `ai.gatewayclient` | 模型接入层（原 `ai.modelconfig` 已并入）：`api` 子包放跨模块端口（推理目标端口、`AgentModelUsagePort`、`GatewayChannels`），`runtime` 放 OpenAI 兼容构建器，`config` 放 `ModelConfigProperties` / `GatewayInternalProperties`；供应商与模型契约在 `zhishu-model-gateway` |
 | OpenAPI | `ai.openapi` | `/open/v1` 控制器、AK/SK 鉴权、开放应用管理 |
 | BizTools | `ai.biztools` | 监测 Tool 端口，当前空实现 |
@@ -1078,7 +1079,11 @@ yunqi:
 
 ### MCP Hub — `/api/v1/mcp`
 
-对外 Client、上游登记、Tool 目录、调用审计（`ai:mcp:edit`）。MCP 协议入口：`/mcp`（`wxmcp_*`）。
+对外 Client、上游登记、Tool 目录、调用审计（`ai:mcp:edit`）。实现位于 **`zhishu-mcp`** 模块：
+`provide` 平面（`McpEndpointAuthFilter` + `McpProvidedToolCatalog` + `McpGuardedToolCallback`）与
+`consume` 平面（`McpUpstreamConnectionManager` + `McpAgentToolAdapter`）互不依赖，`mcp.web` 只做控制面。
+MCP 协议入口：`/mcp`（`Bearer wxmcp_*` 或平台登录 JWT）。详见
+[mcp-hub-design.md](./docs/mcp-hub-design.md) 与 [mcp-service-guide.md](./docs/mcp-service-guide.md)。
 
 ### 模型配置 — `/api/v1/model-config`（已下线）
 
@@ -1185,7 +1190,7 @@ yunqi:
 - `/api/v1/system-config`（GET 公开；写操作仍需登录 + `@PreAuthorize`）
 - `/api/v1/system/health`
 - `/open/v1/**`（Security 层放行，由 `OpenApiAuthFilter` 做 AK/SK 鉴权）
-- `/mcp`、`/mcp/**`（Security 层放行，由 MCP Auth Filter 校验 `wxmcp_*`）
+- `/mcp`、`/mcp/**`（Security 层放行，由 `zhishu-mcp` 的 `McpEndpointAuthFilter` 校验 `wxmcp_*` 或平台登录 JWT）
 - `/v1/**`（Security 层放行，由 `GatewayAuthFilter` 校验知枢 JWT；`zhishu.gateway.enabled=false` 时网关整体不可用）
 - `/uploads/**`
 - `/error`

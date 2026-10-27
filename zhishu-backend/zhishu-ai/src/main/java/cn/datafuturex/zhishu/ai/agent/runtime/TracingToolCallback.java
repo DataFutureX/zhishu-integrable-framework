@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.ai.agent.runtime;
 
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.trace.AgentTraceEvent;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;

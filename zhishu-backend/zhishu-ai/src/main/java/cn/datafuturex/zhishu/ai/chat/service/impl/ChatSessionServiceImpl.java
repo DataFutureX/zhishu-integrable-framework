@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.chat.service.impl;
 
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.chat.domain.ChatSession;
 import cn.datafuturex.zhishu.ai.chat.domain.QaHistory;
 import cn.datafuturex.zhishu.ai.chat.dto.ChatSessionCreateDTO;

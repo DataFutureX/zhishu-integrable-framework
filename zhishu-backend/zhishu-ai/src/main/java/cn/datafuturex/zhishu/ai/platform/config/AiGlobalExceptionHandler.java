@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import cn.datafuturex.zhishu.ai.shared.Result;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
+import cn.datafuturex.zhishu.gateway.port.ModelTargetException;
 
 import java.util.stream.Collectors;
 
@@ -34,6 +35,19 @@ public class AiGlobalExceptionHandler {
                 log.error("AI 服务异常: {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                                 .body(Result.fail(e.getCode(), "AI 服务暂时不可用，请稍后重试"));
+        }
+
+        /**
+         * 模型网关侧的「推理目标不可用」（未配默认模型 / 上游缺 Key 等）。
+         * <p>
+         * 与 {@link AiException} 同构处理：对外只给 503 与服务提示，具体配置原因写日志，
+         * 这样网关无需反向依赖 AI 的异常体系也能保持对外响应一致。
+         */
+        @ExceptionHandler(ModelTargetException.class)
+        public ResponseEntity<Result<Void>> handleModelTargetException(ModelTargetException e) {
+                log.error("模型目标不可用: {}", e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                                .body(Result.fail(503, "AI 服务暂时不可用，请稍后重试"));
         }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)

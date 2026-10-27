@@ -23,7 +23,7 @@ import cn.datafuturex.zhishu.ai.agent.service.AgentRuntimeService;
 import cn.datafuturex.zhishu.ai.shared.Result;
 import cn.datafuturex.zhishu.modules.constant.PermissionConstants;
 import org.springframework.security.access.prepost.PreAuthorize;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.shared.sse.ChatSseSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;

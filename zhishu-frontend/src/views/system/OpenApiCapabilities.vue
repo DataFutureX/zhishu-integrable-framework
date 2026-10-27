@@ -108,10 +108,13 @@
             <h3>MCP 服务接入</h3>
             <p>
               协议：<code>MCP Streamable HTTP</code> · 端点：<code>/mcp</code> · 鉴权：<code
-                >X-API-Key: {your-api-key}</code
+                >Authorization: Bearer wxmcp_*（或登录 JWT）</code
               >
             </p>
-            <p>API Key 由管理员在「智能中心 → MCP Hub」中配置，开发环境默认不鉴权。</p>
+            <p>
+              API Key 由管理员在「智能中心 → MCP Hub」签发，仅创建 / 轮换时明文返回一次；
+              平台登录用户可直接用登录态 JWT 调用公开目录内的 Tool。
+            </p>
             <details class="mcp-code-details">
               <summary>查看 SDK 接入示例</summary>
               <div class="code-block code-block--scroll">
@@ -120,7 +123,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 const transport = new StreamableHTTPClientTransport(
   new URL("http://{host}:{port}/mcp"),
-  { requestInit: { headers: { "X-API-Key": "your-api-key" } } }
+  { requestInit: { headers: { Authorization: "Bearer wxmcp_your-api-key" } } }
 );
 const client = new Client({ name: "my-app", version: "1.0.0" });
 await client.connect(transport);

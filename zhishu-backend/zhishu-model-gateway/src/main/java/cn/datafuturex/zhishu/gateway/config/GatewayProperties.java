@@ -113,6 +113,12 @@ public class GatewayProperties {
 
         /** 请求体上限（字节） */
         private int maxRequestBytes = 8 * 1024 * 1024;
+
+        /**
+         * 供应商未填 Base URL 时的兜底地址（历史键 zhishu.ai.default-base-url 已并入此处）。
+         * 可用 zhishu.gateway.upstream.default-base-url 覆盖。
+         */
+        private String defaultBaseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
     }
 
     /**

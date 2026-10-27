@@ -12,11 +12,13 @@
     </parent>
 
     <artifactId>zhishu-mcp</artifactId>
-    <name>ZhiShu Integrable Framework · MCP Server</name>
-    <description>MCP Server 对外服务模块：注册系统 Tool 并提供 API Key 鉴权（jar 模块，由 zhishu-core 同进程启动）</description>
+    <name>ZhiShu Integrable Framework · MCP</name>
+    <description>MCP 双平面模块：provide（对外提供 MCP 服务）与 consume（接入他方 MCP），互不交叉；由 zhishu-core 同进程启动</description>
 
     <properties>
         <spring-ai.version>2.0.0</spring-ai.version>
+        <!-- MCP Java SDK 版本：与 spring-ai 2.0.0 对齐；spring-ai-bom 不管理该坐标，需自行固定 -->
+        <mcp-sdk.version>2.0.0</mcp-sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -32,18 +34,80 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- 基座：Result / UserContext / BusinessException / CredentialCrypto / JwtUtil / PermissionConstants -->
+        <dependency>
+            <groupId>cn.datafuturex.zhishu</groupId>
+            <artifactId>zhishu-security</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+        </dependency>
+        <!-- MCP Server（provide）与 MCP Client（consume） -->
+        <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+        </dependency>
+        <!--
+          必须显式依赖 SDK 本体：`mcp:2.0.0` 才携带 Boot 4/Jackson 3 所需的
+          `mcp-json-jackson3`（MCP Server 启动时加载 JacksonMcpJsonMapper）。
+          zhishu-ai 的 spring-ai-alibaba-graph-core 会传递 `mcp:0.14.0`（只带 jackson2）；
+          若仅靠 starter 间接引入，`zhishu-core` 的依赖调解会因模块声明顺序选中 0.14.0，
+          导致运行期 NoClassDefFoundError: io/modelcontextprotocol/json/jackson3/JacksonMcpJsonMapper。
+          直接声明后本模块路径深度更浅，调解结果与顺序无关。
+        -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp</artifactId>
+            <version>${mcp-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

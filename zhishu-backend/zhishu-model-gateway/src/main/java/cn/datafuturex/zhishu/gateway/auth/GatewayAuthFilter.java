@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.gateway.auth;
 
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.gateway.auth.impl.GatewayAuthServiceImpl;
 import cn.datafuturex.zhishu.gateway.compat.GatewayException;
 import cn.datafuturex.zhishu.gateway.compat.OpenAiErrors;

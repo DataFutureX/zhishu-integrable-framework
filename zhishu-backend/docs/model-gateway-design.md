@@ -69,14 +69,18 @@
 
 1. `AiGlobalExceptionHandler` 的 `basePackages = "cn.datafuturex.zhishu.ai"` 会把异常包成 `Result`，OpenAI 协议面必须不受其影响。
 2. 协议面与 AI 业务面解耦，避免被 `zhishu-ai` 的 Spring Modulith 模块边界约束。
-3. 依赖方向单向：`zhishu-core` → `zhishu-model-gateway` → {`zhishu-security`, `zhishu-ai`}，无环。
+3. 依赖方向单向：`zhishu-core` → {`zhishu-ai` → `zhishu-model-gateway` → `zhishu-security`}，无环。
+   网关是模型基础设施，AI 内核是业务层，因此方一向为 **ai → gateway**（早期设计写的 gateway → ai 已废除）。
+   跨模块契约一律住在网关的导出面 `gateway.port`（端口、通道常量、契约异常）与 `gateway.upstream`（OpenAI 兼容构建器）；
+   共用的凭证加解密与基础类型在 `zhishu-security` 的 `cn.datafuturex.zhishu.common`。两侧各有护栏：
+   `GatewayDependencyGuardTest` 硬禁止网关引用 ai / mcp，`GatewayBoundaryGuardTest` 限制 ai 只准引用网关导出面。
 
 ### 2.3 工程改动清单
 
 | 文件 | 改动 |
 |---|---|
 | `zhishu-backend/pom.xml` | `<modules>` 与 `<dependencyManagement>` 增 `zhishu-model-gateway` |
-| `zhishu-backend/zhishu-model-gateway/pom.xml` | 新建；依赖 `zhishu-security`、`zhishu-ai`、`spring-boot-starter-webmvc`、`spring-boot-starter-validation`、`mybatis-plus-spring-boot4-starter`、`caffeine`、`swagger-annotations`、`lombok` |
+| `zhishu-backend/zhishu-model-gateway/pom.xml` | 新建；依赖 `zhishu-security`、`spring-ai-openai`、`spring-boot-starter-webmvc`、`spring-boot-starter-validation`、`mybatis-plus-spring-boot4-starter`、`caffeine`、`lombok`（不依赖 `zhishu-ai`；test 作用域显式声明 `archunit`）|
 | `zhishu-backend/zhishu-core/pom.xml` | 增 `zhishu-model-gateway` 依赖 |
 | `zhishu-ai/.../modelconfig/api/ModelUpstreamPort.java` | 新增跨模块端口（modelconfig 的 `api` NamedInterface） |
 | `zhishu-ai/.../modelconfig/service/impl/ModelUpstreamService.java` | 新增实现：复用 Key 解密，返回上游 baseUrl / 明文 key / 模型 / 生成参数 |
@@ -978,7 +982,7 @@ public interface AiEmbeddingTargetPort {
 ```
 
 2. 实现类 `GatewayEmbeddingTargetService` 放在 `zhishu-model-gateway`：读 `ai_gateway_model`（`model_type='EMBEDDING' AND is_default AND status='ENABLED'`）+ `ModelUpstreamPort.resolve(providerId)` 得 baseUrl/apiKey。
-   编译期依赖仍是 gateway → ai（接口在 ai），无环。
+   编译期方向为 ai → gateway（端口 `EmbeddingTargetPort` 声明在网关导出面 `gateway.port`，由网关实现、ai 消费），无环。
 3. `ModelProviderRegistry.resolveEmbeddingModel()` 通过 `ObjectProvider<AiEmbeddingTargetPort>` 优先取该目标；不可用或未配置时回退「默认供应商 + 旧 embedding_model 列」（即当前行为）。
 4. `ModelConfigPort.currentEmbeddingModel()` 返回该目标的上游模型名（展示/历史记录用）。
 
@@ -1147,7 +1151,7 @@ WHERE b.id = p.id;
 | **客户端接入文档** | 新增 `docs/模型网关接入指南.md`：三个端点、错误码与重试矩阵、TS/curl 流式示例、反代注意项、联调自测清单 |
 | **管理面方法级鉴权** | 4 个 admin controller 全部加 `@PreAuthorize`：读接口 `gateway:*.list` / `gateway:usage:query`，写接口 `gateway:*.update`；`PermissionConstants` 新增 7 个常量；`/models/available` 额外允许 `ai:agent:query`（保障 Agent 编辑器下拉）；前端 `constants/permissions.ts` 同步并用 `v-permission` 隐写操作按钮。**前提**：必须先执行 `patch_menu_model_gateway.sql`（建 BUTTON 权限行），否则 ADMIN 也会 403 |
 | **模型行防重** | 迁移脚本第 5 步改为按「供应商 + 类型 + 上游模型名」去重（`provider_key` 改名会让 `ON CONFLICT (model_id)` 失效）；服务层 `create`/`update` 拒绝重复三元组，`batchImport` 跳过已存在并记录跳过数；脚本尾部提供查重 SQL 与可选唯一索引 `uk_ai_gateway_model_provider_upstream` |
-| **供应商业务代码归属迁移** | `ai_model_provider` 的实现从 `zhishu-ai/modelconfig` 整体迁入 `zhishu-model-gateway/provider`（git mv 保留历史）：`provider/domain/ModelProviderEntity`、`provider/mapper/ModelProviderMapper`、`provider/runtime/ModelProviderRegistry`、`provider/service/impl/ModelProviderServiceImpl`、`provider/service/impl/ModelUpstreamServiceImpl`（原 `ModelUpstreamService`）、`provider/config/ProviderSchemaInitializer`（原 `ModelConfigSchemaInitializer`，@Order(16)）+ `zhishu-model-gateway/src/main/resources/db/V_add_model_provider.sql`。ai 侧只保留真正跨模块的契约：`AiChatTargetPort` / `AiEmbeddingTargetPort` 与共享构建器（方向保持 gateway → ai） |
+| **供应商业务代码归属迁移** | `ai_model_provider` 的实现从 `zhishu-ai/modelconfig` 整体迁入 `zhishu-model-gateway/provider`（git mv 保留历史）：`provider/domain/ModelProviderEntity`、`provider/mapper/ModelProviderMapper`、`provider/runtime/ModelProviderRegistry`、`provider/service/impl/ModelProviderServiceImpl`、`provider/service/impl/ModelUpstreamServiceImpl`（原 `ModelUpstreamService`）、`provider/config/ProviderSchemaInitializer`（原 `ModelConfigSchemaInitializer`，@Order(16)）+ `zhishu-model-gateway/src/main/resources/db/V_add_model_provider.sql`。ai 侧只保留真正跨模块的契约：`AiChatTargetPort` / `AiEmbeddingTargetPort` 与共享构建器（方向保持 gateway → ai）。【方向后调整】该方已于拆分时倒转为 ai → gateway：两个端口改名后连同共享构建器一起迁入网关导出面（`gateway.port.ChatTargetPort` / `gateway.port.EmbeddingTargetPort` / `gateway.upstream.RefreshableOpenAiModels`），网关不再引用任何 ai 类，详见 §2.2。 |
 | **退役 `ai_model_config` 单例配置** | 删除 `ModelConfigPort`、`ModelConfigServiceImpl`、`AiModelConfigEntity/Mapper/VO/UpdateDTO`、`AiModelConfigController`（`/api/v1/model-config` 下线），`init_ai.sql` 不再建该表；新增 `db/patch_retire_ai_model_config.sql`：`sys_config` 加 `chat_enable_rag_default` + 迁移旧值 + 将旧表重命名为 `ai_model_config_retired`。新端口 `zhishu-api` 的 `ChatSettingsApi`（由 `zhishu-biz/systemconfig/spi/ChatSettingsApiImpl` 实现）供 ai 读默认 RAG 开关；`ChatClientAgentEngine` 改用该端口。会话记忆窗口改为配置项 `zhishu.ai.chat.memory-window`（默认 20，由 `AiConfig.chatMemory` 读 `Environment`）。展示/审计与 options 构造均改走 `GatewayChatModelRegistry`（`defaultModelLabel()` / `resolveModelId(null)`），修掉了一类**用旧单例模型名覆盖网关 model_id 导致 `404 model_not_found`** 的隐患（QA/RAG 链路） |
 | **废弃表与列清理** | 新增 `db/patch_drop_model_legacy.sql` 并已在开发库执行：删除 `ai_model_provider` 的 5 个历史列、`ai_agent.model_provider_id`、`ai_model_provider_legacy_backup`、`ai_model_config(_retired)`；代码侧删除 `ModelProviderRegistry`（改用 `provider/runtime/ModelRuntimeCache` 按指纹缓存 + 懒代理）、`ModelProviderEntity` 与 `AiAgentEntity` 的废弃字段；`V_add_model_provider.sql` 不再建历史列与 `model_provider_id`；`init_postgresql.sql` 同步删除 `ai_model_config` 建表块；`ProviderSchemaInitializer` 只保留从 `spring.ai.openai.*` 引导默认供应商 |
 | **模型配置包瘦身（契约下沉）** | 引用统计发现 `ModelProviderPort`/`ModelUpstreamPort`/`ModelProviderVO`/`ModelProviderCreateDTO`/`ModelProviderUpdateDTO`/`UpstreamModelInfo` 的消费者 100% 在网关侧（ai 为 0）→ 已全部移入 `zhishu-model-gateway/provider/{api,dto,vo}`；同时删除已无消费者的死端口 `GatewayDefaultModelPort`（`GatewayModelCatalogClient` 去掉 implements）、将 `AiEmbeddingTargetPort` 收缩为单方法 `defaultEmbeddingModel()`（`enabled()`/`currentEmbedding()`/`Target` 下沉为实现内部）、把 `DynamicOpenAiConfig` 移到 `ai.gatewayclient`以消除 `modelconfig ↔ gatewayclient` 模块环、给 `modelconfig.runtime` 补 `@NamedInterface("api")`。结果：`modelconfig` 只剩两个推理目标端口 + `ModelConfigProperties` + `RefreshableOpenAiModels`，其 `@ApplicationModule(allowedDependencies={"shared"})` 声明变为真实 |

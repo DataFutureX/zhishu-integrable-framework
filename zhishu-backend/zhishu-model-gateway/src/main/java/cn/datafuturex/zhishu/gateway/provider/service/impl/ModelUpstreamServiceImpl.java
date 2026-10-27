@@ -1,8 +1,9 @@
 package cn.datafuturex.zhishu.gateway.provider.service.impl;
 
-import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
+import cn.datafuturex.zhishu.gateway.config.GatewayProperties;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
 import cn.datafuturex.zhishu.gateway.provider.domain.ModelProviderEntity;
 import cn.datafuturex.zhishu.gateway.provider.mapper.ModelProviderMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,8 @@ import java.util.Optional;
 public class ModelUpstreamServiceImpl implements ModelUpstreamPort {
 
     private final ModelProviderMapper modelProviderMapper;
-    private final ModelConfigProperties modelConfigProperties;
+    private final CredentialProperties credentialProperties;
+    private final GatewayProperties gatewayProperties;
 
     @Value("${spring.ai.openai.api-key:}")
     private String envApiKey;
@@ -46,7 +48,7 @@ public class ModelUpstreamServiceImpl implements ModelUpstreamPort {
         }
         String baseUrl = StringUtils.hasText(entity.getBaseUrl())
                 ? trimTrailingSlash(entity.getBaseUrl().trim())
-                : modelConfigProperties.getDefaultBaseUrl();
+                : gatewayProperties.getUpstream().getDefaultBaseUrl();
         String apiKey = resolveApiKey(entity);
         return Optional.of(new UpstreamEndpoint(
                 entity.getId(),
@@ -64,7 +66,7 @@ public class ModelUpstreamServiceImpl implements ModelUpstreamPort {
      */
     private String resolveApiKey(ModelProviderEntity entity) {
         if (StringUtils.hasText(entity.getApiKeyEnc())) {
-            String wrapKey = modelConfigProperties.getCryptoKey();
+            String wrapKey = credentialProperties.getCryptoKey();
             return CredentialCrypto.decrypt(entity.getApiKeyEnc(),
                     StringUtils.hasText(wrapKey) ? wrapKey : "zhishu-dev-model-key-wrap");
         }

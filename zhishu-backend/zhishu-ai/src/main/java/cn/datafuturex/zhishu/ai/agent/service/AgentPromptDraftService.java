@@ -7,7 +7,7 @@ import cn.datafuturex.zhishu.ai.agent.enums.AgentCapability;
 import cn.datafuturex.zhishu.ai.agent.enums.WorkflowType;
 import cn.datafuturex.zhishu.ai.agent.registry.ToolCapabilityRegistry;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;

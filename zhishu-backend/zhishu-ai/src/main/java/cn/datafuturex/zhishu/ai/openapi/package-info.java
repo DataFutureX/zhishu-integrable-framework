@@ -11,7 +11,6 @@
                 "chat :: api",
                 "agent :: api",
                 "knowledge :: api",
-                "gatewayclient :: api",
                 "gatewayclient"
         }
 )

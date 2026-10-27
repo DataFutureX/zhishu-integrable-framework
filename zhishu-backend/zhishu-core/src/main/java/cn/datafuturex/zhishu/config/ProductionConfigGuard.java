@@ -52,11 +52,9 @@ public class ProductionConfigGuard implements InitializingBean {
         rejectDefault("jwt.secret", DEFAULT_JWT_SECRET,
                 "请用 JWT_SECRET 注入生产签名密钥", problems);
 
-        // 两个入站鉴权密钥：留空即「不鉴权」，属于功能开关级风险，必须显式决策
-        if (environment.getProperty("zhishu.mcp.server.enabled", Boolean.class, true)) {
-            rejectBlank("zhishu.mcp.server.auth-key",
-                    "MCP Server 入站鉴权密钥；请用 ZHISHU_MCP_AUTH_KEY 注入，若确需关闭鉴权请同时置 zhishu.mcp.server.enabled=false", problems);
-        }
+        // 入站鉴权密钥：留空即「不鉴权」，属于功能开关级风险，必须显式决策
+        // MCP 不再使用静态共享密钥：/mcp 凭据为每 Client 的 wxmcp_*（库内 SHA-256）或平台登录 JWT，
+        // 因此这里不再有 zhishu.mcp.server.auth-key 校验（历史项已随 zhishu-mcp 双平面合并移除）。
         if (environment.getProperty("zhishu.desktop.enabled", Boolean.class, true)) {
             rejectBlank("zhishu.desktop.auth-key",
                     "桌面端鉴权密钥；请用 ZHISHU_DESKTOP_AUTH_KEY 注入，若确需关闭鉴权请同时置 zhishu.desktop.enabled=false", problems);

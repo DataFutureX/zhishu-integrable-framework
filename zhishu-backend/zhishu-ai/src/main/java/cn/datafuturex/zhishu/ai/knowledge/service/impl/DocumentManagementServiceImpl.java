@@ -5,7 +5,7 @@ import cn.datafuturex.zhishu.ai.knowledge.domain.Document;
 import cn.datafuturex.zhishu.ai.knowledge.domain.KnowledgesCategory;
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentUploadDTO;
 import cn.datafuturex.zhishu.ai.knowledge.vo.DocumentVO;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.ai.knowledge.mapper.KnowledgesCategoryMapper;
 import cn.datafuturex.zhishu.ai.knowledge.mapper.DocumentMapper;
 import cn.datafuturex.zhishu.ai.knowledge.service.KnowledgesCategoryService;

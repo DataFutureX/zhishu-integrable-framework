@@ -1,10 +1,10 @@
 package cn.datafuturex.zhishu.ai.gatewayclient;
 
 import cn.datafuturex.zhishu.ai.gatewayclient.config.GatewayInternalProperties;
-import cn.datafuturex.zhishu.ai.gatewayclient.api.AiChatTargetPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.api.GatewayChannels;
-import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.gateway.port.ChatTargetPort;
+import cn.datafuturex.zhishu.gateway.port.GatewayChannels;
+import cn.datafuturex.zhishu.gateway.upstream.RefreshableOpenAiModels;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -32,7 +32,7 @@ public class GatewayChatModelRegistry {
     private final GatewayInternalProperties properties;
     private final GatewayServiceTokenProvider tokenProvider;
     private final GatewayModelCatalogClient catalogClient;
-    private final ObjectProvider<AiChatTargetPort> chatTargetPort;
+    private final ObjectProvider<ChatTargetPort> chatTargetPort;
 
     /** (bearerHash + modelId) -> ChatModel */
     private final Cache<String, ChatModel> cache = Caffeine.newBuilder()
@@ -90,14 +90,14 @@ public class GatewayChatModelRegistry {
      * @return ChatModel
      */
     private ChatModel fallbackChatModel(String gatewayModelId) {
-        AiChatTargetPort port = chatTargetPort.getIfAvailable();
+        ChatTargetPort port = chatTargetPort.getIfAvailable();
         if (port == null) {
             throw new AiException("未装配模型网关模块：无法解析对话模型");
         }
         if (port.enabled() && StringUtils.hasText(gatewayModelId)) {
-            Optional<AiChatTargetPort.Target> target = port.resolveByModelId(gatewayModelId);
+            Optional<ChatTargetPort.Target> target = port.resolveByModelId(gatewayModelId);
             if (target.isPresent()) {
-                AiChatTargetPort.Target value = target.get();
+                ChatTargetPort.Target value = target.get();
                 return cache.get("direct|" + value.modelId(), key -> RefreshableOpenAiModels.chatModel(
                         value.baseUrl(), value.apiKey(), value.upstreamModel(),
                         value.temperature(), value.maxTokens(), value.topP()));
@@ -134,7 +134,7 @@ public class GatewayChatModelRegistry {
      */
     public String describeModel(String gatewayModelId) {
         if (!enabled()) {
-            AiChatTargetPort port = chatTargetPort.getIfAvailable();
+            ChatTargetPort port = chatTargetPort.getIfAvailable();
             if (port != null) {
                 String name = port.describeDefaultChatModelName();
                 if (StringUtils.hasText(name)) {

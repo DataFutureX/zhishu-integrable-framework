@@ -72,8 +72,8 @@ springdoc:
 # 生产必填项（缺失或沿用开发默认值时，ProductionConfigGuard 会直接拒绝启动）
 #   ZHISHU_AI_CRYPTO_KEY      模型 API Key 加解密密钥；共用同一库的所有实例必须同一把，不一致会报「解密失败」
 #   JWT_SECRET                JWT 签名密钥
-#   ZHISHU_MCP_AUTH_KEY       MCP Server 入站鉴权密钥（zhishu.mcp.server.enabled=true 时必填；留空等于不鉴权）
 #   ZHISHU_DESKTOP_AUTH_KEY   桌面端鉴权密钥（zhishu.desktop.enabled=true 时必填；留空等于不鉴权）
+#   （MCP 已取消静态密钥：/mcp 只认 wxmcp_* Client Key 或平台登录 JWT，无必填项）
 #   ZHISHU_GATEWAY_TOKEN      仅 zhishu.gateway.auth.mode=static 时必填
 #   NEO4J_PASSWORD            仅 wanxiang.kg.enabled=true 时必填（不得用默认弱口令）
 # 应急逃生：ZHISHU_PROD_GUARD_ENABLED=false 可临时关闭守卫（只用于回滚窗口，启动日志会持续告警）

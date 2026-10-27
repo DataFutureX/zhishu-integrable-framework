@@ -5,7 +5,7 @@ import cn.datafuturex.zhishu.ai.openapi.service.OpenApiAuthService.Authenticated
 import cn.datafuturex.zhishu.ai.openapi.service.OpenApiAuthService.OpenApiAuthException;
 import cn.datafuturex.zhishu.ai.openapi.service.OpenApiAuthService.UserRef;
 import cn.datafuturex.zhishu.ai.shared.Result;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

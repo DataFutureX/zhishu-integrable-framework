@@ -3,8 +3,7 @@ package cn.datafuturex.zhishu.gateway.admin.service.impl;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort.UpstreamEndpoint;
 import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
-import cn.datafuturex.zhishu.ai.gatewayclient.api.AgentModelUsagePort;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelBatchImportDTO;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayModelUpsertDTO;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayModelAdminService;
@@ -12,6 +11,7 @@ import cn.datafuturex.zhishu.gateway.admin.vo.GatewayModelAdminVO;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayCatalogService;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;
+import cn.datafuturex.zhishu.gateway.port.ModelReferencePort;
 import cn.datafuturex.zhishu.gateway.upstream.UpstreamHttpClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -49,7 +50,7 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     private final GatewayModelMapper gatewayModelMapper;
     private final ModelUpstreamPort modelUpstreamPort;
     private final GatewayCatalogService catalogService;
-    private final AgentModelUsagePort agentModelUsagePort;
+    private final ObjectProvider<ModelReferencePort> modelReferencePort;
     private final UpstreamHttpClient upstreamHttpClient;
     private final ModelRuntimeCache modelRuntimeCache;
 
@@ -170,9 +171,11 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
         GatewayModelEntity entity = requireEntity(id);
         rejectDefaultRemoval(entity, "删除");
         if (TYPE_CHAT.equalsIgnoreCase(entity.getModelType())) {
-            int refs = agentModelUsagePort.countAgentsBoundTo(entity.getModelId());
+            // 引用关系属于业务侧（如 Agent 绑定），网关只通过 ModelReferencePort 询问；未装配实现时跳过检查
+            ModelReferencePort referencePort = modelReferencePort.getIfAvailable();
+            int refs = referencePort == null ? 0 : referencePort.countReferences(entity.getModelId());
             if (refs > 0) {
-                List<String> names = agentModelUsagePort.listAgentNamesBoundTo(entity.getModelId());
+                List<String> names = referencePort.listReferenceNames(entity.getModelId());
                 throw new BusinessException(400, "该模型已被 " + refs + " 个 Agent 引用（"
                         + String.join("、", names) + "），请先调整 Agent 绑定");
             }
@@ -374,8 +377,8 @@ public class GatewayModelAdminServiceImpl implements GatewayModelAdminService {
     /**
      * 默认模型不得直接删除或停用。
      * <p>
-     * 运行时只按「对应类型的默认行」取模型（{@code AiChatTargetPort#defaultChatModel}、
-     * {@code AiEmbeddingTargetPort#defaultEmbeddingModel}）：默认行被删/被停用后，
+     * 运行时只按「对应类型的默认行」取模型（{@code ChatTargetPort#defaultChatModel}、
+     * {@code EmbeddingTargetPort#defaultEmbeddingModel}）：默认行被删/被停用后，
      * 对话会报「未配置默认对话模型」，知识库入库与问答会报「未配置默认向量模型」，
      * 且 {@code /v1/models} 的 {@code default} 字段会消失，故在此前置拦截。
      *

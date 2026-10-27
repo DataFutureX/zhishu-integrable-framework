@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.agent.graph;
 
 import cn.datafuturex.zhishu.ai.agent.enums.WorkflowType;
 import cn.datafuturex.zhishu.ai.agent.support.RoutingCapabilitySupport;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

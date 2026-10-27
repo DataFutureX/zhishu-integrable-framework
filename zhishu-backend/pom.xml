@@ -49,6 +49,8 @@
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>3.1.0</springdoc.version>
         <spring-modulith.version>2.1.0</spring-modulith.version>
+        <!-- 结构护栏：gateway 与 ai 的依赖方向测试共用（此前靠 zhishu-ai 传递进来，方向翻转后必须显式声明）-->
+        <archunit.version>1.4.2</archunit.version>
         <!-- 控制台与源码统一 UTF-8；Windows CMD 启动脚本已 chcp 65001 -->
         <console.encoding>UTF-8</console.encoding>
     </properties>
@@ -106,6 +108,11 @@
                 <version>${spring-modulith.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit</artifactId>
+                <version>${archunit.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.baomidou</groupId>

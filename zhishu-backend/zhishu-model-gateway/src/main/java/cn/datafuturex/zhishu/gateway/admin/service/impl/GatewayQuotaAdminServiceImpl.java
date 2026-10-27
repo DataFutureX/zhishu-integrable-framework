@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.gateway.admin.service.impl;
 
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import cn.datafuturex.zhishu.gateway.admin.dto.GatewayQuotaUpsertDTO;
 import cn.datafuturex.zhishu.gateway.admin.service.GatewayQuotaAdminService;
 import cn.datafuturex.zhishu.gateway.admin.vo.GatewayQuotaVO;

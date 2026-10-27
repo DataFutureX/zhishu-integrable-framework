@@ -1,13 +1,13 @@
 package cn.datafuturex.zhishu.gateway.chat;
 
-import cn.datafuturex.zhishu.ai.gatewayclient.api.AiChatTargetPort;
-import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
-import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;
 import cn.datafuturex.zhishu.gateway.config.GatewayProperties;
+import cn.datafuturex.zhishu.gateway.port.ChatTargetPort;
+import cn.datafuturex.zhishu.gateway.port.ModelTargetException;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
+import cn.datafuturex.zhishu.gateway.upstream.RefreshableOpenAiModels;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GatewayChatTargetService implements AiChatTargetPort {
+public class GatewayChatTargetService implements ChatTargetPort {
 
     private static final String MODEL_TYPE_CHAT = "CHAT";
 
@@ -84,7 +84,7 @@ public class GatewayChatTargetService implements AiChatTargetPort {
     private ChatModel requireDefaultChatModel() {
         return defaultTarget()
                 .map(this::directChatModel)
-                .orElseThrow(() -> new AiException(
+                .orElseThrow(() -> new ModelTargetException(
                         "未配置默认对话模型：请在「模型网关 · 模型设置」中添加 CHAT 模型并设为默认"));
     }
 

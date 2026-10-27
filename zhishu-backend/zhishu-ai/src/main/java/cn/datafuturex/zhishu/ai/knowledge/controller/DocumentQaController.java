@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.knowledge.controller;
 
 import cn.datafuturex.zhishu.ai.shared.Result;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.knowledge.dto.DocumentQueryDTO;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.knowledge.service.DocumentQaService;

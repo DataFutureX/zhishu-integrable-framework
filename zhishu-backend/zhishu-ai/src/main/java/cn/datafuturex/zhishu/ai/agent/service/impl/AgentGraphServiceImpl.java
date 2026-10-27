@@ -10,7 +10,7 @@ import cn.datafuturex.zhishu.ai.agent.mapper.AiAgentMapper;
 import cn.datafuturex.zhishu.ai.agent.service.AgentDefinitionService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentGraphService;
 import cn.datafuturex.zhishu.ai.agent.support.AgentJsonUtils;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

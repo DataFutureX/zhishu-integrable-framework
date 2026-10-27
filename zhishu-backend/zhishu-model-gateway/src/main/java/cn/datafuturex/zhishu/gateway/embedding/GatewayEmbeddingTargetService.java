@@ -1,12 +1,12 @@
 package cn.datafuturex.zhishu.gateway.embedding;
 
-import cn.datafuturex.zhishu.ai.gatewayclient.api.AiEmbeddingTargetPort;
-import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
-import cn.datafuturex.zhishu.ai.gatewayclient.runtime.RefreshableOpenAiModels;
-import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelEntity;
 import cn.datafuturex.zhishu.gateway.catalog.GatewayModelMapper;
+import cn.datafuturex.zhishu.gateway.port.EmbeddingTargetPort;
+import cn.datafuturex.zhishu.gateway.port.ModelTargetException;
+import cn.datafuturex.zhishu.gateway.provider.api.ModelUpstreamPort;
 import cn.datafuturex.zhishu.gateway.provider.runtime.ModelRuntimeCache;
+import cn.datafuturex.zhishu.gateway.upstream.RefreshableOpenAiModels;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GatewayEmbeddingTargetService implements AiEmbeddingTargetPort {
+public class GatewayEmbeddingTargetService implements EmbeddingTargetPort {
 
     private static final String MODEL_TYPE_EMBEDDING = "EMBEDDING";
 
@@ -52,7 +52,7 @@ public class GatewayEmbeddingTargetService implements AiEmbeddingTargetPort {
     private EmbeddingModel requireEmbeddingModel() {
         return findEmbeddingTarget()
                 .map(this::cachedEmbeddingModel)
-                .orElseThrow(() -> new AiException(
+                .orElseThrow(() -> new ModelTargetException(
                         "未配置默认向量模型：请在「模型网关 · 模型设置」中添加 EMBEDDING 模型并设为默认"));
     }
 

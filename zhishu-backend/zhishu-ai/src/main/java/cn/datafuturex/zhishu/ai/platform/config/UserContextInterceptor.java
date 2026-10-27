@@ -2,7 +2,7 @@ package cn.datafuturex.zhishu.ai.platform.config;
 
 import cn.datafuturex.zhishu.common.SecurityUtils;
 import cn.datafuturex.zhishu.ai.shared.Result;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

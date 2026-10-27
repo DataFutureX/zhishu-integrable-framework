@@ -1,8 +1,9 @@
 /**
- * 模型接入层（原 modelconfig 已合并进来）：对内提供推理目标端口与经网关调用的客户端。
+ * 模型接入层：只提供“经网关调用”的客户端与回退解析，不再持有跨模块端口。
  * <p>
- * 子包职责：{@code api} 跨模块端口与通道常量，{@code runtime} OpenAI 兼容构建器，
- * {@code config} 运行时参数，根包为经网关调用的 ChatModel 客户端与目录/令牌提供器。
+ * 推理目标端口、通道常量与 OpenAI 兼容构建器已下沉到模型网关的导出面
+ * （{@code gateway.port} / {@code gateway.upstream}）；{@code config} 仅保留内部调用参数，
+ * 根包为 ChatModel 注册表与目录/令牌提供器。
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "GatewayClient",

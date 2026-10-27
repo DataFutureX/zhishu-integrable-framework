@@ -1,6 +1,6 @@
 package cn.datafuturex.zhishu.ai.kg.support;
 
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

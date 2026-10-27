@@ -8,7 +8,6 @@
                 "agent :: api",
                 "knowledge :: api",
                 "biztools :: api",
-                "gatewayclient :: api",
                 "gatewayclient"
         }
 )

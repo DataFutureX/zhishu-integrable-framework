@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.ai.agent.support;
 
 import cn.datafuturex.zhishu.ai.agent.enums.AgentCapability;
-import cn.datafuturex.zhishu.ai.shared.exception.BusinessException;
+import cn.datafuturex.zhishu.common.exception.BusinessException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.util.StringUtils;

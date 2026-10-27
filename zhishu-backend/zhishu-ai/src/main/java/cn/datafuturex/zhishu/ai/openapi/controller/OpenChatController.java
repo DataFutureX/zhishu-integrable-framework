@@ -5,7 +5,7 @@ import cn.datafuturex.zhishu.ai.chat.service.AiChatService;
 import cn.datafuturex.zhishu.ai.chat.service.QaHistoryService;
 import cn.datafuturex.zhishu.ai.gatewayclient.GatewayChatModelRegistry;
 import cn.datafuturex.zhishu.ai.shared.Result;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.chat.ChatScenes;
 import cn.datafuturex.zhishu.ai.shared.dto.ChatRequestDTO;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;

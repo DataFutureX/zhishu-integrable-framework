@@ -1,7 +1,7 @@
 package cn.datafuturex.zhishu.gateway.provider.config;
 
-import cn.datafuturex.zhishu.ai.shared.crypto.CredentialCrypto;
-import cn.datafuturex.zhishu.ai.gatewayclient.config.ModelConfigProperties;
+import cn.datafuturex.zhishu.common.crypto.CredentialCrypto;
+import cn.datafuturex.zhishu.common.crypto.CredentialProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
  * 统一执行 {@code db/init_gateway.sql} 负责；本类只做一件事：
  * 供应商表为空时，从 {@code spring.ai.openai.*} 引导一条默认供应商（Key 加密入库）。
  * <p>
- * 这里只用 JdbcTemplate 读写，不依赖 ai 模块的内部实体，保持模块方向 gateway → ai。
+ * 这里只用 JdbcTemplate 读写，不依赖 AI 内核的任何内部实体，保持依赖方向 ai → gateway。
  */
 @Slf4j
 @Component
@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 public class ProviderSchemaInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ModelConfigProperties modelConfigProperties;
+    private final CredentialProperties credentialProperties;
 
     @Value("${spring.ai.openai.base-url:}")
     private String envBaseUrl;
@@ -67,7 +67,7 @@ public class ProviderSchemaInitializer implements ApplicationRunner {
             return;
         }
         try {
-            String apiKeyEnc = CredentialCrypto.encrypt(envApiKey, modelConfigProperties.getCryptoKey());
+            String apiKeyEnc = CredentialCrypto.encrypt(envApiKey, credentialProperties.getCryptoKey());
             String masked = envApiKey.length() <= 8
                     ? "****" : envApiKey.substring(0, 3) + "****" + envApiKey.substring(envApiKey.length() - 4);
             int inserted = jdbcTemplate.update("""

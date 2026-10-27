@@ -12,7 +12,7 @@ import cn.datafuturex.zhishu.ai.agent.service.AgentDefinitionService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRunService;
 import cn.datafuturex.zhishu.ai.agent.service.AgentRuntimeService;
 import cn.datafuturex.zhishu.ai.agent.support.AgentJsonUtils;
-import cn.datafuturex.zhishu.ai.shared.UserContext;
+import cn.datafuturex.zhishu.common.context.UserContext;
 import cn.datafuturex.zhishu.ai.shared.vo.ChatResponseVO;
 import cn.datafuturex.zhishu.ai.shared.exception.AiException;
 import lombok.RequiredArgsConstructor;
